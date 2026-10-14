@@ -1,0 +1,2239 @@
+{
+ "assumptions": {
+  "healthy": {
+   "p_enc": [
+    0.9,
+    0.55
+   ],
+   "alpha": [
+    0.6,
+    0.6
+   ],
+   "tau": [
+    0.25,
+    0.35
+   ],
+   "forget": [
+    0.0004,
+    0.5
+   ],
+   "speed": [
+    1.0,
+    0.15
+   ],
+   "aim": [
+    0.55,
+    0.5
+   ],
+   "p_glove": [
+    0.8,
+    0.6
+   ],
+   "iiv": 0.25
+  },
+  "prodromal_base": {
+   "p_enc": [
+    0.75,
+    0.55
+   ],
+   "alpha": [
+    0.38,
+    0.6
+   ],
+   "tau": [
+    0.4,
+    0.35
+   ],
+   "forget": [
+    0.0012,
+    0.5
+   ],
+   "speed": [
+    0.9,
+    0.15
+   ],
+   "aim": [
+    0.5,
+    0.5
+   ],
+   "p_glove": [
+    0.65,
+    0.6
+   ],
+   "iiv": 0.5
+  },
+  "healthy_novice": {
+   "p_enc": [
+    0.86,
+    0.55
+   ],
+   "alpha": [
+    0.57,
+    0.6
+   ],
+   "tau": [
+    0.45,
+    0.35
+   ],
+   "forget": [
+    0.0005,
+    0.5
+   ],
+   "speed": [
+    0.7,
+    0.15
+   ],
+   "aim": [
+    0.32,
+    0.5
+   ],
+   "p_glove": [
+    0.75,
+    0.6
+   ],
+   "iiv": 0.3
+  }
+ },
+ "base": {
+  "knobs": {
+   "effect": 1.0,
+   "decline": 1.0
+  },
+  "single_session": {
+   "current": {
+    "per_metric": {
+     "run_time": {
+      "healthy_vs_prodromal": 0.719,
+      "novice_vs_prodromal": 0.521,
+      "healthy_vs_novice": 0.761,
+      "medians": {
+       "healthy": 120.85,
+       "prodromal": 189.34,
+       "healthy_novice": 190.92
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "run_dist": {
+      "healthy_vs_prodromal": 0.7,
+      "novice_vs_prodromal": 0.6,
+      "healthy_vs_novice": 0.624,
+      "medians": {
+       "healthy": 204.0,
+       "prodromal": 304.0,
+       "healthy_novice": 236.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_time": {
+      "healthy_vs_prodromal": 0.668,
+      "novice_vs_prodromal": 0.567,
+      "healthy_vs_novice": 0.756,
+      "medians": {
+       "healthy": 3.47,
+       "prodromal": 4.72,
+       "healthy_novice": 5.59
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_dist": {
+      "healthy_vs_prodromal": 0.603,
+      "novice_vs_prodromal": 0.545,
+      "healthy_vs_novice": 0.564,
+      "medians": {
+       "healthy": 8.0,
+       "prodromal": 8.0,
+       "healthy_novice": 8.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "bumps": {
+      "healthy_vs_prodromal": 0.643,
+      "novice_vs_prodromal": 0.604,
+      "healthy_vs_novice": 0.545,
+      "medians": {
+       "healthy": 0.0,
+       "prodromal": 1.0,
+       "healthy_novice": 0.0
+      },
+      "frac_zero": {
+       "healthy": 0.601,
+       "prodromal": 0.385,
+       "healthy_novice": 0.52
+      }
+     },
+     "consults": {
+      "healthy_vs_prodromal": 0.628,
+      "novice_vs_prodromal": 0.584,
+      "healthy_vs_novice": 0.543,
+      "medians": {
+       "healthy": 1.0,
+       "prodromal": 2.0,
+       "healthy_novice": 1.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "consults_post": {
+      "healthy_vs_prodromal": 0.545,
+      "novice_vs_prodromal": 0.525,
+      "healthy_vs_novice": 0.519,
+      "medians": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      },
+      "frac_zero": {
+       "healthy": 0.807,
+       "prodromal": 0.713,
+       "healthy_novice": 0.77
+      }
+     },
+     "accuracy": {
+      "healthy_vs_prodromal": 0.57,
+      "novice_vs_prodromal": 0.781,
+      "healthy_vs_novice": 0.818,
+      "medians": {
+       "healthy": 0.57,
+       "prodromal": 0.5,
+       "healthy_novice": 0.33
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     }
+    },
+    "combined_all": {
+     "auc": 0.762,
+     "fpr_healthy_at_80sens": 0.43,
+     "novice_flagged_at_80sens": 0.924
+    },
+    "combined_map_only": {
+     "auc": 0.701,
+     "fpr_healthy_at_80sens": 0.53,
+     "novice_flagged_at_80sens": 0.917
+    },
+    "stuck_rate": {
+     "healthy": 0.016,
+     "prodromal": 0.044,
+     "healthy_novice": 0.019
+    }
+   },
+   "errand": {
+    "per_metric": {
+     "run_time": {
+      "healthy_vs_prodromal": 0.715,
+      "novice_vs_prodromal": 0.574,
+      "healthy_vs_novice": 0.672,
+      "medians": {
+       "healthy": 312.19,
+       "prodromal": 684.05,
+       "healthy_novice": 471.36
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "run_dist": {
+      "healthy_vs_prodromal": 0.693,
+      "novice_vs_prodromal": 0.667,
+      "healthy_vs_novice": 0.539,
+      "medians": {
+       "healthy": 520.0,
+       "prodromal": 1306.0,
+       "healthy_novice": 576.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_time": {
+      "healthy_vs_prodromal": 0.672,
+      "novice_vs_prodromal": 0.576,
+      "healthy_vs_novice": 0.613,
+      "medians": {
+       "healthy": 179.38,
+       "prodromal": 377.95,
+       "healthy_novice": 241.56
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_dist": {
+      "healthy_vs_prodromal": 0.662,
+      "novice_vs_prodromal": 0.647,
+      "healthy_vs_novice": 0.518,
+      "medians": {
+       "healthy": 288.0,
+       "prodromal": 714.0,
+       "healthy_novice": 302.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "bumps": {
+      "healthy_vs_prodromal": 0.7,
+      "novice_vs_prodromal": 0.671,
+      "healthy_vs_novice": 0.537,
+      "medians": {
+       "healthy": 4.0,
+       "prodromal": 7.0,
+       "healthy_novice": 4.0
+      },
+      "frac_zero": {
+       "healthy": 0.011,
+       "prodromal": 0.009,
+       "healthy_novice": 0.004
+      }
+     },
+     "consults": {
+      "healthy_vs_prodromal": 0.516,
+      "novice_vs_prodromal": 0.515,
+      "healthy_vs_novice": 0.5,
+      "medians": {
+       "healthy": 6.0,
+       "prodromal": 5.0,
+       "healthy_novice": 6.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "consults_post": {
+      "healthy_vs_prodromal": 0.557,
+      "novice_vs_prodromal": 0.546,
+      "healthy_vs_novice": 0.51,
+      "medians": {
+       "healthy": 5.0,
+       "prodromal": 4.0,
+       "healthy_novice": 4.0
+      },
+      "frac_zero": {
+       "healthy": 0.091,
+       "prodromal": 0.111,
+       "healthy_novice": 0.079
+      }
+     },
+     "accuracy": {
+      "healthy_vs_prodromal": 0.596,
+      "novice_vs_prodromal": 0.799,
+      "healthy_vs_novice": 0.851,
+      "medians": {
+       "healthy": 0.57,
+       "prodromal": 0.52,
+       "healthy_novice": 0.32
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     }
+    },
+    "combined_all": {
+     "auc": 0.804,
+     "fpr_healthy_at_80sens": 0.383,
+     "novice_flagged_at_80sens": 0.907
+    },
+    "combined_map_only": {
+     "auc": 0.754,
+     "fpr_healthy_at_80sens": 0.458,
+     "novice_flagged_at_80sens": 0.855
+    },
+    "stuck_rate": {
+     "healthy": 0.095,
+     "prodromal": 0.22,
+     "healthy_novice": 0.069
+    }
+   }
+  },
+  "longitudinal": {
+   "current": {
+    "per_feature": {
+     "run_time:mean": {
+      "healthy_vs_prodromal": 0.967,
+      "novice_vs_prodromal": 0.873
+     },
+     "run_time:slope": {
+      "healthy_vs_prodromal": 0.57,
+      "novice_vs_prodromal": 0.665
+     },
+     "run_time:iiv": {
+      "healthy_vs_prodromal": 0.836,
+      "novice_vs_prodromal": 0.787
+     },
+     "run_dist:mean": {
+      "healthy_vs_prodromal": 0.967,
+      "novice_vs_prodromal": 0.935
+     },
+     "run_dist:slope": {
+      "healthy_vs_prodromal": 0.574,
+      "novice_vs_prodromal": 0.583
+     },
+     "run_dist:iiv": {
+      "healthy_vs_prodromal": 0.851,
+      "novice_vs_prodromal": 0.812
+     },
+     "post_time:mean": {
+      "healthy_vs_prodromal": 0.843,
+      "novice_vs_prodromal": 0.723
+     },
+     "post_time:slope": {
+      "healthy_vs_prodromal": 0.501,
+      "novice_vs_prodromal": 0.504
+     },
+     "post_time:iiv": {
+      "healthy_vs_prodromal": 0.777,
+      "novice_vs_prodromal": 0.747
+     },
+     "bumps:mean": {
+      "healthy_vs_prodromal": 0.925,
+      "novice_vs_prodromal": 0.895
+     },
+     "bumps:slope": {
+      "healthy_vs_prodromal": 0.61,
+      "novice_vs_prodromal": 0.563
+     },
+     "bumps:iiv": {
+      "healthy_vs_prodromal": 0.881,
+      "novice_vs_prodromal": 0.868
+     },
+     "accuracy:mean": {
+      "healthy_vs_prodromal": 0.67,
+      "novice_vs_prodromal": 0.604
+     },
+     "accuracy:slope": {
+      "healthy_vs_prodromal": 0.517,
+      "novice_vs_prodromal": 0.799
+     },
+     "accuracy:iiv": {
+      "healthy_vs_prodromal": 0.604,
+      "novice_vs_prodromal": 0.673
+     }
+    },
+    "combined_all": {
+     "auc": 0.984,
+     "fpr_healthy_at_80sens": 0.007,
+     "novice_flagged_at_80sens": 0.093
+    },
+    "means_only": {
+     "auc": 0.981,
+     "fpr_healthy_at_80sens": 0.02,
+     "novice_flagged_at_80sens": 0.067
+    },
+    "slope_and_iiv": {
+     "auc": 0.935,
+     "fpr_healthy_at_80sens": 0.1,
+     "novice_flagged_at_80sens": 0.193
+    },
+    "trajectories": {
+     "healthy": {
+      "run_time": [
+       120.59,
+       114.67,
+       110.72,
+       111.86,
+       109.58,
+       108.31,
+       108.44,
+       105.56,
+       106.14,
+       104.11,
+       104.49,
+       106.56
+      ],
+      "post_time": [
+       3.55,
+       3.34,
+       3.37,
+       3.34,
+       3.24,
+       3.17,
+       3.13,
+       3.21,
+       3.12,
+       3.12,
+       3.15,
+       3.21
+      ],
+      "bumps": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "prodromal": {
+      "run_time": [
+       191.62,
+       196.44,
+       171.65,
+       192.54,
+       183.39,
+       177.94,
+       197.98,
+       172.87,
+       196.73,
+       199.31,
+       201.7,
+       176.87
+      ],
+      "post_time": [
+       4.65,
+       4.54,
+       4.55,
+       4.61,
+       4.32,
+       4.23,
+       4.66,
+       4.28,
+       4.14,
+       4.34,
+       4.12,
+       4.43
+      ],
+      "bumps": [
+       1.0,
+       2.0,
+       1.0,
+       2.5,
+       2.0,
+       1.0,
+       2.0,
+       1.0,
+       2.0,
+       1.0,
+       2.0,
+       1.0
+      ]
+     },
+     "healthy_novice": {
+      "run_time": [
+       192.25,
+       172.3,
+       149.64,
+       138.48,
+       139.74,
+       129.19,
+       126.18,
+       124.1,
+       124.06,
+       127.93,
+       121.11,
+       120.31
+      ],
+      "post_time": [
+       5.51,
+       5.05,
+       4.28,
+       4.1,
+       4.11,
+       3.97,
+       3.85,
+       3.73,
+       3.72,
+       3.81,
+       3.57,
+       3.63
+      ],
+      "bumps": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    }
+   },
+   "errand": {
+    "per_feature": {
+     "run_time:mean": {
+      "healthy_vs_prodromal": 0.972,
+      "novice_vs_prodromal": 0.902
+     },
+     "run_time:slope": {
+      "healthy_vs_prodromal": 0.69,
+      "novice_vs_prodromal": 0.81
+     },
+     "run_time:iiv": {
+      "healthy_vs_prodromal": 0.701,
+      "novice_vs_prodromal": 0.576
+     },
+     "run_dist:mean": {
+      "healthy_vs_prodromal": 0.97,
+      "novice_vs_prodromal": 0.944
+     },
+     "run_dist:slope": {
+      "healthy_vs_prodromal": 0.698,
+      "novice_vs_prodromal": 0.754
+     },
+     "run_dist:iiv": {
+      "healthy_vs_prodromal": 0.688,
+      "novice_vs_prodromal": 0.585
+     },
+     "post_time:mean": {
+      "healthy_vs_prodromal": 0.96,
+      "novice_vs_prodromal": 0.881
+     },
+     "post_time:slope": {
+      "healthy_vs_prodromal": 0.684,
+      "novice_vs_prodromal": 0.78
+     },
+     "post_time:iiv": {
+      "healthy_vs_prodromal": 0.725,
+      "novice_vs_prodromal": 0.602
+     },
+     "bumps:mean": {
+      "healthy_vs_prodromal": 0.934,
+      "novice_vs_prodromal": 0.867
+     },
+     "bumps:slope": {
+      "healthy_vs_prodromal": 0.75,
+      "novice_vs_prodromal": 0.72
+     },
+     "bumps:iiv": {
+      "healthy_vs_prodromal": 0.625,
+      "novice_vs_prodromal": 0.613
+     },
+     "accuracy:mean": {
+      "healthy_vs_prodromal": 0.606,
+      "novice_vs_prodromal": 0.693
+     },
+     "accuracy:slope": {
+      "healthy_vs_prodromal": 0.515,
+      "novice_vs_prodromal": 0.875
+     },
+     "accuracy:iiv": {
+      "healthy_vs_prodromal": 0.608,
+      "novice_vs_prodromal": 0.615
+     }
+    },
+    "combined_all": {
+     "auc": 0.981,
+     "fpr_healthy_at_80sens": 0.013,
+     "novice_flagged_at_80sens": 0.053
+    },
+    "means_only": {
+     "auc": 0.97,
+     "fpr_healthy_at_80sens": 0.033,
+     "novice_flagged_at_80sens": 0.087
+    },
+    "slope_and_iiv": {
+     "auc": 0.839,
+     "fpr_healthy_at_80sens": 0.287,
+     "novice_flagged_at_80sens": 0.393
+    },
+    "trajectories": {
+     "healthy": {
+      "run_time": [
+       308.43,
+       297.89,
+       289.69,
+       274.03,
+       290.19,
+       255.37,
+       258.67,
+       267.59,
+       308.67,
+       278.76,
+       285.04,
+       258.39
+      ],
+      "post_time": [
+       161.91,
+       153.62,
+       155.47,
+       167.74,
+       171.65,
+       148.11,
+       150.96,
+       151.05,
+       191.18,
+       173.25,
+       161.16,
+       158.8
+      ],
+      "bumps": [
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0
+      ]
+     },
+     "prodromal": {
+      "run_time": [
+       556.08,
+       783.92,
+       835.04,
+       949.43,
+       1034.4,
+       992.1,
+       1019.88,
+       821.74,
+       1253.03,
+       1246.27,
+       1450.36,
+       1182.04
+      ],
+      "post_time": [
+       282.79,
+       474.25,
+       473.58,
+       473.1,
+       636.86,
+       535.18,
+       609.4,
+       537.13,
+       938.03,
+       871.37,
+       1074.73,
+       894.86
+      ],
+      "bumps": [
+       6.0,
+       7.0,
+       7.0,
+       7.5,
+       7.0,
+       8.0,
+       8.0,
+       8.0,
+       8.0,
+       10.0,
+       9.0,
+       10.0
+      ]
+     },
+     "healthy_novice": {
+      "run_time": [
+       485.32,
+       457.46,
+       395.66,
+       414.29,
+       348.98,
+       337.77,
+       317.59,
+       345.69,
+       308.47,
+       303.23,
+       324.25,
+       308.55
+      ],
+      "post_time": [
+       248.44,
+       260.11,
+       244.22,
+       238.06,
+       198.92,
+       193.84,
+       187.32,
+       190.48,
+       189.21,
+       180.52,
+       190.27,
+       185.78
+      ],
+      "bumps": [
+       4.0,
+       4.5,
+       4.0,
+       5.0,
+       4.0,
+       4.5,
+       5.0,
+       5.0,
+       4.5,
+       5.0,
+       4.0,
+       5.0
+      ]
+     }
+    }
+   }
+  }
+ },
+ "no_decline": {
+  "knobs": {
+   "effect": 1.0,
+   "decline": 0.0
+  },
+  "single_session": {
+   "current": {
+    "per_metric": {
+     "run_time": {
+      "healthy_vs_prodromal": 0.719,
+      "novice_vs_prodromal": 0.521,
+      "healthy_vs_novice": 0.761,
+      "medians": {
+       "healthy": 120.85,
+       "prodromal": 189.34,
+       "healthy_novice": 190.92
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "run_dist": {
+      "healthy_vs_prodromal": 0.7,
+      "novice_vs_prodromal": 0.6,
+      "healthy_vs_novice": 0.624,
+      "medians": {
+       "healthy": 204.0,
+       "prodromal": 304.0,
+       "healthy_novice": 236.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_time": {
+      "healthy_vs_prodromal": 0.668,
+      "novice_vs_prodromal": 0.567,
+      "healthy_vs_novice": 0.756,
+      "medians": {
+       "healthy": 3.47,
+       "prodromal": 4.72,
+       "healthy_novice": 5.59
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_dist": {
+      "healthy_vs_prodromal": 0.603,
+      "novice_vs_prodromal": 0.545,
+      "healthy_vs_novice": 0.564,
+      "medians": {
+       "healthy": 8.0,
+       "prodromal": 8.0,
+       "healthy_novice": 8.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "bumps": {
+      "healthy_vs_prodromal": 0.643,
+      "novice_vs_prodromal": 0.604,
+      "healthy_vs_novice": 0.545,
+      "medians": {
+       "healthy": 0.0,
+       "prodromal": 1.0,
+       "healthy_novice": 0.0
+      },
+      "frac_zero": {
+       "healthy": 0.601,
+       "prodromal": 0.385,
+       "healthy_novice": 0.52
+      }
+     },
+     "consults": {
+      "healthy_vs_prodromal": 0.628,
+      "novice_vs_prodromal": 0.584,
+      "healthy_vs_novice": 0.543,
+      "medians": {
+       "healthy": 1.0,
+       "prodromal": 2.0,
+       "healthy_novice": 1.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "consults_post": {
+      "healthy_vs_prodromal": 0.545,
+      "novice_vs_prodromal": 0.525,
+      "healthy_vs_novice": 0.519,
+      "medians": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      },
+      "frac_zero": {
+       "healthy": 0.807,
+       "prodromal": 0.713,
+       "healthy_novice": 0.77
+      }
+     },
+     "accuracy": {
+      "healthy_vs_prodromal": 0.57,
+      "novice_vs_prodromal": 0.781,
+      "healthy_vs_novice": 0.818,
+      "medians": {
+       "healthy": 0.57,
+       "prodromal": 0.5,
+       "healthy_novice": 0.33
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     }
+    },
+    "combined_all": {
+     "auc": 0.762,
+     "fpr_healthy_at_80sens": 0.43,
+     "novice_flagged_at_80sens": 0.924
+    },
+    "combined_map_only": {
+     "auc": 0.701,
+     "fpr_healthy_at_80sens": 0.53,
+     "novice_flagged_at_80sens": 0.917
+    },
+    "stuck_rate": {
+     "healthy": 0.016,
+     "prodromal": 0.044,
+     "healthy_novice": 0.019
+    }
+   },
+   "errand": {
+    "per_metric": {
+     "run_time": {
+      "healthy_vs_prodromal": 0.715,
+      "novice_vs_prodromal": 0.574,
+      "healthy_vs_novice": 0.672,
+      "medians": {
+       "healthy": 312.19,
+       "prodromal": 684.05,
+       "healthy_novice": 471.36
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "run_dist": {
+      "healthy_vs_prodromal": 0.693,
+      "novice_vs_prodromal": 0.667,
+      "healthy_vs_novice": 0.539,
+      "medians": {
+       "healthy": 520.0,
+       "prodromal": 1306.0,
+       "healthy_novice": 576.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_time": {
+      "healthy_vs_prodromal": 0.672,
+      "novice_vs_prodromal": 0.576,
+      "healthy_vs_novice": 0.613,
+      "medians": {
+       "healthy": 179.38,
+       "prodromal": 377.95,
+       "healthy_novice": 241.56
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_dist": {
+      "healthy_vs_prodromal": 0.662,
+      "novice_vs_prodromal": 0.647,
+      "healthy_vs_novice": 0.518,
+      "medians": {
+       "healthy": 288.0,
+       "prodromal": 714.0,
+       "healthy_novice": 302.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "bumps": {
+      "healthy_vs_prodromal": 0.7,
+      "novice_vs_prodromal": 0.671,
+      "healthy_vs_novice": 0.537,
+      "medians": {
+       "healthy": 4.0,
+       "prodromal": 7.0,
+       "healthy_novice": 4.0
+      },
+      "frac_zero": {
+       "healthy": 0.011,
+       "prodromal": 0.009,
+       "healthy_novice": 0.004
+      }
+     },
+     "consults": {
+      "healthy_vs_prodromal": 0.516,
+      "novice_vs_prodromal": 0.515,
+      "healthy_vs_novice": 0.5,
+      "medians": {
+       "healthy": 6.0,
+       "prodromal": 5.0,
+       "healthy_novice": 6.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "consults_post": {
+      "healthy_vs_prodromal": 0.557,
+      "novice_vs_prodromal": 0.546,
+      "healthy_vs_novice": 0.51,
+      "medians": {
+       "healthy": 5.0,
+       "prodromal": 4.0,
+       "healthy_novice": 4.0
+      },
+      "frac_zero": {
+       "healthy": 0.091,
+       "prodromal": 0.111,
+       "healthy_novice": 0.079
+      }
+     },
+     "accuracy": {
+      "healthy_vs_prodromal": 0.596,
+      "novice_vs_prodromal": 0.799,
+      "healthy_vs_novice": 0.851,
+      "medians": {
+       "healthy": 0.57,
+       "prodromal": 0.52,
+       "healthy_novice": 0.32
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     }
+    },
+    "combined_all": {
+     "auc": 0.804,
+     "fpr_healthy_at_80sens": 0.383,
+     "novice_flagged_at_80sens": 0.907
+    },
+    "combined_map_only": {
+     "auc": 0.754,
+     "fpr_healthy_at_80sens": 0.458,
+     "novice_flagged_at_80sens": 0.855
+    },
+    "stuck_rate": {
+     "healthy": 0.095,
+     "prodromal": 0.22,
+     "healthy_novice": 0.069
+    }
+   }
+  },
+  "longitudinal": {
+   "current": {
+    "per_feature": {
+     "run_time:mean": {
+      "healthy_vs_prodromal": 0.937,
+      "novice_vs_prodromal": 0.801
+     },
+     "run_time:slope": {
+      "healthy_vs_prodromal": 0.518,
+      "novice_vs_prodromal": 0.584
+     },
+     "run_time:iiv": {
+      "healthy_vs_prodromal": 0.783,
+      "novice_vs_prodromal": 0.726
+     },
+     "run_dist:mean": {
+      "healthy_vs_prodromal": 0.925,
+      "novice_vs_prodromal": 0.871
+     },
+     "run_dist:slope": {
+      "healthy_vs_prodromal": 0.523,
+      "novice_vs_prodromal": 0.506
+     },
+     "run_dist:iiv": {
+      "healthy_vs_prodromal": 0.794,
+      "novice_vs_prodromal": 0.741
+     },
+     "post_time:mean": {
+      "healthy_vs_prodromal": 0.81,
+      "novice_vs_prodromal": 0.688
+     },
+     "post_time:slope": {
+      "healthy_vs_prodromal": 0.507,
+      "novice_vs_prodromal": 0.503
+     },
+     "post_time:iiv": {
+      "healthy_vs_prodromal": 0.745,
+      "novice_vs_prodromal": 0.712
+     },
+     "bumps:mean": {
+      "healthy_vs_prodromal": 0.869,
+      "novice_vs_prodromal": 0.825
+     },
+     "bumps:slope": {
+      "healthy_vs_prodromal": 0.54,
+      "novice_vs_prodromal": 0.512
+     },
+     "bumps:iiv": {
+      "healthy_vs_prodromal": 0.817,
+      "novice_vs_prodromal": 0.788
+     },
+     "accuracy:mean": {
+      "healthy_vs_prodromal": 0.658,
+      "novice_vs_prodromal": 0.619
+     },
+     "accuracy:slope": {
+      "healthy_vs_prodromal": 0.548,
+      "novice_vs_prodromal": 0.747
+     },
+     "accuracy:iiv": {
+      "healthy_vs_prodromal": 0.538,
+      "novice_vs_prodromal": 0.612
+     }
+    },
+    "combined_all": {
+     "auc": 0.946,
+     "fpr_healthy_at_80sens": 0.047,
+     "novice_flagged_at_80sens": 0.293
+    },
+    "means_only": {
+     "auc": 0.945,
+     "fpr_healthy_at_80sens": 0.067,
+     "novice_flagged_at_80sens": 0.227
+    },
+    "slope_and_iiv": {
+     "auc": 0.852,
+     "fpr_healthy_at_80sens": 0.247,
+     "novice_flagged_at_80sens": 0.46
+    },
+    "trajectories": {
+     "healthy": {
+      "run_time": [
+       120.59,
+       114.67,
+       110.72,
+       111.86,
+       109.58,
+       108.31,
+       108.44,
+       105.56,
+       106.14,
+       104.11,
+       104.49,
+       106.56
+      ],
+      "post_time": [
+       3.55,
+       3.34,
+       3.37,
+       3.34,
+       3.24,
+       3.17,
+       3.13,
+       3.21,
+       3.12,
+       3.12,
+       3.15,
+       3.21
+      ],
+      "bumps": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "prodromal": {
+      "run_time": [
+       191.62,
+       203.55,
+       175.28,
+       191.99,
+       145.04,
+       150.79,
+       155.53,
+       164.86,
+       158.18,
+       159.86,
+       166.39,
+       156.06
+      ],
+      "post_time": [
+       4.65,
+       4.67,
+       4.39,
+       4.35,
+       4.08,
+       4.31,
+       3.75,
+       4.32,
+       3.85,
+       4.08,
+       3.83,
+       4.08
+      ],
+      "bumps": [
+       1.0,
+       1.5,
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       0.5,
+       1.0,
+       1.0,
+       1.0,
+       1.0,
+       1.0
+      ]
+     },
+     "healthy_novice": {
+      "run_time": [
+       192.25,
+       172.3,
+       149.64,
+       138.48,
+       139.74,
+       129.19,
+       126.18,
+       124.1,
+       124.06,
+       127.93,
+       121.11,
+       120.31
+      ],
+      "post_time": [
+       5.51,
+       5.05,
+       4.28,
+       4.1,
+       4.11,
+       3.97,
+       3.85,
+       3.73,
+       3.72,
+       3.81,
+       3.57,
+       3.63
+      ],
+      "bumps": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    }
+   },
+   "errand": {
+    "per_feature": {
+     "run_time:mean": {
+      "healthy_vs_prodromal": 0.917,
+      "novice_vs_prodromal": 0.781
+     },
+     "run_time:slope": {
+      "healthy_vs_prodromal": 0.52,
+      "novice_vs_prodromal": 0.666
+     },
+     "run_time:iiv": {
+      "healthy_vs_prodromal": 0.714,
+      "novice_vs_prodromal": 0.594
+     },
+     "run_dist:mean": {
+      "healthy_vs_prodromal": 0.903,
+      "novice_vs_prodromal": 0.846
+     },
+     "run_dist:slope": {
+      "healthy_vs_prodromal": 0.53,
+      "novice_vs_prodromal": 0.598
+     },
+     "run_dist:iiv": {
+      "healthy_vs_prodromal": 0.697,
+      "novice_vs_prodromal": 0.6
+     },
+     "post_time:mean": {
+      "healthy_vs_prodromal": 0.89,
+      "novice_vs_prodromal": 0.754
+     },
+     "post_time:slope": {
+      "healthy_vs_prodromal": 0.515,
+      "novice_vs_prodromal": 0.626
+     },
+     "post_time:iiv": {
+      "healthy_vs_prodromal": 0.727,
+      "novice_vs_prodromal": 0.614
+     },
+     "bumps:mean": {
+      "healthy_vs_prodromal": 0.854,
+      "novice_vs_prodromal": 0.757
+     },
+     "bumps:slope": {
+      "healthy_vs_prodromal": 0.508,
+      "novice_vs_prodromal": 0.552
+     },
+     "bumps:iiv": {
+      "healthy_vs_prodromal": 0.64,
+      "novice_vs_prodromal": 0.628
+     },
+     "accuracy:mean": {
+      "healthy_vs_prodromal": 0.599,
+      "novice_vs_prodromal": 0.696
+     },
+     "accuracy:slope": {
+      "healthy_vs_prodromal": 0.536,
+      "novice_vs_prodromal": 0.865
+     },
+     "accuracy:iiv": {
+      "healthy_vs_prodromal": 0.61,
+      "novice_vs_prodromal": 0.615
+     }
+    },
+    "combined_all": {
+     "auc": 0.923,
+     "fpr_healthy_at_80sens": 0.12,
+     "novice_flagged_at_80sens": 0.447
+    },
+    "means_only": {
+     "auc": 0.922,
+     "fpr_healthy_at_80sens": 0.127,
+     "novice_flagged_at_80sens": 0.433
+    },
+    "slope_and_iiv": {
+     "auc": 0.714,
+     "fpr_healthy_at_80sens": 0.46,
+     "novice_flagged_at_80sens": 0.747
+    },
+    "trajectories": {
+     "healthy": {
+      "run_time": [
+       308.43,
+       297.89,
+       289.69,
+       274.03,
+       290.19,
+       255.37,
+       258.67,
+       267.59,
+       308.67,
+       278.76,
+       285.04,
+       258.39
+      ],
+      "post_time": [
+       161.91,
+       153.62,
+       155.47,
+       167.74,
+       171.65,
+       148.11,
+       150.96,
+       151.05,
+       191.18,
+       173.25,
+       161.16,
+       158.8
+      ],
+      "bumps": [
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0
+      ]
+     },
+     "prodromal": {
+      "run_time": [
+       556.08,
+       627.24,
+       662.17,
+       777.42,
+       725.06,
+       661.0,
+       509.01,
+       707.39,
+       918.22,
+       569.71,
+       586.22,
+       531.88
+      ],
+      "post_time": [
+       282.79,
+       347.83,
+       445.3,
+       462.8,
+       327.14,
+       409.21,
+       243.14,
+       418.69,
+       542.12,
+       370.66,
+       386.51,
+       293.19
+      ],
+      "bumps": [
+       6.0,
+       7.0,
+       6.5,
+       7.0,
+       7.0,
+       7.0,
+       7.0,
+       7.0,
+       7.0,
+       7.0,
+       6.0,
+       6.0
+      ]
+     },
+     "healthy_novice": {
+      "run_time": [
+       485.32,
+       457.46,
+       395.66,
+       414.29,
+       348.98,
+       337.77,
+       317.59,
+       345.69,
+       308.47,
+       303.23,
+       324.25,
+       308.55
+      ],
+      "post_time": [
+       248.44,
+       260.11,
+       244.22,
+       238.06,
+       198.92,
+       193.84,
+       187.32,
+       190.48,
+       189.21,
+       180.52,
+       190.27,
+       185.78
+      ],
+      "bumps": [
+       4.0,
+       4.5,
+       4.0,
+       5.0,
+       4.0,
+       4.5,
+       5.0,
+       5.0,
+       4.5,
+       5.0,
+       4.0,
+       5.0
+      ]
+     }
+    }
+   }
+  }
+ },
+ "half_effect": {
+  "knobs": {
+   "effect": 0.5,
+   "decline": 0.0
+  },
+  "single_session": {
+   "current": {
+    "per_metric": {
+     "run_time": {
+      "healthy_vs_prodromal": 0.623,
+      "novice_vs_prodromal": 0.648,
+      "healthy_vs_novice": 0.761,
+      "medians": {
+       "healthy": 120.85,
+       "prodromal": 146.39,
+       "healthy_novice": 190.92
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "run_dist": {
+      "healthy_vs_prodromal": 0.616,
+      "novice_vs_prodromal": 0.501,
+      "healthy_vs_novice": 0.624,
+      "medians": {
+       "healthy": 204.0,
+       "prodromal": 238.0,
+       "healthy_novice": 236.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_time": {
+      "healthy_vs_prodromal": 0.588,
+      "novice_vs_prodromal": 0.659,
+      "healthy_vs_novice": 0.756,
+      "medians": {
+       "healthy": 3.47,
+       "prodromal": 3.87,
+       "healthy_novice": 5.59
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_dist": {
+      "healthy_vs_prodromal": 0.555,
+      "novice_vs_prodromal": 0.507,
+      "healthy_vs_novice": 0.564,
+      "medians": {
+       "healthy": 8.0,
+       "prodromal": 8.0,
+       "healthy_novice": 8.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "bumps": {
+      "healthy_vs_prodromal": 0.585,
+      "novice_vs_prodromal": 0.542,
+      "healthy_vs_novice": 0.545,
+      "medians": {
+       "healthy": 0.0,
+       "prodromal": 1.0,
+       "healthy_novice": 0.0
+      },
+      "frac_zero": {
+       "healthy": 0.601,
+       "prodromal": 0.455,
+       "healthy_novice": 0.52
+      }
+     },
+     "consults": {
+      "healthy_vs_prodromal": 0.563,
+      "novice_vs_prodromal": 0.52,
+      "healthy_vs_novice": 0.543,
+      "medians": {
+       "healthy": 1.0,
+       "prodromal": 2.0,
+       "healthy_novice": 1.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "consults_post": {
+      "healthy_vs_prodromal": 0.529,
+      "novice_vs_prodromal": 0.509,
+      "healthy_vs_novice": 0.519,
+      "medians": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      },
+      "frac_zero": {
+       "healthy": 0.807,
+       "prodromal": 0.745,
+       "healthy_novice": 0.77
+      }
+     },
+     "accuracy": {
+      "healthy_vs_prodromal": 0.544,
+      "novice_vs_prodromal": 0.789,
+      "healthy_vs_novice": 0.818,
+      "medians": {
+       "healthy": 0.57,
+       "prodromal": 0.53,
+       "healthy_novice": 0.33
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     }
+    },
+    "combined_all": {
+     "auc": 0.642,
+     "fpr_healthy_at_80sens": 0.631,
+     "novice_flagged_at_80sens": 0.985
+    },
+    "combined_map_only": {
+     "auc": 0.614,
+     "fpr_healthy_at_80sens": 0.674,
+     "novice_flagged_at_80sens": 0.971
+    },
+    "stuck_rate": {
+     "healthy": 0.016,
+     "prodromal": 0.04,
+     "healthy_novice": 0.019
+    }
+   },
+   "errand": {
+    "per_metric": {
+     "run_time": {
+      "healthy_vs_prodromal": 0.604,
+      "novice_vs_prodromal": 0.557,
+      "healthy_vs_novice": 0.672,
+      "medians": {
+       "healthy": 312.19,
+       "prodromal": 432.41,
+       "healthy_novice": 471.36
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "run_dist": {
+      "healthy_vs_prodromal": 0.59,
+      "novice_vs_prodromal": 0.557,
+      "healthy_vs_novice": 0.539,
+      "medians": {
+       "healthy": 520.0,
+       "prodromal": 752.0,
+       "healthy_novice": 576.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_time": {
+      "healthy_vs_prodromal": 0.577,
+      "novice_vs_prodromal": 0.53,
+      "healthy_vs_novice": 0.613,
+      "medians": {
+       "healthy": 179.38,
+       "prodromal": 232.7,
+       "healthy_novice": 241.56
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "post_dist": {
+      "healthy_vs_prodromal": 0.568,
+      "novice_vs_prodromal": 0.55,
+      "healthy_vs_novice": 0.518,
+      "medians": {
+       "healthy": 288.0,
+       "prodromal": 376.0,
+       "healthy_novice": 302.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "bumps": {
+      "healthy_vs_prodromal": 0.599,
+      "novice_vs_prodromal": 0.565,
+      "healthy_vs_novice": 0.537,
+      "medians": {
+       "healthy": 4.0,
+       "prodromal": 5.0,
+       "healthy_novice": 4.0
+      },
+      "frac_zero": {
+       "healthy": 0.011,
+       "prodromal": 0.006,
+       "healthy_novice": 0.004
+      }
+     },
+     "consults": {
+      "healthy_vs_prodromal": 0.504,
+      "novice_vs_prodromal": 0.504,
+      "healthy_vs_novice": 0.5,
+      "medians": {
+       "healthy": 6.0,
+       "prodromal": 6.0,
+       "healthy_novice": 6.0
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     },
+     "consults_post": {
+      "healthy_vs_prodromal": 0.517,
+      "novice_vs_prodromal": 0.506,
+      "healthy_vs_novice": 0.51,
+      "medians": {
+       "healthy": 5.0,
+       "prodromal": 4.0,
+       "healthy_novice": 4.0
+      },
+      "frac_zero": {
+       "healthy": 0.091,
+       "prodromal": 0.098,
+       "healthy_novice": 0.079
+      }
+     },
+     "accuracy": {
+      "healthy_vs_prodromal": 0.543,
+      "novice_vs_prodromal": 0.827,
+      "healthy_vs_novice": 0.851,
+      "medians": {
+       "healthy": 0.57,
+       "prodromal": 0.55,
+       "healthy_novice": 0.32
+      },
+      "frac_zero": {
+       "healthy": 0.0,
+       "prodromal": 0.0,
+       "healthy_novice": 0.0
+      }
+     }
+    },
+    "combined_all": {
+     "auc": 0.673,
+     "fpr_healthy_at_80sens": 0.619,
+     "novice_flagged_at_80sens": 0.964
+    },
+    "combined_map_only": {
+     "auc": 0.636,
+     "fpr_healthy_at_80sens": 0.67,
+     "novice_flagged_at_80sens": 0.945
+    },
+    "stuck_rate": {
+     "healthy": 0.095,
+     "prodromal": 0.116,
+     "healthy_novice": 0.069
+    }
+   }
+  },
+  "longitudinal": {
+   "current": {
+    "per_feature": {
+     "run_time:mean": {
+      "healthy_vs_prodromal": 0.811,
+      "novice_vs_prodromal": 0.551
+     },
+     "run_time:slope": {
+      "healthy_vs_prodromal": 0.525,
+      "novice_vs_prodromal": 0.614
+     },
+     "run_time:iiv": {
+      "healthy_vs_prodromal": 0.714,
+      "novice_vs_prodromal": 0.646
+     },
+     "run_dist:mean": {
+      "healthy_vs_prodromal": 0.809,
+      "novice_vs_prodromal": 0.715
+     },
+     "run_dist:slope": {
+      "healthy_vs_prodromal": 0.521,
+      "novice_vs_prodromal": 0.527
+     },
+     "run_dist:iiv": {
+      "healthy_vs_prodromal": 0.724,
+      "novice_vs_prodromal": 0.656
+     },
+     "post_time:mean": {
+      "healthy_vs_prodromal": 0.729,
+      "novice_vs_prodromal": 0.572
+     },
+     "post_time:slope": {
+      "healthy_vs_prodromal": 0.529,
+      "novice_vs_prodromal": 0.53
+     },
+     "post_time:iiv": {
+      "healthy_vs_prodromal": 0.687,
+      "novice_vs_prodromal": 0.65
+     },
+     "bumps:mean": {
+      "healthy_vs_prodromal": 0.759,
+      "novice_vs_prodromal": 0.688
+     },
+     "bumps:slope": {
+      "healthy_vs_prodromal": 0.525,
+      "novice_vs_prodromal": 0.529
+     },
+     "bumps:iiv": {
+      "healthy_vs_prodromal": 0.754,
+      "novice_vs_prodromal": 0.708
+     },
+     "accuracy:mean": {
+      "healthy_vs_prodromal": 0.597,
+      "novice_vs_prodromal": 0.673
+     },
+     "accuracy:slope": {
+      "healthy_vs_prodromal": 0.538,
+      "novice_vs_prodromal": 0.769
+     },
+     "accuracy:iiv": {
+      "healthy_vs_prodromal": 0.516,
+      "novice_vs_prodromal": 0.592
+     }
+    },
+    "combined_all": {
+     "auc": 0.84,
+     "fpr_healthy_at_80sens": 0.253,
+     "novice_flagged_at_80sens": 0.753
+    },
+    "means_only": {
+     "auc": 0.826,
+     "fpr_healthy_at_80sens": 0.34,
+     "novice_flagged_at_80sens": 0.747
+    },
+    "slope_and_iiv": {
+     "auc": 0.782,
+     "fpr_healthy_at_80sens": 0.387,
+     "novice_flagged_at_80sens": 0.547
+    },
+    "trajectories": {
+     "healthy": {
+      "run_time": [
+       120.59,
+       114.67,
+       110.72,
+       111.86,
+       109.58,
+       108.31,
+       108.44,
+       105.56,
+       106.14,
+       104.11,
+       104.49,
+       106.56
+      ],
+      "post_time": [
+       3.55,
+       3.34,
+       3.37,
+       3.34,
+       3.24,
+       3.17,
+       3.13,
+       3.21,
+       3.12,
+       3.12,
+       3.15,
+       3.21
+      ],
+      "bumps": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "prodromal": {
+      "run_time": [
+       143.06,
+       137.03,
+       136.55,
+       128.2,
+       131.94,
+       122.86,
+       127.67,
+       122.38,
+       125.13,
+       127.91,
+       122.15,
+       128.23
+      ],
+      "post_time": [
+       4.15,
+       3.63,
+       3.82,
+       3.56,
+       3.61,
+       3.51,
+       3.39,
+       3.52,
+       3.68,
+       3.59,
+       3.51,
+       3.55
+      ],
+      "bumps": [
+       1.0,
+       1.0,
+       0.0,
+       1.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       1.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     },
+     "healthy_novice": {
+      "run_time": [
+       192.25,
+       172.3,
+       149.64,
+       138.48,
+       139.74,
+       129.19,
+       126.18,
+       124.1,
+       124.06,
+       127.93,
+       121.11,
+       120.31
+      ],
+      "post_time": [
+       5.51,
+       5.05,
+       4.28,
+       4.1,
+       4.11,
+       3.97,
+       3.85,
+       3.73,
+       3.72,
+       3.81,
+       3.57,
+       3.63
+      ],
+      "bumps": [
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0,
+       0.0
+      ]
+     }
+    }
+   },
+   "errand": {
+    "per_feature": {
+     "run_time:mean": {
+      "healthy_vs_prodromal": 0.798,
+      "novice_vs_prodromal": 0.564
+     },
+     "run_time:slope": {
+      "healthy_vs_prodromal": 0.543,
+      "novice_vs_prodromal": 0.598
+     },
+     "run_time:iiv": {
+      "healthy_vs_prodromal": 0.669,
+      "novice_vs_prodromal": 0.549
+     },
+     "run_dist:mean": {
+      "healthy_vs_prodromal": 0.785,
+      "novice_vs_prodromal": 0.674
+     },
+     "run_dist:slope": {
+      "healthy_vs_prodromal": 0.537,
+      "novice_vs_prodromal": 0.522
+     },
+     "run_dist:iiv": {
+      "healthy_vs_prodromal": 0.669,
+      "novice_vs_prodromal": 0.57
+     },
+     "post_time:mean": {
+      "healthy_vs_prodromal": 0.753,
+      "novice_vs_prodromal": 0.554
+     },
+     "post_time:slope": {
+      "healthy_vs_prodromal": 0.577,
+      "novice_vs_prodromal": 0.536
+     },
+     "post_time:iiv": {
+      "healthy_vs_prodromal": 0.661,
+      "novice_vs_prodromal": 0.539
+     },
+     "bumps:mean": {
+      "healthy_vs_prodromal": 0.724,
+      "novice_vs_prodromal": 0.608
+     },
+     "bumps:slope": {
+      "healthy_vs_prodromal": 0.502,
+      "novice_vs_prodromal": 0.543
+     },
+     "bumps:iiv": {
+      "healthy_vs_prodromal": 0.582,
+      "novice_vs_prodromal": 0.57
+     },
+     "accuracy:mean": {
+      "healthy_vs_prodromal": 0.547,
+      "novice_vs_prodromal": 0.741
+     },
+     "accuracy:slope": {
+      "healthy_vs_prodromal": 0.561,
+      "novice_vs_prodromal": 0.845
+     },
+     "accuracy:iiv": {
+      "healthy_vs_prodromal": 0.606,
+      "novice_vs_prodromal": 0.612
+     }
+    },
+    "combined_all": {
+     "auc": 0.794,
+     "fpr_healthy_at_80sens": 0.413,
+     "novice_flagged_at_80sens": 0.833
+    },
+    "means_only": {
+     "auc": 0.796,
+     "fpr_healthy_at_80sens": 0.38,
+     "novice_flagged_at_80sens": 0.76
+    },
+    "slope_and_iiv": {
+     "auc": 0.668,
+     "fpr_healthy_at_80sens": 0.613,
+     "novice_flagged_at_80sens": 0.86
+    },
+    "trajectories": {
+     "healthy": {
+      "run_time": [
+       308.43,
+       297.89,
+       289.69,
+       274.03,
+       290.19,
+       255.37,
+       258.67,
+       267.59,
+       308.67,
+       278.76,
+       285.04,
+       258.39
+      ],
+      "post_time": [
+       161.91,
+       153.62,
+       155.47,
+       167.74,
+       171.65,
+       148.11,
+       150.96,
+       151.05,
+       191.18,
+       173.25,
+       161.16,
+       158.8
+      ],
+      "bumps": [
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0,
+       4.0
+      ]
+     },
+     "prodromal": {
+      "run_time": [
+       517.52,
+       402.72,
+       444.32,
+       381.81,
+       441.47,
+       423.8,
+       395.16,
+       347.35,
+       427.5,
+       340.51,
+       392.25,
+       374.2
+      ],
+      "post_time": [
+       280.93,
+       230.81,
+       259.49,
+       231.77,
+       215.47,
+       244.6,
+       218.55,
+       198.13,
+       238.91,
+       190.92,
+       240.77,
+       199.97
+      ],
+      "bumps": [
+       6.0,
+       5.5,
+       5.0,
+       6.0,
+       5.0,
+       6.0,
+       5.0,
+       6.0,
+       5.0,
+       5.0,
+       5.0,
+       5.0
+      ]
+     },
+     "healthy_novice": {
+      "run_time": [
+       485.32,
+       457.46,
+       395.66,
+       414.29,
+       348.98,
+       337.77,
+       317.59,
+       345.69,
+       308.47,
+       303.23,
+       324.25,
+       308.55
+      ],
+      "post_time": [
+       248.44,
+       260.11,
+       244.22,
+       238.06,
+       198.92,
+       193.84,
+       187.32,
+       190.48,
+       189.21,
+       180.52,
+       190.27,
+       185.78
+      ],
+      "bumps": [
+       4.0,
+       4.5,
+       4.0,
+       5.0,
+       4.0,
+       4.5,
+       5.0,
+       5.0,
+       4.5,
+       5.0,
+       4.0,
+       5.0
+      ]
+     }
+    }
+   }
+  }
+ }
+}
