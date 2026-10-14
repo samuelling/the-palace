@@ -1,0 +1,93 @@
+<title>The Palace</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap">
+<style>
+/* Layout: full-bleed 3D view; HUD text inset from every edge; RE-style text box across the bottom. Deliberately single dark theme. */
+:root{
+  --ink:#070605; --soot:rgba(16,13,11,.82); --brass:#e0a84a; --brass-dim:#8a6a33;
+  --blood:#b23b30; --herb:#7fae6a; --paper:#e6dcc4; --muted:#968b7d;
+  --display:"IM Fell English SC","Iowan Old Style",Georgia,serif;
+  --body:"IM Fell English","Iowan Old Style",Georgia,serif;
+  --type:"Special Elite","Courier New",ui-monospace,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%;background:var(--ink);color:var(--paper);font-family:var(--body);overflow:hidden}
+body{margin:0}
+#game{position:relative;width:100%;height:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#game canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;pointer-events:none;font-family:var(--type);letter-spacing:.06em}
+#room{top:calc(14px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));font-family:var(--display);font-size:1.15rem;color:var(--brass);text-shadow:0 1px 4px #000;opacity:0;transition:opacity .6s}
+#room.on{opacity:1}
+#status{top:calc(12px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));text-align:right;font-size:.82rem;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+#cond{font-size:.95rem}
+#cond.fine{color:var(--herb)}#cond.caution{color:var(--brass)}#cond.danger{color:var(--blood)}
+#inv{bottom:calc(14px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right,0px));font-size:.72rem;color:var(--muted);text-align:right;max-width:46%;line-height:1.5}
+#cross{top:50%;left:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(230,220,196,.55)}
+#prompt{top:58%;left:50%;transform:translateX(-50%);font-size:.85rem;color:var(--paper);background:var(--soot);border:1px solid var(--brass-dim);padding:4px 10px;opacity:0;transition:opacity .15s;white-space:nowrap}
+#prompt.on,#toast.on{opacity:1}
+#toast{top:26%;left:50%;transform:translateX(-50%);font-size:.85rem;color:var(--paper);background:var(--soot);border:1px solid var(--brass-dim);padding:5px 12px;opacity:0;transition:opacity .25s;max-width:calc(100% - 32px);text-align:center}
+#hurt{inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(150,20,15,.55));opacity:0;transition:opacity .4s}
+#fade{inset:0;background:#000;opacity:0;transition:opacity .35s}
+#dialog{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(640px,calc(100% - 32px));
+  background:var(--soot);border:1px solid var(--brass-dim);padding:14px 18px 12px;font-family:var(--body);font-size:1.05rem;line-height:1.5;color:var(--paper);cursor:pointer}
+#dialog .who{font-family:var(--display);color:var(--brass);font-size:.95rem;letter-spacing:.05em;margin-bottom:2px}
+#dialog .more{font-family:var(--type);font-size:.7rem;color:var(--muted);text-align:right;margin-top:6px}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,3,3,.88);overflow:auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+.card{max-width:560px;width:100%;text-align:center;margin:auto}
+.card h1{font-family:var(--display);font-weight:400;font-size:clamp(2.4rem,9vw,4.2rem);margin:0;color:var(--brass);letter-spacing:.08em;text-wrap:balance}
+.card .sub{font-family:var(--type);font-size:.78rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin:4px 0 18px}
+.card p{line-height:1.55;margin:0 0 12px}
+.card .letter{font-style:italic}
+.card .keys{font-family:var(--type);font-size:.74rem;color:var(--muted);line-height:1.7;margin-top:14px}
+.btn{font-family:var(--type);font-size:1rem;letter-spacing:.08em;background:transparent;color:var(--brass);border:1px solid var(--brass);padding:11px 22px;cursor:pointer;margin-top:8px}
+.btn:hover,.btn:focus-visible{background:rgba(224,168,74,.12);outline:none}
+.btn.small{font-size:.78rem;padding:7px 12px;color:var(--muted);border-color:var(--muted)}
+.btn:disabled{opacity:.35;cursor:default}
+#chapters{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+#mapView canvas{max-width:100%;height:auto;background:#d8ccb4;box-shadow:0 8px 30px #000}
+#notes{max-width:580px;text-align:left;font-size:.92rem;margin:auto}
+#notes .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;border-top:1px solid #3a322b;padding:8px 0}
+#notes .k{font-family:var(--display);color:var(--paper)}#notes .v{font-family:var(--type);color:var(--brass);font-variant-numeric:tabular-nums;text-align:right}
+#notes .m{grid-column:1/-1;font-size:.8rem;color:var(--muted);line-height:1.4}
+#touch{position:absolute;inset:0;pointer-events:none}
+#joy{position:absolute;left:max(24px,env(safe-area-inset-left,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;border:1px solid rgba(224,168,74,.35);background:rgba(16,13,11,.35);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(224,168,74,.35)}
+.tbtn{position:absolute;pointer-events:auto;width:64px;height:64px;border-radius:50%;border:1px solid var(--brass-dim);background:rgba(16,13,11,.55);color:var(--brass);font-family:var(--type);font-size:.72rem;touch-action:none}
+#tFire{right:max(28px,env(safe-area-inset-right,0px));bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+#tUse{right:max(104px,calc(env(safe-area-inset-right,0px) + 80px));bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+#tMap{right:max(28px,env(safe-area-inset-right,0px));bottom:calc(40px + env(safe-area-inset-bottom,0px));width:52px;height:52px}
+@media (prefers-reduced-motion:reduce){#room,#prompt,#hurt,#toast,#fade{transition:none}}
+</style>
+
+<div id="game">
+  <div class="hud" id="hurt"></div>
+  <div class="hud" id="room"></div>
+  <div class="hud" id="status"><span id="cond" class="fine">Fine</span><span id="ammo">Handgun 12</span></div>
+  <div class="hud" id="inv"></div>
+  <div class="hud" id="cross"></div>
+  <div class="hud" id="prompt"></div>
+  <div class="hud" id="toast" role="status" aria-live="polite"></div>
+  <div id="touch" hidden>
+    <div id="joy"><div id="knob"></div></div>
+    <button class="tbtn" id="tFire">Fire</button>
+    <button class="tbtn" id="tUse">Use</button>
+    <button class="tbtn" id="tMap">Map</button>
+  </div>
+  <div id="dialog" hidden><div class="who" id="dWho"></div><div id="dText"></div><div class="more">▼</div></div>
+  <div class="hud" id="fade"></div>
+  <div class="screen" id="mapView" hidden><div class="card"><canvas id="mapCv" width="560" height="460"></canvas><p class="keys" id="mapNote"></p><button class="btn small" id="mapClose">Step back</button></div></div>
+  <div class="screen" id="title"><div class="card">
+    <h1>The Palace</h1><div class="sub">Locke Hall · beta</div>
+    <p class="letter">"Come quickly. I can no longer find the rooms. The house does not stay where I put it. — E. L."</p>
+    <p>Dr. Elias Locke's letter arrived three days ago. Tonight his front door was unlocked.</p>
+    <button class="btn" id="start">Enter Locke Hall</button>
+    <div id="chapters"></div>
+    <div class="keys" id="keyhelp">WASD move · mouse look (click to capture) · click fire · E use · Shift run · M read the plan when you're at it</div>
+    <div class="keys">Every session builds new layouts. Nothing you do is a visible test.</div>
+  </div></div>
+  <div class="screen" id="end" hidden><div class="card" id="endCard"></div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="levels.js"></script>
+<script src="game.js"></script>

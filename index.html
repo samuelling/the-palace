@@ -26,33 +26,35 @@ body{margin:0}
 #status{top:calc(12px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));text-align:right;font-size:.82rem;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
 #cond{font-size:.95rem}
 #cond.fine{color:var(--herb)}#cond.caution{color:var(--brass)}#cond.danger{color:var(--blood)}
-#ammo{color:var(--paper)}
 #inv{bottom:calc(14px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right,0px));font-size:.72rem;color:var(--muted);text-align:right;max-width:46%;line-height:1.5}
 #cross{top:50%;left:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(230,220,196,.55)}
 #prompt{top:58%;left:50%;transform:translateX(-50%);font-size:.85rem;color:var(--paper);background:var(--soot);border:1px solid var(--brass-dim);padding:4px 10px;opacity:0;transition:opacity .15s;white-space:nowrap}
-#prompt.on{opacity:1}
+#prompt.on,#toast.on{opacity:1}
+#toast{top:26%;left:50%;transform:translateX(-50%);font-size:.85rem;color:var(--paper);background:var(--soot);border:1px solid var(--brass-dim);padding:5px 12px;opacity:0;transition:opacity .25s;max-width:calc(100% - 32px);text-align:center}
 #hurt{inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(150,20,15,.55));opacity:0;transition:opacity .4s}
+#fade{inset:0;background:#000;opacity:0;transition:opacity .35s}
 #dialog{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(640px,calc(100% - 32px));
   background:var(--soot);border:1px solid var(--brass-dim);padding:14px 18px 12px;font-family:var(--body);font-size:1.05rem;line-height:1.5;color:var(--paper);cursor:pointer}
 #dialog .who{font-family:var(--display);color:var(--brass);font-size:.95rem;letter-spacing:.05em;margin-bottom:2px}
 #dialog .more{font-family:var(--type);font-size:.7rem;color:var(--muted);text-align:right;margin-top:6px}
-.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,3,3,.88);
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,3,3,.88);overflow:auto;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
-.card{max-width:520px;width:100%;text-align:center}
-.card h1{font-family:var(--display);font-weight:400;font-size:clamp(2.6rem,9vw,4.4rem);margin:0;color:var(--brass);letter-spacing:.08em;text-wrap:balance}
-.card .sub{font-family:var(--type);font-size:.78rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin:4px 0 22px}
+.card{max-width:560px;width:100%;text-align:center;margin:auto}
+.card h1{font-family:var(--display);font-weight:400;font-size:clamp(2.4rem,9vw,4.2rem);margin:0;color:var(--brass);letter-spacing:.08em;text-wrap:balance}
+.card .sub{font-family:var(--type);font-size:.78rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin:4px 0 18px}
 .card p{line-height:1.55;margin:0 0 12px}
-.card .letter{font-style:italic;color:var(--paper)}
+.card .letter{font-style:italic}
 .card .keys{font-family:var(--type);font-size:.74rem;color:var(--muted);line-height:1.7;margin-top:14px}
 .btn{font-family:var(--type);font-size:1rem;letter-spacing:.08em;background:transparent;color:var(--brass);border:1px solid var(--brass);padding:11px 22px;cursor:pointer;margin-top:8px}
 .btn:hover,.btn:focus-visible{background:rgba(224,168,74,.12);outline:none}
-.btn.small{font-size:.8rem;padding:7px 14px;color:var(--muted);border-color:var(--muted)}
+.btn.small{font-size:.78rem;padding:7px 12px;color:var(--muted);border-color:var(--muted)}
+.btn:disabled{opacity:.35;cursor:default}
+#chapters{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
 #mapView canvas{max-width:100%;height:auto;background:#d8ccb4;box-shadow:0 8px 30px #000}
-#notes{max-width:560px;text-align:left;font-size:.92rem}
-#notes .row{display:grid;grid-template-columns:1fr auto;gap:2px 12px;border-top:1px solid #3a322b;padding:8px 0}
+#notes{max-width:580px;text-align:left;font-size:.92rem;margin:auto}
+#notes .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;border-top:1px solid #3a322b;padding:8px 0}
 #notes .k{font-family:var(--display);color:var(--paper)}#notes .v{font-family:var(--type);color:var(--brass);font-variant-numeric:tabular-nums;text-align:right}
 #notes .m{grid-column:1/-1;font-size:.8rem;color:var(--muted);line-height:1.4}
-/* touch controls */
 #touch{position:absolute;inset:0;pointer-events:none}
 #joy{position:absolute;left:max(24px,env(safe-area-inset-left,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;border:1px solid rgba(224,168,74,.35);background:rgba(16,13,11,.35);pointer-events:auto;touch-action:none}
 #knob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(224,168,74,.35)}
@@ -60,7 +62,7 @@ body{margin:0}
 #tFire{right:max(28px,env(safe-area-inset-right,0px));bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 #tUse{right:max(104px,calc(env(safe-area-inset-right,0px) + 80px));bottom:calc(60px + env(safe-area-inset-bottom,0px))}
 #tMap{right:max(28px,env(safe-area-inset-right,0px));bottom:calc(40px + env(safe-area-inset-bottom,0px));width:52px;height:52px}
-@media (prefers-reduced-motion:reduce){#room,#prompt,#hurt{transition:none}}
+@media (prefers-reduced-motion:reduce){#room,#prompt,#hurt,#toast,#fade{transition:none}}
 </style>
 
 <div id="game">
@@ -70,6 +72,7 @@ body{margin:0}
   <div class="hud" id="inv"></div>
   <div class="hud" id="cross"></div>
   <div class="hud" id="prompt"></div>
+  <div class="hud" id="toast" role="status" aria-live="polite"></div>
   <div id="touch" hidden>
     <div id="joy"><div id="knob"></div></div>
     <button class="tbtn" id="tFire">Fire</button>
@@ -77,502 +80,22 @@ body{margin:0}
     <button class="tbtn" id="tMap">Map</button>
   </div>
   <div id="dialog" hidden><div class="who" id="dWho"></div><div id="dText"></div><div class="more">▼</div></div>
-  <div class="screen" id="mapView" hidden><div class="card"><canvas id="mapCv" width="520" height="380"></canvas><p class="keys">The plan hangs in the foyer. You can only read it here.</p><button class="btn small" id="mapClose">Step back</button></div></div>
+  <div class="hud" id="fade"></div>
+  <div class="screen" id="mapView" hidden><div class="card"><canvas id="mapCv" width="560" height="460"></canvas><p class="keys" id="mapNote"></p><button class="btn small" id="mapClose">Step back</button></div></div>
   <div class="screen" id="title"><div class="card">
-    <h1>The Palace</h1><div class="sub">Locke Hall · East Wing beta</div>
+    <h1>The Palace</h1><div class="sub">Locke Hall · beta</div>
     <p class="letter">"Come quickly. I can no longer find the rooms. The house does not stay where I put it. — E. L."</p>
     <p>Dr. Elias Locke's letter arrived three days ago. Tonight his front door was unlocked.</p>
     <button class="btn" id="start">Enter Locke Hall</button>
-    <div class="keys" id="keyhelp">WASD move · mouse look (click to capture) · click fire · E use · M read the plan in the foyer</div>
+    <div id="chapters"></div>
+    <div class="keys" id="keyhelp">WASD move · mouse look (click to capture) · click fire · E use · Shift run · M read the plan when you're at it</div>
+    <div class="keys">Every session builds new layouts. Nothing you do is a visible test.</div>
   </div></div>
   <div class="screen" id="end" hidden><div class="card" id="endCard"></div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-/* ---------- core ---------- */
-const $=s=>document.querySelector(s);
-const R=(a,b)=>a+Math.random()*(b-a);
-const now=()=>performance.now();
-const TOUCH=matchMedia('(pointer:coarse)').matches;
-const S={running:false,paused:true,hp:3,ammo:12,inv:{},flags:{},log:{events:[],shots:0,hits:0,dmg:0,mapViews:0,mapTime:0,dist:0,path:[]},t0:0};
-
-/* ---------- canvas textures ---------- */
-function ctex(w,h,draw,rx=1,ry=1){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);
-  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.anisotropy=4;return t;}
-function noise(g,w,h,a,n=1800){for(let i=0;i<n;i++){g.fillStyle=`rgba(0,0,0,${R(0,a)})`;g.fillRect(R(0,w),R(0,h),R(1,3),R(1,3));}}
-function wallpaper(base,motif){return ctex(256,384,(g,w,h)=>{
-  g.fillStyle=base;g.fillRect(0,0,w,h);
-  for(let x=0;x<w;x+=32){g.fillStyle='rgba(0,0,0,.12)';g.fillRect(x,0,10,h*.68);}
-  g.fillStyle=motif;for(let y=20;y<h*.66;y+=48)for(let x=(y/48%2)*16+8;x<w;x+=32){g.beginPath();g.moveTo(x,y-9);g.lineTo(x+6,y);g.lineTo(x,y+9);g.lineTo(x-6,y);g.fill();}
-  g.fillStyle='#2b1a10';g.fillRect(0,h*.68,w,h*.32);g.fillStyle='#3a2416';for(let x=6;x<w;x+=64)g.fillRect(x,h*.72,52,h*.24);
-  g.fillStyle='#1a0f08';g.fillRect(0,h*.68,w,6);noise(g,w,h,.18);});}
-const TEX={
-  foyerWall:wallpaper('#3c2a24','rgba(200,150,80,.18)'),
-  galleryWall:wallpaper('#1f3029','rgba(170,190,150,.14)'),
-  libWall:ctex(256,384,(g,w,h)=>{g.fillStyle='#24170e';g.fillRect(0,0,w,h);for(let y=8;y<h*.9;y+=46){g.fillStyle='#160d07';g.fillRect(0,y+38,w,8);
-    for(let x=4;x<w;){const bw=R(7,15);g.fillStyle=`hsl(${R(0,40)},${R(20,45)}%,${R(14,28)}%)`;g.fillRect(x,y+R(2,8),bw,38-R(0,6));x+=bw+1;}}noise(g,w,h,.2);}),
-  studyWall:wallpaper('#3a1a19','rgba(210,170,110,.15)'),
-  stone:ctex(256,256,(g,w,h)=>{g.fillStyle='#34322e';g.fillRect(0,0,w,h);g.strokeStyle='#1d1b18';g.lineWidth=3;
-    for(let y=0;y<h;y+=42){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();for(let x=(y/42%2)*40;x<w;x+=80){g.beginPath();g.moveTo(x,y);g.lineTo(x,y+42);g.stroke();}}noise(g,w,h,.3,3000);}),
-  marble:ctex(256,256,(g,w,h)=>{for(let i=0;i<2;i++)for(let j=0;j<2;j++){g.fillStyle=(i+j)%2?'#d4cbbb':'#1c1a18';g.fillRect(i*128,j*128,128,128);}
-    g.strokeStyle='rgba(120,110,100,.35)';for(let k=0;k<8;k++){g.beginPath();g.moveTo(R(0,w),R(0,h));g.bezierCurveTo(R(0,w),R(0,h),R(0,w),R(0,h),R(0,w),R(0,h));g.stroke();}}),
-  wood:ctex(256,256,(g,w,h)=>{for(let x=0;x<w;x+=32){g.fillStyle=`hsl(25,${R(30,40)}%,${R(14,20)}%)`;g.fillRect(x,0,32,h);g.fillStyle='#0d0805';g.fillRect(x,0,2,h);g.fillRect(x,R(0,h),32,2);}noise(g,w,h,.2);}),
-  carpet:ctex(256,256,(g,w,h)=>{g.fillStyle='#4a1414';g.fillRect(0,0,w,h);g.strokeStyle='rgba(200,150,70,.25)';g.lineWidth=4;g.strokeRect(14,14,w-28,h-28);
-    g.fillStyle='rgba(200,150,70,.15)';for(let y=40;y<h-30;y+=36)for(let x=40;x<w-30;x+=36){g.beginPath();g.arc(x,y,5,0,7);g.fill();}noise(g,w,h,.25);}),
-  ceiling:ctex(128,128,(g,w,h)=>{g.fillStyle='#1d1916';g.fillRect(0,0,w,h);noise(g,w,h,.3,600);}),
-  door:ctex(128,256,(g,w,h)=>{g.fillStyle='#3d2414';g.fillRect(0,0,w,h);g.strokeStyle='#1c0f07';g.lineWidth=5;g.strokeRect(14,16,w-28,h*.4);g.strokeRect(14,h*.52,w-28,h*.42);
-    g.fillStyle='#c9a35a';g.beginPath();g.arc(w-24,h*.5,6,0,7);g.fill();noise(g,w,h,.2,500);}),
-};
-/* ---------- sound ---------- */
-let AC=null,droneG=null;
-function audio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume();}catch(e){}}
-function noiseBuf(d){const b=AC.createBuffer(1,AC.sampleRate*d,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;return b;}
-function sfx(type,vol=1){if(!AC)return;const t=AC.currentTime,g=AC.createGain();g.connect(AC.destination);
-  if(type==='shot'){const s=AC.createBufferSource();s.buffer=noiseBuf(.35);const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=1800;s.connect(f).connect(g);g.gain.setValueAtTime(.9*vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.32);s.start(t);}
-  else if(type==='step'){const s=AC.createBufferSource();s.buffer=noiseBuf(.08);const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=380;s.connect(f).connect(g);g.gain.setValueAtTime(.18*vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.08);s.start(t);}
-  else if(type==='moan'){const o=AC.createOscillator(),f=AC.createBiquadFilter();o.type='sawtooth';o.frequency.setValueAtTime(R(85,110),t);o.frequency.linearRampToValueAtTime(R(60,75),t+1.1);f.type='lowpass';f.frequency.value=420;o.connect(f).connect(g);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.16*vol,t+.25);g.gain.linearRampToValueAtTime(0,t+1.2);o.start(t);o.stop(t+1.25);}
-  else if(type==='thud'){const o=AC.createOscillator();o.frequency.setValueAtTime(70,t);o.frequency.exponentialRampToValueAtTime(30,t+.3);o.connect(g);g.gain.setValueAtTime(.7*vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o.start(t);o.stop(t+.5);}
-  else if(type==='creak'){const o=AC.createOscillator(),f=AC.createBiquadFilter();o.type='square';o.frequency.setValueAtTime(140,t);o.frequency.linearRampToValueAtTime(95,t+.6);f.type='bandpass';f.frequency.value=600;f.Q.value=8;o.connect(f).connect(g);g.gain.setValueAtTime(.12*vol,t);g.gain.linearRampToValueAtTime(0,t+.65);o.start(t);o.stop(t+.7);}
-  else if(type==='pickup'){[660,880].forEach((fq,i)=>{const o=AC.createOscillator(),gg=AC.createGain();o.type='triangle';o.frequency.value=fq;o.connect(gg).connect(AC.destination);gg.gain.setValueAtTime(.12,t+i*.09);gg.gain.exponentialRampToValueAtTime(.001,t+i*.09+.3);o.start(t+i*.09);o.stop(t+i*.09+.32);});}
-  else if(type==='hurt'){const o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(90,t+.2);o.connect(g);g.gain.setValueAtTime(.25,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.start(t);o.stop(t+.3);}
-}
-function startDrone(){if(!AC||droneG)return;droneG=AC.createGain();droneG.gain.value=0;droneG.connect(AC.destination);
-  [41,61.5,82.4].forEach(fq=>{const o=AC.createOscillator(),f=AC.createBiquadFilter();o.type='sawtooth';o.frequency.value=fq*R(.995,1.005);f.type='lowpass';f.frequency.value=180;o.connect(f).connect(droneG);o.start();});}
-function droneLevel(v){if(droneG)droneG.gain.setTargetAtTime(v,AC.currentTime,1.2);}
-/* ---------- Locke Hall layout (grid, 2 m tiles) ---------- */
-const MW=26,MH=18,T=2,WH=3.4;let G=[];
-function carve(x0,y0,x1,y1,c='.'){for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)G[y][x]=c;}
-G=Array.from({length:MH},()=>Array(MW).fill('#'));
-carve(1,1,7,5);carve(16,1,22,5);carve(2,7,21,7);carve(8,9,14,15);carve(1,9,6,15);
-carve(23,3,24,3);carve(24,3,24,10);carve(18,10,24,10);carve(18,10,18,13);carve(16,13,18,13);
-G[6][4]='A';G[6][19]='B';G[13][15]='E';
-['7,12','7,10','11,8','12,8'].forEach(k=>{const[x,y]=k.split(',').map(Number);G[y][x]='P';});
-function inCorr(x,y){return (y===3&&x>=23&&x<=24)||(x===24&&y>=3&&y<=10)||(y===10&&x>=18&&x<=24)||(x===18&&y>=10&&y<=13)||(y===13&&x>=16&&x<=18);}
-function roomAt(x,y){
-  if(x>=1&&x<=7&&y>=1&&y<=5)return 'Library';if(x>=16&&x<=22&&y>=1&&y<=5)return 'Study';
-  if(y===7&&x>=2&&x<=21)return 'North Hall';if(x>=8&&x<=14&&y>=9&&y<=15)return 'Foyer';
-  if(x>=1&&x<=6&&y>=9&&y<=15)return 'Portrait Gallery';if(inCorr(x,y))return "Servants' Corridor";return null;}
-const tileOf=(px,pz)=>[Math.floor(px/T),Math.floor(pz/T)];
-const ctr=(x,y)=>new THREE.Vector3(x*T+T/2,0,y*T+T/2);
-
-/* ---------- renderer & scene ---------- */
-const renderer=new THREE.WebGLRenderer({antialias:!TOUCH,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,TOUCH?1.5:2));
-$('#game').prepend(renderer.domElement);
-const scene=new THREE.Scene();scene.background=new THREE.Color(0x030202);scene.fog=new THREE.FogExp2(0x050403,.075);
-const camera=new THREE.PerspectiveCamera(70,1,.05,60);camera.rotation.order='YXZ';scene.add(camera);
-function resize(){const w=$('#game').clientWidth,h=$('#game').clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
-addEventListener('resize',resize);
-scene.add(new THREE.AmbientLight(0x3a2c22,.42));
-const flash=new THREE.SpotLight(0xfff1d6,2.4,22,.48,.55,1.6);flash.position.set(.18,-.15,0);camera.add(flash);camera.add(flash.target);flash.target.position.set(0,-.2,-3);
-const muzzle=new THREE.PointLight(0xffc070,0,8,2);camera.add(muzzle);muzzle.position.set(.2,-.2,-.6);
-
-const ROOMMAT={
-  'Foyer':{wall:TEX.foyerWall,floor:TEX.marble},'Portrait Gallery':{wall:TEX.galleryWall,floor:TEX.carpet},
-  'Library':{wall:TEX.libWall,floor:TEX.wood},'Study':{wall:TEX.studyWall,floor:TEX.wood},
-  'North Hall':{wall:TEX.foyerWall,floor:TEX.wood},"Servants' Corridor":{wall:TEX.stone,floor:TEX.stone}};
-const MAT={};const mat=(t,k)=>MAT[k]||(MAT[k]=new THREE.MeshPhongMaterial({map:t,shininess:6,specular:0x111111}));
-const wallGeo=new THREE.PlaneGeometry(T,WH),floorGeo=new THREE.PlaneGeometry(T,T);
-function buildStatic(){
-  const buckets={};const add=(key,tex,m)=>{(buckets[key]=buckets[key]||{tex,list:[]}).list.push(m);};
-  const o=new THREE.Object3D();
-  const solid=(x,y)=>!G[y]||G[y][x]==='#'||G[y][x]===undefined;
-  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
-    if(G[y][x]==='#')continue;const rm=roomAt(x,y)||'North Hall',M=ROOMMAT[rm],c=ctr(x,y);
-    if(G[y][x]!=='P'){o.position.set(c.x,0,c.z);o.rotation.set(-Math.PI/2,0,0);o.updateMatrix();add('f'+rm,M.floor,o.matrix.clone());}
-    o.position.set(c.x,WH,c.z);o.rotation.set(Math.PI/2,0,0);o.updateMatrix();add('ceil',TEX.ceiling,o.matrix.clone());
-    [[0,-1,0],[0,1,Math.PI],[-1,0,Math.PI/2],[1,0,-Math.PI/2]].forEach(([dx,dy,ry])=>{
-      if(!solid(x+dx,y+dy))return;o.position.set(c.x+dx*T/2,WH/2,c.z+dy*T/2);o.rotation.set(0,ry,0);o.updateMatrix();add('w'+rm,M.wall,o.matrix.clone());});
-  }
-  Object.entries(buckets).forEach(([k,b])=>{const im=new THREE.InstancedMesh(k[0]==='w'?wallGeo:floorGeo,mat(b.tex,k),b.list.length);b.list.forEach((m,i)=>im.setMatrixAt(i,m));scene.add(im);});
-}
-buildStatic();
-
-/* plugs: the doorways the Architect moves (gallery and north hall openings) */
-const PLUG={};
-function makePlug(x,y,openNow){
-  const c=ctr(x,y),g=new THREE.BoxGeometry(T,WH,T),fm=mat(TEX.foyerWall,'wFoyer'),
-    other=x===7?mat(TEX.galleryWall,'wPortrait Gallery'):mat(TEX.foyerWall,'wNorth Hall'),dark=mat(TEX.ceiling,'ceil');
-  const mats=x===7?[fm,other,dark,dark,dark,dark]:[dark,dark,dark,dark,fm,other];
-  const m=new THREE.Mesh(g,mats);m.position.set(c.x,WH/2,c.z);m.visible=!openNow;scene.add(m);
-  const f=new THREE.Mesh(floorGeo,mat(TEX.marble,'fFoyer'));f.rotation.x=-Math.PI/2;f.position.set(c.x,.001,c.z);scene.add(f);
-  PLUG[x+','+y]={mesh:m,open:openNow};
-}
-makePlug(7,12,true);makePlug(7,10,false);makePlug(11,8,true);makePlug(12,8,false);
-function setPlug(k,open){PLUG[k].open=open;PLUG[k].mesh.visible=!open;}
-
-/* doors */
-const DOORS={};
-function makeDoor(x,y,axis,id,locked){
-  const c=ctr(x,y),piv=new THREE.Group();
-  const d=new THREE.Mesh(new THREE.BoxGeometry(axis==='z'?T*.92:.12,WH*.82,axis==='z'?.12:T*.92),mat(TEX.door,'door'));
-  if(axis==='z'){piv.position.set(c.x-T*.46,0,c.z);d.position.set(T*.46,WH*.41,0);}else{piv.position.set(c.x,0,c.z-T*.46);d.position.set(0,WH*.41,T*.46);}
-  piv.add(d);scene.add(piv);
-  const lintel=new THREE.Mesh(new THREE.BoxGeometry(axis==='z'?T:.3,WH*.18,axis==='z'?.3:T),mat(TEX.ceiling,'ceil'));lintel.position.set(c.x,WH*.91,c.z);scene.add(lintel);
-  DOORS[id]={x,y,piv,open:false,locked,ang:0};
-}
-makeDoor(4,6,'z','A','Lion Medallion');makeDoor(19,6,'z','B','Brass Key');makeDoor(15,13,'x','E','bolt');
-function openDoor(id){const d=DOORS[id];if(d.open)return;d.open=true;d.locked=null;sfx('creak');}
-
-/* walkability */
-const BLOCK=new Set();
-function passable(x,y){
-  const ch=G[y]&&G[y][x];if(!ch||ch==='#')return false;if(BLOCK.has(x+','+y))return false;
-  if(ch==='P')return PLUG[x+','+y].open;
-  if(ch==='A'||ch==='B'||ch==='E')return DOORS[ch].open;
-  return true;}
-
-/* ---------- props ---------- */
-const P3=(w,h,d,color,x,y,z,emis)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color,emissive:emis||0}));m.position.set(x,y,z);scene.add(m);return m;};
-function paintedTex(fn){return ctex(256,320,fn);}
-const claraTex=paintedTex((g,w,h)=>{g.fillStyle='#2a1d14';g.fillRect(0,0,w,h);const gr=g.createRadialGradient(w/2,h*.4,10,w/2,h*.45,w*.6);gr.addColorStop(0,'#5a4636');gr.addColorStop(1,'#1d140e');g.fillStyle=gr;g.fillRect(0,0,w,h);
-  g.fillStyle='#1a120c';g.beginPath();g.ellipse(w/2,h*.36,58,70,0,0,7);g.fill();g.fillStyle='#cdb59a';g.beginPath();g.ellipse(w/2,h*.4,40,52,0,0,7);g.fill();
-  g.fillStyle='#2e1f19';g.beginPath();g.moveTo(w*.15,h);g.quadraticCurveTo(w/2,h*.55,w*.85,h);g.fill();g.fillStyle='#3a2a20';g.fillRect(w/2-14,h*.38,8,4);g.fillRect(w/2+6,h*.38,8,4);});
-const strangerTex=()=>paintedTex((g,w,h)=>{g.fillStyle=`hsl(${R(10,40)},25%,14%)`;g.fillRect(0,0,w,h);g.fillStyle=`hsl(30,20%,${R(45,60)}%)`;g.beginPath();g.ellipse(w/2,h*.42,38,50,0,0,7);g.fill();
-  g.fillStyle='#120c08';g.fillRect(w/2-50,h*.38,100,10);g.fillStyle='#1a120c';g.beginPath();g.moveTo(0,h);g.quadraticCurveTo(w/2,h*.55,w,h);g.fill();});
-function framed(tex,x,y,z,ry,w=1,h=1.25){const grp=new THREE.Group();grp.position.set(x,y,z);grp.rotation.y=ry;
-  const fr=new THREE.Mesh(new THREE.BoxGeometry(w+.16,h+.16,.06),new THREE.MeshLambertMaterial({color:0x8a6a33}));grp.add(fr);
-  const pic=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshLambertMaterial({map:tex}));pic.position.z=.035;grp.add(pic);scene.add(grp);return grp;}
-function planTex(){return ctex(520,380,(g,w,h)=>drawPlan(g,w,h,false));}
-function drawPlan(g,w,h,live){
-  const s=Math.floor(Math.min(w/MW,h/MH)),ox=(w-s*MW)/2,oy=(h-s*MH)/2;
-  g.fillStyle='#d8ccb4';g.fillRect(0,0,w,h);
-  const open=(x,y)=>{const ch=G[y]&&G[y][x];if(!ch||ch==='#')return false;if(ch==='P')return live?PLUG[x+','+y].open:(x===7?y===12:x===11);return true;};
-  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++)if(open(x,y)){g.fillStyle='#efe6d2';g.fillRect(ox+x*s,oy+y*s,s,s);}
-  g.strokeStyle='#2a221b';g.lineWidth=2;
-  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(!open(x,y))continue;const X=ox+x*s,Y=oy+y*s;g.beginPath();
-    if(!open(x,y-1)){g.moveTo(X,Y);g.lineTo(X+s,Y);}if(!open(x,y+1)){g.moveTo(X,Y+s);g.lineTo(X+s,Y+s);}if(!open(x-1,y)){g.moveTo(X,Y);g.lineTo(X,Y+s);}if(!open(x+1,y)){g.moveTo(X+s,Y);g.lineTo(X+s,Y+s);}g.stroke();}
-  g.fillStyle='#2a221b';g.font=`${Math.max(10,s*.72)}px "IM Fell English SC",serif`;g.textAlign='center';
-  [['Library',4,3.2],['Study',19,3.2],['Foyer',11,12.4],['Gallery',3.5,12.4],['North Hall',12,6.6],["Servants'",21,9.6]].forEach(([n,x,y])=>g.fillText(n,ox+x*s,oy+y*s));
-  g.font=`italic ${Math.max(10,s*.6)}px "IM Fell English",serif`;g.fillText('Locke Hall, East Wing',w/2,oy+s*17.4);
-}
-function buildProps(){
-  // foyer
-  framed(planTex(),9*T+T/2,1.7,9*T+.04,0,1.3,.95);
-  framed(claraTex,13*T+T/2,1.8,9*T+.04,0,.9,1.15).name='clara';
-  const clock=new THREE.Group();clock.position.set(14*T+T-.35,0,11*T+T/2);scene.add(clock);
-  const cb=new THREE.Mesh(new THREE.BoxGeometry(.5,2.3,.5),new THREE.MeshLambertMaterial({color:0x3a2212}));cb.position.y=1.15;clock.add(cb);
-  const face=new THREE.Mesh(new THREE.CircleGeometry(.17,24),new THREE.MeshLambertMaterial({color:0xd8ccb4}));face.position.set(-.26,1.85,0);face.rotation.y=-Math.PI/2;clock.add(face);
-  clock.name='clock';S.clock=clock;S.clara=scene.getObjectByName('clara');BLOCK.add('14,11');
-  const rug=new THREE.Mesh(new THREE.PlaneGeometry(T*2.4,T*3),new THREE.MeshLambertMaterial({map:TEX.carpet}));rug.rotation.x=-Math.PI/2;rug.position.set(11*T+T/2,.01,12*T+T/2);scene.add(rug);S.rug=rug;
-  const chand=new THREE.PointLight(0xffb060,1.5,16,1.6);chand.position.set(11*T+T/2,WH-.5,12*T);scene.add(chand);S.chand=chand;
-  P3(.5,.06,.5,0x8a6a33,11*T+T/2,WH-.45,12*T,0x3a2a10);
-  // gallery
-  [[1,10,Math.PI/2],[1,13,Math.PI/2],[3,15,Math.PI],[5,15,Math.PI],[6,14,-Math.PI/2]].forEach(([x,y,ry])=>{const c=ctr(x,y);framed(strangerTex(),c.x-Math.sin(ry)*(T/2-.04),1.75,c.z-Math.cos(ry)*(T/2-.04)+0,ry,.8,1);});
-  const gl=new THREE.PointLight(0xc9d6b0,.7,10,1.8);gl.position.set(3.5*T,WH-.6,12*T);scene.add(gl);
-  // library
-  P3(1.4,.08,.8,0x3d2414,6*T+T/2,.85,2*T+T/2);P3(1.3,.8,.7,0x2a170c,6*T+T/2,.42,2*T+T/2);BLOCK.add('6,2');
-  P3(.5,.7,.5,0x2a170c,2*T+T/2,.35,4*T+T/2);BLOCK.add('2,4');
-  const ll=new THREE.PointLight(0xffa850,.9,9,1.8);ll.position.set(6*T+T/2,1.6,2*T+T/2);scene.add(ll);P3(.12,.25,.12,0xe0a84a,6*T+T/2+.4,1.0,2*T+T/2,0x7a5010);
-  // study
-  P3(1.6,.8,.8,0x2a170c,17*T+T/2,.4,2*T+T/2);BLOCK.add('17,2');
-  P3(.3,1.2,1.6,0x1d1a17,22*T+T-.15,.6,4*T+T/2);
-  const fire=new THREE.PointLight(0xff6a2a,1.2,11,1.7);fire.position.set(22*T+T/2,.7,4*T+T/2);scene.add(fire);S.fire=fire;
-  P3(.1,.5,1.0,0xff7a30,22*T+T-.25,.35,4*T+T/2,0xc04010);
-  P3(.6,.9,.4,0x2a170c,21*T+T/2,.45,2*T+T/2);BLOCK.add('21,2');
-  // hall candelabra
-  [9,15].forEach(x=>P3(.08,1.4,.08,0x8a6a33,x*T+T/2,.7,7*T+.3));
-}
-buildProps();
-/* ---------- player ---------- */
-const PL={x:11*T+T/2,z:14*T+T/2,yaw:0,pitch:0,bob:0,stepAcc:0,lastTile:'',hurtUntil:0};
-const RAD=.28;
-function canStand(x,z){for(const[dx,dz]of[[-RAD,-RAD],[RAD,-RAD],[-RAD,RAD],[RAD,RAD]]){const[tx,tz]=tileOf(x+dx,z+dz);if(!passable(tx,tz))return false;}return true;}
-const keys={};let joy={x:0,y:0},locked=false;
-addEventListener('keydown',e=>{
-  if(!S.running)return;
-  if(dlgOpen()&&(e.code==='KeyE'||e.code==='Space'||e.code==='Enter')){e.preventDefault();advanceDialog();return;}
-  if(!$('#mapView').hidden&&(e.code==='KeyM'||e.code==='Escape'||e.code==='KeyE')){closeMap();return;}
-  keys[e.code]=true;
-  if(S.paused)return;
-  if(e.code==='KeyE')use();if(e.code==='KeyM')tryMap();if(e.code==='Space'||e.code==='KeyF'){e.preventDefault();fire();}
-});
-addEventListener('keyup',e=>keys[e.code]=false);
-const cvEl=renderer.domElement;
-cvEl.addEventListener('click',()=>{
-  if(!S.running||TOUCH)return;if(dlgOpen()){advanceDialog();return;}
-  if(!locked){try{const p=cvEl.requestPointerLock&&cvEl.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}return;}
-  if(!S.paused)fire();
-});
-document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===cvEl;});
-addEventListener('mousemove',e=>{
-  if(TOUCH||S.paused)return;
-  if(locked||e.buttons===1){PL.yaw-=e.movementX*.0024;PL.pitch=Math.max(-1.2,Math.min(1.2,PL.pitch-e.movementY*.0024));}
-});
-/* touch: joystick left, drag to look anywhere else */
-if(TOUCH){
-  $('#touch').hidden=false;$('#keyhelp').textContent='Left stick move · drag to look · Fire · Use · Map in the foyer';
-  const jz=$('#joy'),kn=$('#knob');let jid=null;
-  const jm=e=>{const r=jz.getBoundingClientRect();let dx=(e.clientX-r.left-r.width/2)/(r.width/2),dy=(e.clientY-r.top-r.height/2)/(r.height/2);const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m;}joy={x:dx,y:dy};kn.style.transform=`translate(${dx*36}px,${dy*36}px)`;};
-  jz.addEventListener('pointerdown',e=>{jid=e.pointerId;jz.setPointerCapture(jid);jm(e);});
-  jz.addEventListener('pointermove',e=>{if(e.pointerId===jid)jm(e);});
-  const jend=()=>{jid=null;joy={x:0,y:0};kn.style.transform='';};jz.addEventListener('pointerup',jend);jz.addEventListener('pointercancel',jend);
-  let lid=null,lx=0,ly=0;
-  cvEl.addEventListener('pointerdown',e=>{if(dlgOpen()){advanceDialog();return;}lid=e.pointerId;lx=e.clientX;ly=e.clientY;});
-  cvEl.addEventListener('pointermove',e=>{if(e.pointerId!==lid||S.paused)return;PL.yaw-=(e.clientX-lx)*.006;PL.pitch=Math.max(-1.1,Math.min(1.1,PL.pitch-(e.clientY-ly)*.006));lx=e.clientX;ly=e.clientY;});
-  ['pointerup','pointercancel'].forEach(ev=>cvEl.addEventListener(ev,e=>{if(e.pointerId===lid)lid=null;}));
-  $('#tFire').addEventListener('pointerdown',e=>{e.preventDefault();if(dlgOpen())return advanceDialog();if(!S.paused)fire();});
-  $('#tUse').addEventListener('pointerdown',e=>{e.preventDefault();if(dlgOpen())return advanceDialog();if(!S.paused)use();});
-  $('#tMap').addEventListener('pointerdown',e=>{e.preventDefault();if(!$('#mapView').hidden)return closeMap();if(!S.paused)tryMap();});
-}
-$('#dialog').addEventListener('click',()=>advanceDialog());
-function updatePlayer(dt){
-  let f=0,s=0;
-  if(keys.KeyW||keys.ArrowUp)f+=1;if(keys.KeyS||keys.ArrowDown)f-=1;if(keys.KeyD)s+=1;if(keys.KeyA)s-=1;
-  if(keys.ArrowLeft)PL.yaw+=2.2*dt;if(keys.ArrowRight)PL.yaw-=2.2*dt;
-  if(TOUCH){f-=joy.y;s+=joy.x;}
-  const mag=Math.min(1,Math.hypot(f,s));
-  const run=(keys.ShiftLeft||keys.ShiftRight||(TOUCH&&mag>.92))?1.55:1;
-  const sp=2.5*run*(S.hp<=1?.75:1);
-  if(mag>.05){
-    const fx=-Math.sin(PL.yaw),fz=-Math.cos(PL.yaw),rx=Math.cos(PL.yaw),rz=-Math.sin(PL.yaw);
-    let vx=(fx*f+rx*s)/Math.max(1,mag)*sp*mag,vz=(fz*f+rz*s)/Math.max(1,mag)*sp*mag;
-    const ox=PL.x,oz=PL.z;
-    if(canStand(PL.x+vx*dt,PL.z))PL.x+=vx*dt;else bump(PL.x+Math.sign(vx)*.5,PL.z);
-    if(canStand(PL.x,PL.z+vz*dt))PL.z+=vz*dt;else bump(PL.x,PL.z+Math.sign(vz)*.5);
-    const moved=Math.hypot(PL.x-ox,PL.z-oz);S.log.dist+=moved;
-    PL.bob+=moved*3.2;PL.stepAcc+=moved;if(PL.stepAcc>.9*run){PL.stepAcc=0;sfx('step');}
-  }
-  camera.position.set(PL.x,1.6+Math.sin(PL.bob)*.035,PL.z);camera.rotation.set(PL.pitch,PL.yaw,0);
-  const[tx,tz]=tileOf(PL.x,PL.z),k=tx+','+tz;
-  if(k!==PL.lastTile){PL.lastTile=k;onTile(tx,tz);}
-}
-/* ---------- ghouls ---------- */
-const GH=[];
-const skin=new THREE.MeshLambertMaterial({color:0x9aa394}),rag=new THREE.MeshLambertMaterial({color:0x2a2622}),eyeM=new THREE.MeshBasicMaterial({color:0xff3322});
-function makeGhoul(x,y,opts={}){
-  const g=new THREE.Group(),body=new THREE.Group();g.add(body);
-  const torso=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,1.15,8),rag);torso.position.y=.95;torso.rotation.x=.18;body.add(torso);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),skin);head.position.set(0,1.58,-.1);body.add(head);
-  [-.065,.065].forEach(ex=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.025,6,4),eyeM);e.position.set(ex,1.6,-.24);body.add(e);});
-  const arms=[-.25,.25].map(ax=>{const a=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.7),skin);a.position.set(ax,1.25,-.38);body.add(a);return a;});
-  [-.1,.1].forEach(lx=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.11,.5,.11),rag);l.position.set(lx,.25,0);body.add(l);});
-  const c=ctr(x,y);g.position.set(c.x,0,c.z);scene.add(g);
-  const o={g,body,arms,x:c.x,z:c.z,hp:opts.hp||4,state:opts.state||'idle',patrol:opts.patrol||null,pi:0,speed:opts.speed||1.05,cd:0,lost:0,next:null,bfsT:0,moanT:R(2,6),stagger:0,fall:0,t:R(0,6),id:opts.id};
-  GH.push(o);return o;
-}
-const ghPass=(x,y)=>passable(x,y)&&roomAt(x,y)!=='Foyer'&&!(G[y]&&G[y][x]==='P');
-function los(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.25);for(let i=1;i<n;i++){const t=i/n,[tx,tz]=tileOf(ax+(bx-ax)*t,az+(bz-az)*t);if(!passable(tx,tz))return false;}return true;}
-function bfsNext(sx,sy,tx,ty){
-  if(sx===tx&&sy===ty)return null;const key=(x,y)=>x+','+y,prev={},q=[[sx,sy]];prev[key(sx,sy)]=null;
-  while(q.length){const[x,y]=q.shift();if(x===tx&&y===ty)break;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=key(nx,ny);if(k in prev||!(ghPass(nx,ny)||(nx===tx&&ny===ty&&passable(nx,ny))))continue;prev[k]=[x,y];q.push([nx,ny]);}if(q.length>600)break;}
-  let cur=key(tx,ty);if(!(cur in prev))return null;let step=[tx,ty];while(prev[cur]&&key(...prev[cur])!==key(sx,sy)){step=prev[cur];cur=key(...step);}return step;
-}
-function updateGhouls(dt,t){
-  GH.forEach(o=>{
-    if(o.state==='dead'){if(o.fall<1){o.fall=Math.min(1,o.fall+dt*1.8);o.body.rotation.x=-o.fall*Math.PI/2;o.body.position.y=o.fall*.15;}return;}
-    if(o.state==='dormant')return;
-    o.t+=dt;o.cd-=dt;o.stagger=Math.max(0,o.stagger-dt);
-    const dx=PL.x-o.x,dz=PL.z-o.z,d=Math.hypot(dx,dz),see=d<11&&los(o.x,o.z,PL.x,PL.z);
-    if(see&&o.state!=='chase'){o.state='chase';sfx('moan',1);}
-    if(o.state==='chase'){if(see)o.lost=0;else if((o.lost+=dt)>7)o.state=o.patrol?'patrol':'idle';}
-    let tx=null,tz=null,sp=o.speed;
-    if(o.state==='chase'){
-      if(see&&d<3.5){tx=PL.x;tz=PL.z;}else{
-        if((o.bfsT-=dt)<=0){o.bfsT=.4;const[gx,gy]=tileOf(o.x,o.z),[px,py]=tileOf(PL.x,PL.z);o.next=bfsNext(gx,gy,px,py);}
-        if(o.next){const c=ctr(o.next[0],o.next[1]);tx=c.x;tz=c.z;}}
-    }else if(o.state==='patrol'&&o.patrol){const w=o.patrol[o.pi],c=ctr(w[0],w[1]);tx=c.x;tz=c.z;sp*=.55;if(Math.hypot(c.x-o.x,c.z-o.z)<.3)o.pi=(o.pi+1)%o.patrol.length;}
-    if(tx!==null&&o.stagger<=0){
-      const vx=tx-o.x,vz=tz-o.z,m=Math.hypot(vx,vz)||1,stepx=vx/m*sp*dt,stepz=vz/m*sp*dt;
-      const ok=(x,z)=>{const[a,b]=tileOf(x,z);return ghPass(a,b);};
-      if(d>.7){if(ok(o.x+stepx,o.z))o.x+=stepx;if(ok(o.x,o.z+stepz))o.z+=stepz;}
-      o.g.rotation.y=Math.atan2(-vx,-vz);
-    }
-    o.g.position.set(o.x,0,o.z);
-    o.body.rotation.z=Math.sin(o.t*3)*.06;o.body.position.y=Math.abs(Math.sin(o.t*3))*.04;
-    o.arms.forEach((a,i)=>a.rotation.x=Math.sin(o.t*3+i*1.4)*.2);
-    if((o.moanT-=dt)<=0){o.moanT=R(4,9);if(d<14)sfx('moan',Math.max(.15,1-d/14));}
-    if(o.state==='chase'&&d<.95&&o.cd<=0&&!S.paused){o.cd=1.7;hurtPlayer(dx/d,dz/d);}
-  });
-}
-function hurtPlayer(nx,nz){
-  S.hp--;S.log.dmg++;sfx('hurt');PL.hurtUntil=now()+700;$('#hurt').style.opacity=1;setTimeout(()=>$('#hurt').style.opacity=S.hp<=1?.45:0,450);
-  for(let k=.7;k>0;k-=.1)if(canStand(PL.x+nx*k,PL.z+nz*k)){PL.x+=nx*k;PL.z+=nz*k;break;}
-  hud();if(S.hp<=0)die();
-}
-function die(){
-  S.paused=true;S.log.deaths=(S.log.deaths||0)+1;
-  if(document.exitPointerLock)document.exitPointerLock();
-  showEnd(`<h1 style="color:var(--blood)">You Died</h1><p>The house keeps you a while, then lets you go.</p><button class="btn" id="retry">Wake in the foyer</button>`,
-    ()=>$('#retry').onclick=()=>{$('#end').hidden=true;S.hp=3;PL.x=11*T+T/2;PL.z=14*T+T/2;PL.yaw=0;GH.forEach(o=>{if(o.state==='chase')o.state=o.patrol?'patrol':'idle';});hud();S.paused=false;$('#hurt').style.opacity=0;});
-}
-function fire(){
-  if(S.ammo<=0){say(['Out of ammunition.']);return;}
-  S.ammo--;S.log.shots++;sfx('shot');muzzle.intensity=4;setTimeout(()=>muzzle.intensity=0,70);hud();
-  const o=camera.position.clone(),dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
-  let wall=30;for(let s=.2;s<30;s+=.15){const p=o.clone().addScaledVector(dir,s),[tx,tz]=tileOf(p.x,p.z);if(!passable(tx,tz)||p.y<0||p.y>WH){wall=s;break;}}
-  let best=null;
-  GH.forEach(g=>{if(g.state==='dead'||g.state==='dormant')return;
-    [[1.58,.2,2],[1.0,.36,1]].forEach(([hy,r,dmg])=>{const c=new THREE.Vector3(g.x,hy,g.z),oc=c.clone().sub(o),tc=oc.dot(dir);if(tc<0||tc>wall)return;
-      const d2=oc.lengthSq()-tc*tc;if(d2<r*r&&(!best||tc<best.t))best={g,t:tc,dmg};});});
-  if(best){const g=best.g;S.log.hits++;g.hp-=best.dmg;g.stagger=.45;g.state='chase';g.x+=dir.x*.25;g.z+=dir.z*.25;
-    if(g.hp<=0){g.state='dead';sfx('thud',.6);}}
-}
-/* ---------- dialog, HUD ---------- */
-let DQ=[],dDone=null;
-function dlgOpen(){return !$('#dialog').hidden;}
-function say(lines,who='',done){DQ=lines.slice();dDone=done||null;$('#dWho').textContent=who;$('#dWho').hidden=!who;S.paused=true;showLine();}
-function showLine(){$('#dialog').hidden=false;$('#dText').textContent=DQ.shift();}
-function advanceDialog(){if(DQ.length){showLine();return;}$('#dialog').hidden=true;S.paused=false;const d=dDone;dDone=null;if(d)d();}
-const NAMES={medallion:'Lion Medallion',brass:'Brass Key (Study)',glove:"Clara's glove",music:'Music box',locket:'Locket'};
-function hud(){
-  const c=$('#cond');c.textContent=['Danger','Danger','Caution','Fine'][Math.max(0,S.hp)];c.className=['danger','danger','caution','fine'][Math.max(0,S.hp)];
-  $('#ammo').textContent='Handgun '+S.ammo;
-  $('#inv').innerHTML=Object.keys(S.inv).filter(k=>S.inv[k]).map(k=>NAMES[k]).join('<br>');
-}
-let roomT=0;
-function showRoom(n){const r=$('#room');r.textContent=n;r.classList.add('on');clearTimeout(roomT);roomT=setTimeout(()=>r.classList.remove('on'),2600);}
-function logEvent(name){const[tx,tz]=tileOf(PL.x,PL.z);S.log.events.push({name,t:(now()-S.t0)/1000,dist:S.log.dist,tile:[tx,tz]});}
-
-/* ---------- interactables ---------- */
-const IT=[];
-function addIt(o){IT.push(o);return o;}
-function pickupMesh(color,x,y,z,size=.12,shape='box'){const g=shape==='sphere'?new THREE.SphereGeometry(size,12,8):new THREE.BoxGeometry(size*1.6,size,size*1.2);
-  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color,emissive:color,emissiveIntensity:.25}));m.position.set(x,y,z);scene.add(m);return m;}
-function pedestal(x,y){const c=ctr(x,y);P3(.45,1,.45,0x4a443d,c.x,.5,c.z);BLOCK.add(x+','+y);return c;}
-function take(key,mesh,lines){S.inv[key]=true;if(mesh)mesh.visible=false;sfx('pickup');logEvent('take:'+key);hud();say(lines);}
-function buildInteractables(){
-  let c;
-  // foyer
-  addIt({x:9*T+T/2,z:9*T+.3,y:1.7,label:'Read the plan',use:()=>openMap()});
-  S.claraIt=addIt({x:13*T+T/2,z:9*T+.3,y:1.8,label:'Examine the portrait',use:()=>say(['"Clara Locke, 1871."','Someone has wiped the dust from her face, and only from her face.'])});
-  S.clockIt=addIt({x:14*T+T-.6,z:11*T+T/2,y:1.6,label:'Examine the clock',use:()=>say(['The long-case clock reads twelve past three.','The pendulum swings, but the hands have not moved since you came in.'])});
-  S.trapIt=addIt({x:11*T+T/2,z:12*T+T/2,y:.2,label:'Examine the trapdoor',hidden:true,use:trapdoor});
-  // gallery
-  c=pedestal(2,11);const med=pickupMesh(0xc9a35a,c.x,1.08,c.z,.11,'sphere');
-  addIt({x:c.x,z:c.z,y:1.1,label:'Take the medallion',done:()=>S.inv.medallion||S.flags.usedMed,use(){take('medallion',med,['A heavy gold medallion: a lion, mouth open.','It matches a hollow you may have seen on a door.']);}});
-  c=pedestal(5,13);const glv=pickupMesh(0xe2d6bd,c.x,1.06,c.z,.1);
-  addIt({x:c.x,z:c.z,y:1.1,label:'Take the glove',done:()=>S.inv.glove,use(){take('glove',glv,["Clara's glove. Kid leather, the left hand.",'The fingers still hold a shape, as if it was taken off a moment ago.']);}});
-  c=ctr(6,15);P3(.4,.35,.4,0x3a2a1c,c.x+.4,.18,c.z+.4);const herb=pickupMesh(0x5e8a48,c.x+.4,.45,c.z+.4,.16,'sphere');
-  addIt({x:c.x+.4,z:c.z+.4,y:.4,label:'Take the herb',done:()=>S.flags.herb,use(){S.flags.herb=true;herb.visible=false;S.hp=3;$('#hurt').style.opacity=0;sfx('pickup');hud();say(['A bitter green herb. You chew it, and the pain eases.']);}});
-  // library
-  c=ctr(6,2);const key=pickupMesh(0xd4a64a,c.x-.2,.92,c.z,.07);
-  addIt({x:c.x,z:c.z,y:.9,label:'Take the key',done:()=>S.inv.brass||S.flags.usedBrass,use(){take('brass',key,['A brass key on a cardboard tag.','In Locke\'s hand: STUDY. Underneath, crossed out: "Don\'t let me in."']);}});
-  c=ctr(2,4);const mb=pickupMesh(0x7a4a2a,c.x,.78,c.z,.12);
-  addIt({x:c.x,z:c.z,y:.8,label:'Take the music box',done:()=>S.inv.music,use(){take('music',mb,['A music box. It plays four bars of a waltz and stops on the same note every time.','Inside the lid: "For C., so the tune stays put."']);}});
-  c=ctr(1,1);const am1=pickupMesh(0x5a5a3a,c.x,.1,c.z,.14);
-  addIt({x:c.x,z:c.z,y:.2,label:'Take the bullets',done:()=>S.flags.am1,use(){S.flags.am1=true;am1.visible=false;S.ammo+=8;sfx('pickup');hud();say(['Handgun bullets. Eight rounds.']);}});
-  // study
-  c=ctr(17,2);pickupMesh(0xd8ccb4,c.x,.84,c.z,.1);
-  addIt({x:c.x,z:c.z,y:.85,label:"Read Locke's journal",use:()=>say(['"Oct. 3. The east wing moved again in the night. I found the music box in the library, though I am certain I left it by the window."','"I have begun building below the house. A palace, down in the cellar, where every room stays where I put it."','"Where she stays where I put her. No one will rearrange it. Not even me."'],'Locke\'s journal')});
-  c=ctr(21,2);const lk=pickupMesh(0xe0a84a,c.x,.95,c.z,.07,'sphere');
-  addIt({x:c.x,z:c.z,y:.95,label:'Take the locket',done:()=>S.inv.locket,use(){take('locket',lk,['A locket with a curl of dark hair under glass.','The portrait inside has been scratched out, carefully, by someone who regretted it.']);}});
-  c=ctr(16,5);const am2=pickupMesh(0x5a5a3a,c.x,.1,c.z,.14);
-  addIt({x:c.x,z:c.z,y:.2,label:'Take the bullets',done:()=>S.flags.am2,use(){S.flags.am2=true;am2.visible=false;S.ammo+=8;sfx('pickup');hud();say(['Handgun bullets. Eight rounds.']);}});
-  // doors
-  addIt({x:4*T+T/2,z:6*T+T/2,y:1.4,label:'Open the door',done:()=>DOORS.A.open,use(){
-    if(S.inv.medallion){S.inv.medallion=false;S.flags.usedMed=true;openDoor('A');logEvent('open:library');hud();say(['The lion medallion fits the hollow. Something heavy turns inside the door.']);}
-    else say(['A heavy oak door. Set into the lock is a hollow shaped like a lion\'s head.']);}});
-  addIt({x:19*T+T/2,z:6*T+T/2,y:1.4,label:'Open the door',done:()=>DOORS.B.open,use(){
-    if(S.inv.brass){S.inv.brass=false;S.flags.usedBrass=true;openDoor('B');logEvent('open:study');hud();say(['The brass key turns. The study door swings in on warm air.']);}
-    else say(['Locked. A small brass keyhole, worn bright from use.']);}});
-  addIt({x:15*T+T/2,z:13*T+T/2,y:1.4,label:'Open the door',done:()=>DOORS.E.open,use(){
-    if(PL.x>15*T+T/2){openDoor('E');logEvent('open:corridor');say(['You slide the bolt back. Candlelight spills through from the foyer.']);}
-    else say(['It won\'t move. Bolted from the other side.']);}});
-}
-buildInteractables();
-let focus=null;
-function findFocus(){
-  const fx=-Math.sin(PL.yaw),fz=-Math.cos(PL.yaw);let best=null,bs=1e9;
-  IT.forEach(o=>{if(o.hidden||(o.done&&o.done()))return;const dx=o.x-PL.x,dz=o.z-PL.z,d=Math.hypot(dx,dz);if(d>2.1)return;
-    const dot=(dx*fx+dz*fz)/(d||1);if(dot<.55&&d>.6)return;const sc=d-dot;if(sc<bs){bs=sc;best=o;}});
-  focus=best;const p=$('#prompt');if(best&&!S.paused){p.textContent=(TOUCH?'Use · ':'E · ')+best.label;p.classList.add('on');}else p.classList.remove('on');
-}
-function use(){if(focus)focus.use();}
-
-/* ---------- the plan ---------- */
-let mapT0=0;
-function openMap(){S.paused=true;mapT0=now();S.log.mapViews++;if(S.flags.changed)S.log.mapViewsPost=(S.log.mapViewsPost||0)+1;
-  const c=$('#mapCv');drawPlan(c.getContext('2d'),c.width,c.height,false);$('#mapView').hidden=false;if(document.exitPointerLock)document.exitPointerLock();}
-function closeMap(){$('#mapView').hidden=true;S.log.mapTime+=(now()-mapT0)/1000;S.paused=false;}
-$('#mapClose').onclick=closeMap;
-function tryMap(){const d=Math.hypot(PL.x-(9*T+T/2),PL.z-(9*T+.3));if(d<2.6)openMap();else say(['The only map in the house hangs on the foyer wall.']);}
-
-/* ---------- story beats ---------- */
-function onTile(tx,ty){
-  const rm=roomAt(tx,ty);
-  if(rm&&rm!==S.room){S.room=rm;showRoom(rm);droneLevel(rm==='Foyer'?0:rm==="Servants' Corridor"?.09:.045);
-    S.visited=S.visited||{};if(!S.visited[rm]){S.visited[rm]=true;logEvent('enter:'+rm);}}
-  if(tx===23&&ty===3&&!S.flags.dark){S.flags.dark=true;logEvent('dark');architect();
-    say(['Your flashlight sputters.','...and dies. Somewhere ahead in the dark, something shifts its weight.'],'',()=>{setTimeout(()=>{const g=GH.find(o=>o.id==='corr');if(g&&g.state==='dormant')g.state='chase';},2500);});}
-  if(rm==='Foyer'&&S.flags.dark&&!S.flags.back){S.flags.back=true;S.flags.lightBack=true;S.backT=now();S.backDist=S.log.dist;logEvent('foyer-return');
-    sfx('thud',.8);setTimeout(()=>sfx('thud',.85),550);setTimeout(()=>sfx('thud',.9),1100);
-    say(['Your flashlight flickers back to life.','Overhead, heavy footsteps cross the floor. They are not Locke\'s.','The rug in the middle of the foyer has been pulled back. Beneath it is a trapdoor.']);}
-  if(rm==='Portrait Gallery'&&S.flags.changed){const g=GH.find(o=>o.id==='gal');if(g&&g.state==='dormant')g.state='idle';}
-}
-/* the Architect rearranges the foyer while the player is in the dark */
-function architect(){
-  S.flags.changed=true;
-  setPlug('7,12',false);setPlug('7,10',true);setPlug('11,8',false);setPlug('12,8',true);
-  const cp=S.clara.position.clone();S.clara.position.set(14*T+T-.04,1.8,11*T+T/2);S.clara.rotation.y=-Math.PI/2;
-  S.clock.position.set(13*T+T/2,0,9*T+.35);S.clock.rotation.y=Math.PI/2;BLOCK.delete('14,11');BLOCK.add('13,9');
-  S.claraIt.x=14*T+T-.3;S.claraIt.z=11*T+T/2;S.clockIt.x=13*T+T/2;S.clockIt.z=9*T+.6;
-  S.rug.position.x=11*T+T/2+T*.9;S.rug.rotation.z=.25;
-  const trap=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.4),new THREE.MeshLambertMaterial({map:TEX.door}));trap.rotation.x=-Math.PI/2;trap.position.set(11*T+T/2,.02,12*T+T/2);scene.add(trap);
-  S.trapIt.hidden=false;
-  makeGhoul(2,10,{id:'gal',state:'dormant',hp:5,speed:1.15});
-}
-function trapdoor(){
-  const have=['glove','music','locket'].filter(k=>S.inv[k]),miss=['glove','music','locket'].filter(k=>!S.inv[k]);
-  if(miss.length){say(['Three hollows are carved into the trapdoor: a glove, a music box, a locket.',
-    have.length?`You fit ${have.map(k=>NAMES[k].toLowerCase()).join(' and ')} into place. ${miss.length===1?'One hollow':'Two hollows'} still empty.`:'They are all empty.']);
-    if(have.length)logEvent('trap-partial');return;}
-  logEvent('trapdoor');S.flags.done=true;
-  say(['The glove, the music box, the locket. Each one settles into its hollow.','The trapdoor swings down. Stone steps descend, farther than the house is tall.','The air smells of candle wax and lilies.'],'',ending);
-}
-function ending(){
-  S.paused=true;if(document.exitPointerLock)document.exitPointerLock();
-  showEnd(`<h1>The Palace</h1><div class="sub">End of the East Wing beta</div>
-    <p>Somewhere below, Elias Locke is still building. A palace where every room stays where he put it.</p>
-    <p>The footsteps above stop at the top of the stairs.</p>
-    <button class="btn" id="again">Play again</button><br><button class="btn small" id="showNotes">Session notes</button>`,
-    ()=>{$('#again').onclick=()=>location.reload();$('#showNotes').onclick=notes;});
-}
-function showEnd(html,mount){$('#endCard').innerHTML=html;$('#end').hidden=false;if(mount)mount();}
-/* ---------- silent measures ---------- */
-S.lastBump=0;S.log.oldDoorBumps=0;
-function bump(x,z){if(!S.flags.changed)return;const[tx,tz]=tileOf(x,z),k=tx+','+tz;
-  if((k==='7,12'||k==='11,8')&&now()-S.lastBump>1200){S.lastBump=now();S.log.oldDoorBumps++;}}
-function notes(){
-  const L=S.log,f=(x,d=0)=>x==null||!isFinite(x)?'—':(+x).toFixed(d),mins=(now()-S.t0)/60000;
-  const tr=L.events.find(e=>e.name==='trapdoor'),post=S.backT&&tr?{t:tr.t-(S.backT-S.t0)/1000,d:tr.dist-S.backDist}:null;
-  const row=(k,v,m)=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span><span class="m">${m}</span></div>`;
-  let hist=[];try{hist=JSON.parse(localStorage.getItem('palace.runs')||'[]');}catch(e){}
-  if(!S.saved){S.saved=true;hist.push({d:Date.now(),mins,dist:L.dist,mapViews:L.mapViews,postT:post&&post.t,postD:post&&post.d,bumps:L.oldDoorBumps});try{localStorage.setItem('palace.runs',JSON.stringify(hist.slice(-50)));}catch(e){}}
-  showEnd(`<div id="notes"><h1 style="font-size:2rem;text-align:center">Session notes</h1>
-    <p style="font-size:.85rem;color:var(--muted);text-align:center">Recorded silently while you played. Nothing here was a test you could see.</p>
-    ${row('Run time',f(mins,1)+' min',`${f(L.dist)} m walked through the East Wing.`)}
-    ${row('Plan readings',`${L.mapViews} · ${f(L.mapTime)} s`,'How often you went back to the only map, and how long you studied it. A strategy marker for every navigation score below.')}
-    ${row('After the house changed',post?`${f(post.t)} s · ${f(post.d)} m`:'—','From the foyer return to opening the trapdoor. The Architect moved two doorways, so this is how fast your map updated.')}
-    ${row('Walked into sealed doorways',String(L.oldDoorBumps),'Attempts to use an old doorway after it was moved. Perseveration on a stale map.')}
-    ${row('Plan readings after the change',String(L.mapViewsPost||0),'The plan on the wall was never updated, so it now lies. Returning to it is a reasonable instinct that stops paying off.')}
-    ${row('Shooting',`${L.hits}/${L.shots}`,`Hits per shot. Damage taken: ${L.dmg}. Deaths: ${L.deaths||0}.`)}
-    ${row('Runs on record',String(hist.length),hist.length>1?'Run-to-run variability is where the signal will come from once the full game exists.':'Change across runs is the point. One run is an anecdote.')}
-    <div style="text-align:center"><button class="btn" id="again">Play again</button></div></div>`,()=>$('#again').onclick=()=>location.reload());
-}
-/* ---------- boot ---------- */
-makeGhoul(17,7,{id:'hall',state:'patrol',patrol:[[8,7],[20,7]]});
-makeGhoul(4,2,{id:'lib',state:'idle',hp:3,speed:.9});
-makeGhoul(24,8,{id:'corr',state:'dormant',speed:1.3});
-hud();resize();
-let last=now();
-function loop(){
-  requestAnimationFrame(loop);const t=now(),dt=Math.min(.05,(t-last)/1000);last=t;
-  if(S.running&&!S.paused){updatePlayer(dt);updateGhouls(dt,t);}
-  else{camera.position.set(PL.x,1.6,PL.z);camera.rotation.set(PL.pitch,PL.yaw,0);}
-  Object.values(DOORS).forEach(d=>{const tg=d.open?-1.75:0;d.ang+=(tg-d.ang)*Math.min(1,dt*3);d.piv.rotation.y=d.ang;});
-  S.chand.intensity=1.5+Math.sin(t/130)*.08+Math.sin(t/57)*.05;S.fire.intensity=1.05+Math.random()*.35;
-  flash.intensity=(S.flags.dark&&!S.flags.lightBack)?(Math.random()<.035?.9:.06):2.4;
-  if(!S.running)PL.yaw+=dt*.05;
-  findFocus();renderer.render(scene,camera);
-}
-loop();
-$('#start').onclick=()=>{
-  audio();startDrone();$('#title').hidden=true;S.running=true;S.paused=false;S.t0=now();resize();
-  if(!TOUCH){try{const p=cvEl.requestPointerLock&&cvEl.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
-  say(['The foyer of Locke Hall. The chandelier is lit, and the candles are fresh.','Someone has been here tonight.','The framed plan by the door is the only map in the house.']);
-};
-</script>
+<script src="levels.js"></script>
+<script src="game.js"></script>
 
 </html>
