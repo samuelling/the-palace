@@ -1,3 +1,6 @@
 sim/layouts.json
 sim/__pycache__/
 sim/*.log
+sim/ado_*.json
+sim/big_*.json
+sim/bias_*.json

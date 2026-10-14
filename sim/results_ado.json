@@ -1,0 +1,222 @@
+{
+ "fixed": {
+  "recovery_r": {
+   "acc": 0.864,
+   "rep": 0.309,
+   "gain": 0.777,
+   "leak": 0.41,
+   "rho": 0.884,
+   "alpha": 0.704,
+   "m": 0.835
+  },
+  "auc_hp": {
+   "acc": 0.845,
+   "rep": 0.646,
+   "gain": 0.698,
+   "leak": 0.63,
+   "rho": 0.596,
+   "alpha": 0.738,
+   "m": 0.799
+  },
+  "auc_hn": {
+   "acc": 0.863,
+   "rep": 0.686,
+   "gain": 0.875,
+   "leak": 0.65,
+   "rho": 0.51,
+   "alpha": 0.563,
+   "m": 0.697
+  },
+  "combined": {
+   "auc": 0.929,
+   "novice_flagged": 0.717
+  },
+  "interval_width": {
+   "session1": {
+    "acc": 0.366,
+    "rho": 0.473
+   },
+   "session3": {
+    "acc": 0.247,
+    "rho": 0.332
+   },
+   "session10": {
+    "acc": 0.172,
+    "rho": 0.172
+   }
+  },
+  "design": {
+   "mean_path_m": 14.3,
+   "palace_mix": {
+    "swap": 6660,
+    "rotate": 6660,
+    "none": 6480
+   }
+  }
+ },
+ "fixed_misspecified": {
+  "recovery_r": {
+   "acc": 0.501,
+   "rep": 0.239,
+   "gain": 0.77,
+   "leak": 0.528,
+   "rho": 0.883,
+   "alpha": 0.729,
+   "m": 0.852
+  },
+  "auc_hp": {
+   "acc": 0.552,
+   "rep": 0.627,
+   "gain": 0.591,
+   "leak": 0.663,
+   "rho": 0.77,
+   "alpha": 0.613,
+   "m": 0.723
+  },
+  "auc_hn": {
+   "acc": 0.529,
+   "rep": 0.584,
+   "gain": 0.77,
+   "leak": 0.666,
+   "rho": 0.641,
+   "alpha": 0.592,
+   "m": 0.579
+  },
+  "combined": {
+   "auc": 0.831,
+   "novice_flagged": 0.567
+  },
+  "interval_width": {
+   "session1": {
+    "acc": 0.407,
+    "rho": 0.474
+   },
+   "session3": {
+    "acc": 0.271,
+    "rho": 0.312
+   },
+   "session10": {
+    "acc": 0.159,
+    "rho": 0.179
+   }
+  },
+  "design": {
+   "mean_path_m": 14.3,
+   "palace_mix": {
+    "swap": 6660,
+    "rotate": 6660,
+    "none": 6480
+   }
+  }
+ },
+ "ado": {
+  "recovery_r": {
+   "acc": 0.856,
+   "rep": 0.387,
+   "gain": 0.679,
+   "leak": 0.569,
+   "rho": 0.894,
+   "alpha": 0.752,
+   "m": 0.827
+  },
+  "auc_hp": {
+   "acc": 0.825,
+   "rep": 0.652,
+   "gain": 0.611,
+   "leak": 0.716,
+   "rho": 0.676,
+   "alpha": 0.645,
+   "m": 0.756
+  },
+  "auc_hn": {
+   "acc": 0.797,
+   "rep": 0.74,
+   "gain": 0.821,
+   "leak": 0.688,
+   "rho": 0.581,
+   "alpha": 0.558,
+   "m": 0.69
+  },
+  "combined": {
+   "auc": 0.876,
+   "novice_flagged": 0.933
+  },
+  "interval_width": {
+   "session1": {
+    "acc": 0.348,
+    "rho": 0.416
+   },
+   "session3": {
+    "acc": 0.241,
+    "rho": 0.261
+   },
+   "session10": {
+    "acc": 0.147,
+    "rho": 0.12
+   }
+  },
+  "design": {
+   "mean_path_m": 14.6,
+   "palace_mix": {
+    "swap": 1133,
+    "rotate": 12732,
+    "none": 5935
+   }
+  }
+ },
+ "ado_misspecified": {
+  "recovery_r": {
+   "acc": 0.324,
+   "rep": 0.259,
+   "gain": 0.685,
+   "leak": 0.536,
+   "rho": 0.9,
+   "alpha": 0.729,
+   "m": 0.807
+  },
+  "auc_hp": {
+   "acc": 0.644,
+   "rep": 0.679,
+   "gain": 0.611,
+   "leak": 0.701,
+   "rho": 0.757,
+   "alpha": 0.731,
+   "m": 0.721
+  },
+  "auc_hn": {
+   "acc": 0.633,
+   "rep": 0.689,
+   "gain": 0.718,
+   "leak": 0.64,
+   "rho": 0.592,
+   "alpha": 0.518,
+   "m": 0.585
+  },
+  "combined": {
+   "auc": 0.876,
+   "novice_flagged": 0.6
+  },
+  "interval_width": {
+   "session1": {
+    "acc": 0.4,
+    "rho": 0.413
+   },
+   "session3": {
+    "acc": 0.256,
+    "rho": 0.258
+   },
+   "session10": {
+    "acc": 0.124,
+    "rho": 0.115
+   }
+  },
+  "design": {
+   "mean_path_m": 15.0,
+   "palace_mix": {
+    "swap": 1301,
+    "rotate": 12621,
+    "none": 5878
+   }
+  }
+ }
+}

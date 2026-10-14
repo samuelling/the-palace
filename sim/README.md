@@ -92,3 +92,16 @@ Half-sized effects, no decline, five lantern trials per session:
 | glimpse tests (v5), transition-specific deficit | .82 · 66% | .97 · 66% |
 
 Over ten sessions the integration measures carry real signal and resist the novice confound: correct after a rotation, AUC .82 healthy vs prodromal and .59 healthy vs novice; the rotation-minus-no-change contrast .78 vs .54. Closure revisits stay weak (.55 to .59).
+
+## Adaptive design optimization (`ado_sim.js`, `ado_analyze.py`)
+
+`ado_sim.js` runs the game's own `ado.js`. Simulated players (half-sized prodromal effects) do 10 sessions of 5 lantern returns and 11 palace glimpse tests. Fixed design: random lantern paths, palace reshuffles cycling swap, rotation, none. Adaptive: the first lantern trial and first three palace tests are fixed anchors; the rest are chosen by expected information gain over the grid posterior.
+
+| | Fixed | Adaptive |
+| --- | --- | --- |
+| Healthy vs prodromal AUC, novices flagged (150 per group) | .925 · 69% | .96 · 71% |
+| 80% interval width at session 3 (noise · inference) | .26 · .33 | .25 · .26 |
+| 80% interval width at session 10 (noise · inference) | .17 · .17 | .15 · .12 |
+| Recovery r (noise, inference) | .89, .86 | .91, .91 |
+
+With a misspecification not in the model (a constant turning bias of about 15° per player), recovery of accumulating noise fell to .50 with fixed designs and .32 with adaptive ones: adaptive designs lean harder on the model. Adding a turning-bias parameter to the lantern model restored it to .83 under both, with the adaptive design still ahead (.926 vs .906 AUC; 64% vs 75% of novices flagged). In the palace, the adaptive policy runs mostly rotations and no-change tests and almost no swaps.

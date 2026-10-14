@@ -34,3 +34,7 @@ The session notes after each chapter summarize these and offer "Copy session dat
 - `game.js`: engine, telemetry, chapter flow
 - `shell.html`: page body; `python3 build.py` wraps it into `index.html`
 - `sim/`: Monte Carlo players
+
+### Adaptive design
+
+`ado.js` keeps a grid posterior per player for two models: path integration on the lantern trials (accumulating noise, reporting noise, gain, leak, turning bias) and integrating a glimpse in the palace (rule inference, local updating, memory for unchanged links). After a few fixed anchor trials, each lantern path and each palace reshuffle type is chosen to maximize expected information gain. Posteriors are saved in the browser and carried into the next session with some widening, so a real change in a player can still show up. Session notes report the estimates with 80% intervals.

@@ -848,7 +848,7 @@ function summarize(c) {
   ];
   if (c.ado && (c.id === 'conservatory' || c.id === 'palace')) {
     const f = (o, d) => `${o.mean.toFixed(d)} (${o.lo}–${o.hi})`;
-    if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `noise ${f(l.acc, 2)}`, `Accumulating noise per √m, with an 80% interval. Reporting noise ${f(l.rep, 2)}, gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)}. Estimated from every lantern return so far, across sessions.`]); }
+    if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `noise ${f(l.acc, 2)}`, `Accumulating noise per √m, with an 80% interval. Reporting noise ${f(l.rep, 2)}, gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)}, turning bias ${f(l.bias, 0)}°. Estimated from every lantern return so far, across sessions.`]); }
     if (c.id === 'palace') { const q = c.ado.palace; rows.push(['Model: integrating a glimpse', `inference ${f(q.rho, 2)}`, `Probability of working out the whole rearrangement from one glimpse. Local updating ${f(q.alpha, 2)}, memory for unchanged links ${f(q.m, 2)}. Reshuffle types after the first three were chosen to be as informative as possible about these.`]); }
   }
   if (c.id === 'grounds') rows.unshift(['Warm-up', 'not scored', 'Calibrates movement and aim for this session, so the chapters measure decisions rather than controls.']);

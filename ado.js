@@ -46,21 +46,24 @@
      Error in the frame of the true homing vector (length c, outbound path length L):
        radial  e_r ~ N((gain * exp(-leak * L) - 1) * c, s)   tangential e_t ~ N(0, s)
        s^2 = acc^2 * L + rep^2     (acc: accumulating noise per sqrt(m); rep: reporting noise) */
-  const LANTERN_AXES = { acc: [.1, .2, .3, .4, .55, .7, .9, 1.2], rep: [.2, .35, .5, .7, .9, 1.2, 1.6], gain: [.75, .85, .95, 1.05, 1.15], leak: [0, .006, .012, .02, .03] };
+  // bias: a constant rotation of the homing response (degrees); real path integrators drift to one side
+  const LANTERN_AXES = { acc: [.1, .2, .3, .4, .55, .7, .9, 1.2], rep: [.2, .35, .5, .7, .9, 1.2, 1.6], gain: [.75, .85, .95, 1.05, 1.15], leak: [0, .006, .012, .02, .03], bias: [-24, -12, 0, 12, 24] };
   function lanternLogLik(g, d, er, et, out) {
-    const { acc, rep, gain, leak } = g.cols;
+    const { acc, rep, gain, leak, bias } = g.cols;
     for (let i = 0; i < g.N; i++) {
-      const s2 = acc[i] * acc[i] * d.L + rep[i] * rep[i], mu = (gain[i] * Math.exp(-leak[i] * d.L) - 1) * d.c;
-      out[i] = -Math.log(2 * Math.PI * s2) - ((er - mu) * (er - mu) + et * et) / (2 * s2);
+      const s2 = acc[i] * acc[i] * d.L + rep[i] * rep[i], R = gain[i] * Math.exp(-leak[i] * d.L) * d.c, b = bias[i] * Math.PI / 180;
+      const mr = R * Math.cos(b) - d.c, mt = R * Math.sin(b);
+      out[i] = -Math.log(2 * Math.PI * s2) - ((er - mr) * (er - mr) + (et - mt) * (et - mt)) / (2 * s2);
     }
     return out;
   }
   function lanternUpdate(g, d, er, et) { const ll = lanternLogLik(g, d, er, et, new Float64Array(g.N)); for (let i = 0; i < g.N; i++) g.logp[i] += ll[i]; }
   function lanternEIG(g, d, rnd, S) {
-    S = S || 32; const w = weights(g), H0 = entropy(w), idx = sampleIdx(w, S, rnd), ll = new Float64Array(g.N), post = new Float64Array(g.N);
-    const { acc, rep, gain, leak } = g.cols; let Hs = 0;
+    S = S || 20; const w = weights(g), H0 = entropy(w), idx = sampleIdx(w, S, rnd), ll = new Float64Array(g.N), post = new Float64Array(g.N);
+    const { acc, rep, gain, leak, bias } = g.cols; let Hs = 0;
     for (const i of idx) {
-      const s = Math.sqrt(acc[i] * acc[i] * d.L + rep[i] * rep[i]), er = (gain[i] * Math.exp(-leak[i] * d.L) - 1) * d.c + s * gauss(rnd), et = s * gauss(rnd);
+      const s = Math.sqrt(acc[i] * acc[i] * d.L + rep[i] * rep[i]), R = gain[i] * Math.exp(-leak[i] * d.L) * d.c, b = bias[i] * Math.PI / 180;
+      const er = R * Math.cos(b) - d.c + s * gauss(rnd), et = R * Math.sin(b) + s * gauss(rnd);
       lanternLogLik(g, d, er, et, ll);
       let m = -Infinity; for (let k = 0; k < g.N; k++) { post[k] = g.logp[k] + ll[k]; if (post[k] > m) m = post[k]; }
       let z = 0; for (let k = 0; k < g.N; k++) { post[k] = Math.exp(post[k] - m); z += post[k]; }
@@ -113,7 +116,7 @@
   function chooseLantern(st, cands, rnd, anchor) {
     if (anchor) { let best = cands[0]; cands.forEach(c => { if (Math.abs(c.length - 12) < Math.abs(best.length - 12)) best = c; }); return { pick: best, eig: null, anchor: true }; }
     let best = null, be = -Infinity;
-    cands.forEach(c => { const e = lanternEIG(st.lantern, { L: c.length, c: c.homeDist }, rnd); if (e > be) { be = e; best = c; } });
+    cands.slice(0, 6).forEach(c => { const e = lanternEIG(st.lantern, { L: c.length, c: c.homeDist }, rnd); if (e > be) { be = e; best = c; } });
     return { pick: best, eig: +be.toFixed(4), anchor: false };
   }
   function choosePalace(st, kinds, anchor) {
