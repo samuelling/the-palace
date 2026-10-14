@@ -14,7 +14,7 @@ A first-person 3D survival-horror game. Play it on GitHub Pages or open `index.h
 
 Some figures in the dark are dress forms or scarecrows. Some are ghouls standing still, and those sway very slightly.
 
-Controls. Desktop: WASD move, mouse look (click to capture), click or Space fire, E use, Shift run, M to read a plan while standing at it. Phone: left stick, drag to look, Fire, Use and Map buttons.
+Controls. Desktop: WASD move, mouse look (click to capture), click or Space fire, E use, Shift run, M to read a plan while standing at it, N music on/off, L model estimates. Phone: left stick, drag to look, Fire, Use and Map buttons, Lab button for the estimates.
 
 ### What is recorded, silently
 
@@ -28,10 +28,22 @@ Controls. Desktop: WASD move, mouse look (click to capture), click or Space fire
 
 The session notes after each chapter summarize these and offer "Copy session data" (JSON).
 
+### Sound
+
+`audio.js` synthesizes the score and every effect at run time with WebAudio; there are no samples. Each chapter has its own key, drone and chord voice (strings on the grounds, organ in the East Wing, glass in the conservatory, a formant choir in the palace) plus weather and the house: wind, rain on glass, the boiler, stick-slip creaks, drips, whispers, distant thuds. Tension rises quickly when something is hunting you and settles slowly: the drone's filter opens, a tritone comes in, then tremolo strings and a heartbeat. Clara's lullaby is one fixed melody, intact on the chapter cards; inside the house it plays in safe rooms (with a clock) and occasionally far off, and the deeper the chapter the more notes go missing and the further the rest drift out of tune.
+
+The score never reacts to anything a measure depends on. Standing figures are not enemies until they move, so a dormant ghoul never changes the music; Architect reshuffles have no cue; and while a homing trial runs every positional sound is centred, so nothing can act as an auditory landmark for path integration.
+
+### Model estimates overlay
+
+Press L (or the Lab button on a phone, or open the page with `#lab`) for a live view of the adaptive layer: the marginal posterior of every parameter, filled for now and outlined for where it started this session, with the mean and 80% interval; the uncertainty left in each model, in bits, trial by trial; the next lantern path or palace reshuffle the design chose and its expected information gain (or that it is a fixed anchor); and the behavioral measures that don't go through a model. It is off by default so players are not steered by watching their own estimates.
+
 ### Files
 
 - `levels.js`: seeded chapter generators (pure; also loadable from node for simulation)
-- `game.js`: engine, telemetry, chapter flow
+- `game.js`: engine, telemetry, chapter flow, model-estimates overlay
+- `ado.js`: adaptive design optimization
+- `audio.js`: generative score and sound effects
 - `shell.html`: page body; `python3 build.py` wraps it into `index.html`
 - `sim/`: Monte Carlo players
 

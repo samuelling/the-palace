@@ -69,26 +69,11 @@ const MAT = {};
 const mat = (k, opts) => MAT[k] || (MAT[k] = new THREE.MeshPhongMaterial(Object.assign({ map: tex(k), shininess: 6, specular: 0x111111 }, opts || {})));
 const flat = (color, emissive) => new THREE.MeshLambertMaterial({ color, emissive: emissive || 0 });
 
-/* ---------- sound ---------- */
-let AC = null, droneG = null;
-function audio() { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch (e) { } }
-function noiseBuf(d) { const b = AC.createBuffer(1, AC.sampleRate * d, AC.sampleRate), a = b.getChannelData(0); for (let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1; return b; }
-function sfx(type, vol = 1) {
-  if (!AC) return; const t = AC.currentTime, g = AC.createGain(); g.connect(AC.destination);
-  const osc = (tp, f0, f1, dur, v, filt) => { const o = AC.createOscillator(); o.type = tp; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t + dur); let n = o; if (filt) { const f = AC.createBiquadFilter(); f.type = filt[0]; f.frequency.value = filt[1]; if (filt[2]) f.Q.value = filt[2]; o.connect(f); n = f; } n.connect(g); g.gain.setValueAtTime(v * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.start(t); o.stop(t + dur + .05); };
-  const nz = (dur, v, fc) => { const s = AC.createBufferSource(); s.buffer = noiseBuf(dur); const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = fc; s.connect(f).connect(g); g.gain.setValueAtTime(v * vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); s.start(t); };
-  if (type === 'shot') nz(.35, .9, 1800); else if (type === 'step') nz(.08, .18, 380); else if (type === 'scrape') nz(.12, .1, 900);
-  else if (type === 'thud') osc('sine', 70, 30, .45, .7); else if (type === 'hurt') osc('sawtooth', 220, 90, .25, .25);
-  else if (type === 'creak') osc('square', 140, 95, .65, .12, ['bandpass', 600, 8]);
-  else if (type === 'roar') { osc('sawtooth', 70, 40, 1.4, .3, ['lowpass', 300]); }
-  else if (type === 'veil') { osc('sine', 300, 900, .6, .15); }
-  else if (type === 'match') { nz(.25, .4, 3000); }
-  else if (type === 'caw') { osc('sawtooth', 900, 500, .18, .12, ['bandpass', 1200, 3]); }
-  else if (type === 'moan') { const o = AC.createOscillator(), f = AC.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.setValueAtTime(R(85, 110), t); o.frequency.linearRampToValueAtTime(R(60, 75), t + 1.1); f.type = 'lowpass'; f.frequency.value = 420; o.connect(f).connect(g); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16 * vol, t + .25); g.gain.linearRampToValueAtTime(0, t + 1.2); o.start(t); o.stop(t + 1.25); }
-  else if (type === 'pickup') { [660, 880].forEach((fq, i) => { const o = AC.createOscillator(), gg = AC.createGain(); o.type = 'triangle'; o.frequency.value = fq; o.connect(gg).connect(AC.destination); gg.gain.setValueAtTime(.12, t + i * .09); gg.gain.exponentialRampToValueAtTime(.001, t + i * .09 + .3); o.start(t + i * .09); o.stop(t + i * .09 + .32); }); }
-}
-function startDrone() { if (!AC || droneG) return; droneG = AC.createGain(); droneG.gain.value = 0; droneG.connect(AC.destination); [41, 61.5, 82.4].forEach(fq => { const o = AC.createOscillator(), f = AC.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.value = fq * R(.995, 1.005); f.type = 'lowpass'; f.frequency.value = 180; o.connect(f).connect(droneG); o.start(); }); }
-function droneLevel(v) { if (droneG) droneG.gain.setTargetAtTime(v, AC.currentTime, 1.2); }
+/* ---------- sound: synthesized score and effects live in audio.js ---------- */
+const SND = window.PALACE_AUDIO;
+function audio() { SND.init(); }
+function sfx(type, vol = 1) { SND.sfx(type, { vol }); }
+function sfxAt(type, x, z, vol = 1) { SND.sfx(type, { vol, x, z, occ: !los(PL.x, PL.z, x, z) }); }
 
 /* ---------- renderer ---------- */
 const renderer = new THREE.WebGLRenderer({ antialias: !TOUCH, powerPreference: 'high-performance' });
@@ -318,7 +303,7 @@ function decideFigure(f, how, t) {
   const rec = { chapter: S.spec.id, id: f.id, truth: f.type, look: f.look, sway: f.sway, seen: f.seen != null ? (f.seen - S.t0) / 1000 : null,
     decision: how, rt: f.seen != null ? (t - f.seen) / 1000 : null, correct: (how === 'shoot') === (f.type === 'sleeper') };
   S.log.figures.push(rec);
-  if (f.type === 'sleeper') { f.mesh.visible = false; const [x, y] = tileOf(f.wx, f.wz); spawnEnemy({ id: f.id + '-awake', type: 'ghoul', x, y, state: 'chase', hp: how === 'shoot' ? 3 : 4, at: [f.wx, f.wz], look: f.look === 'scarecrow' ? 'gardener' : null }); sfx('moan', 1.2); }
+  if (f.type === 'sleeper') { f.mesh.visible = false; const [x, y] = tileOf(f.wx, f.wz); spawnEnemy({ id: f.id + '-awake', type: 'ghoul', x, y, state: 'chase', hp: how === 'shoot' ? 3 : 4, at: [f.wx, f.wz], look: f.look === 'scarecrow' ? 'gardener' : null }); sfxAt('moan', f.wx, f.wz, 1.2); SND.stinger('alert'); }
 }
 function updateFigures(dt, t) {
   S.figures.forEach(f => {
@@ -365,7 +350,7 @@ function bfsNext(o, sx, sy, tx, ty) {
   let cur = KEY(tx, ty); if (!prev.has(cur)) return null; let step = [tx, ty];
   while (prev.get(cur) && KEY(...prev.get(cur)) !== KEY(sx, sy)) { step = prev.get(cur); cur = KEY(...step); } return step;
 }
-function wake(id, mul) { const o = S.enemies.find(e => e.id === id); if (!o) return; o.state = 'chase'; o.hunt = true; if (mul) o.speed *= mul; if (o.type === 'guardian') sfx('roar'); else sfx('moan'); }
+function wake(id, mul) { const o = S.enemies.find(e => e.id === id); if (!o) return; o.state = 'chase'; o.hunt = true; if (mul) o.speed *= mul; sfxAt(o.type === 'guardian' ? 'roar' : 'moan', o.x, o.z); SND.stinger('alert'); }
 function updateEnemies(dt) {
   S.enemies.forEach(o => {
     if (o.state === 'dead') { if (o.fall < 1) { o.fall = Math.min(1, o.fall + dt * 1.8); o.body.rotation.x = -o.fall * Math.PI / 2; o.body.position.y = o.fall * .15; } return; }
@@ -374,7 +359,7 @@ function updateEnemies(dt) {
     const dx = PL.x - o.x, dz = PL.z - o.z, d = Math.hypot(dx, dz), [ptx, pty] = tileOf(PL.x, PL.z);
     const playerSafe = isSafe(ptx, pty), sightR = o.type === 'guardian' ? 8 : 11;
     const see = !playerSafe && d < sightR && los(o.x, o.z, PL.x, PL.z) && (!o.allowed || o.allowed.has(S.spec.roomAt(ptx, pty)));
-    if (see && o.state !== 'chase') { o.state = 'chase'; sfx(o.type === 'guardian' ? 'roar' : 'moan', 1); }
+    if (see && o.state !== 'chase') { o.state = 'chase'; sfxAt(o.type === 'guardian' ? 'roar' : 'moan', o.x, o.z); SND.stinger('alert'); }
     if (o.state === 'chase' && !o.hunt) { if (see) o.lost = 0; else if ((o.lost += dt) > 7) o.state = o.patrol ? 'patrol' : 'idle'; }
     let tx = null, tz = null, sp = o.speed;
     if (o.state === 'chase' && !playerSafe) {
@@ -390,11 +375,12 @@ function updateEnemies(dt) {
       const ok = (x, z) => { const [a, b] = tileOf(x, z); return ghPass(o, a, b); };
       if (d > .7) { if (ok(o.x + stx, o.z)) o.x += stx; if (ok(o.x, o.z + stz)) o.z += stz; }
       o.g.rotation.y = Math.atan2(-vx, -vz);
+      if ((o.stepT = (o.stepT || 0) - dt) <= 0) { o.stepT = (o.type === 'guardian' ? .75 : .6) * o.speed / sp; if (d < 14) sfxAt('drag', o.x, o.z, o.type === 'guardian' ? 1 : .7); }
     }
     o.g.position.set(o.x, 0, o.z);
     o.body.rotation.z = Math.sin(o.t * 3) * .06; o.body.position.y = Math.abs(Math.sin(o.t * 3)) * .04;
     o.arms.forEach((a, i) => a.rotation.x = Math.sin(o.t * 3 + i * 1.4) * .2);
-    if ((o.moanT -= dt) <= 0) { o.moanT = R(4, 9); if (d < 14) sfx(o.type === 'guardian' ? 'roar' : 'moan', Math.max(.12, 1 - d / 14) * (o.type === 'guardian' ? .5 : 1)); }
+    if ((o.moanT -= dt) <= 0) { o.moanT = R(4, 9); if (d < 16) sfxAt(o.type === 'guardian' ? 'roar' : 'moan', o.x, o.z, o.type === 'guardian' ? .6 : .9); }
     const reach = o.type === 'guardian' ? 1.3 : .95;
     if (o.state === 'chase' && d < reach && o.cd <= 0 && !S.paused && !playerSafe) { o.cd = o.type === 'guardian' ? 2.2 : 1.7; hurtPlayer(dx / d, dz / d, o.type === 'guardian' ? 2 : 1); }
   });
@@ -490,7 +476,7 @@ function updatePlayer(dt, t) {
     if (blocked && t - lastScrape > 500) { lastScrape = t; m.scrapes++; }
     const [tx, ty] = tileOf(PL.x, PL.z);
     if (!running && mag > .8 && straightTile(tx, ty)) { m.straightT += dt; m.straightD += moved; }
-    PL.bob += moved * 3.2; PL.stepAcc += moved; if (PL.stepAcc > .9 * run) { PL.stepAcc = 0; sfx('step'); }
+    PL.bob += moved * 3.2; PL.stepAcc += moved; if (PL.stepAcc > .9 * run) { PL.stepAcc = 0; SND.sfx('step', { surface: themeAt(tx, ty).floor }); }
   }
   camera.position.set(PL.x, 1.6 + Math.sin(PL.bob) * .035, PL.z); camera.rotation.set(PL.pitch, PL.yaw, 0);
   const [tx, ty] = tileOf(PL.x, PL.z), k = KEY(tx, ty);
@@ -512,7 +498,7 @@ function goalDist(passFn) {
 }
 function onTile(tx, ty, prev) {
   const room = S.spec.roomAt(tx, ty);
-  if (room && room !== S.room) { S.room = room; showRoom(room); droneLevel(S.spec.safe.includes(room) ? 0 : S.dark ? .09 : .045); if (!S.visited[room]) { S.visited[room] = true; logEvent('enter', { room }); } }
+  if (room && room !== S.room) { S.room = room; showRoom(room); if (!S.visited[room]) { S.visited[room] = true; logEvent('enter', { room }); } }
   if (prev && S.goalSet) {
     const [px, py] = prev.split(',').map(Number), deg = N4.filter(([dx, dy]) => passable(px + dx, py + dy)).length;
     const diag = [[1, 1], [1, -1], [-1, 1], [-1, -1]].filter(([dx, dy]) => passable(px + dx, py + dy)).length;
@@ -558,7 +544,7 @@ function hurtPlayer(nx, nz, dmg) {
   hud(); if (S.hp <= 0) die();
 }
 function die() {
-  S.paused = true; S.log.deaths++; logEvent('death'); if (document.exitPointerLock) document.exitPointerLock();
+  S.paused = true; S.log.deaths++; logEvent('death'); SND.stinger('death'); if (document.exitPointerLock) document.exitPointerLock();
   showScreen('end', `<h1 style="color:var(--blood)">You Died</h1><p>The house keeps you a while, then lets you go.</p><button class="btn" id="retry">Wake in the ${S.spec.safe[0].toLowerCase()}</button>`,
     () => $('#retry').onclick = () => { $('#end').hidden = true; S.hp = 3; placeAtSpawn(); S.enemies.forEach(o => { if (o.state === 'chase' && !o.hunt) o.state = o.patrol ? 'patrol' : 'idle'; }); hud(); S.paused = false; $('#hurt').style.opacity = 0; });
 }
@@ -569,7 +555,7 @@ function aimTarget(o, dir) {
   return best;
 }
 function fire() {
-  if (S.ammo <= 0) { toast('Out of ammunition.'); return; }
+  if (S.ammo <= 0) { sfx('empty'); toast('Out of ammunition.'); return; }
   S.ammo--; S.log.shotsN++; sfx('shot'); muzzle.intensity = 4; setTimeout(() => muzzle.intensity = 0, 70); hud();
   const o = camera.position.clone(), dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
   let wall = 30; for (let s = .2; s < 30; s += .15) { const p = o.clone().addScaledVector(dir, s), [tx, tz] = tileOf(p.x, p.z); if (opaque(tx, tz) || p.y < 0 || p.y > WH) { wall = s; break; } }
@@ -581,7 +567,7 @@ function fire() {
   const err = aimTarget(o, dir);
   S.log.shots.push({ t: +((now() - S.t0) / 1000).toFixed(2), hit: !!best, aimErr: err == null ? null : +err.toFixed(1), target: best ? (best.tg ? 'crow' : best.f ? 'figure:' + best.f.type : best.g.type) : null });
   if (!best) return;
-  if (best.tg) { const tg = best.tg; tg.alive = false; tg.vy = 1; const a = R(0, 6.28); tg.dx = Math.cos(a); tg.dz = Math.sin(a); sfx('caw'); S.log.hits++; logEvent('crow', { id: tg.id }); if (S.hooks.onTarget) S.hooks.onTarget(tg); return; }
+  if (best.tg) { const tg = best.tg; tg.alive = false; tg.vy = 1; const a = R(0, 6.28); tg.dx = Math.cos(a); tg.dz = Math.sin(a); sfxAt('caw', tg.wx, tg.wz); S.log.hits++; logEvent('crow', { id: tg.id }); if (S.hooks.onTarget) S.hooks.onTarget(tg); return; }
   if (best.f) { const f = best.f; if (!f.decided) decideFigure(f, 'shoot', now()); if (f.type === 'mannequin') { f.mesh.rotation.z = .15; setTimeout(() => f.mesh.rotation.z = 0, 160); toast(f.look === 'scarecrow' ? 'Only a scarecrow.' : 'Only a dress form under a sheet.'); } return; }
   const g = best.g; S.log.hits++;
   if (g.type === 'guardian') { g.stagger = 2.5; g.state = 'chase'; return; }
@@ -730,10 +716,102 @@ function updateLantern(dt) {
   L.g.position.set(L.x, 1.25 + Math.sin(L.t * 2.2) * .06, L.z);
 }
 
+/* ---------- researcher overlay: live posteriors, certainty, next design ---------- */
+const LAB_ROWS = {
+  lantern: [['acc', 'Accum. noise', v => v.toFixed(2)], ['rep', 'Report noise', v => v.toFixed(2)], ['gain', 'Gain', v => v.toFixed(2)], ['leak', 'Leak /m', v => v.toFixed(3)], ['bias', 'Turn bias °', v => v.toFixed(0)]],
+  palace: [['rho', 'Rule inference', v => v.toFixed(2)], ['alpha', 'Local update', v => v.toFixed(2)], ['m', 'Link memory', v => v.toFixed(2)]],
+};
+let labOn = null, labLast = 0;   // resolved on first use: store is declared further down
+function labIsOn() { if (labOn === null) labOn = location.hash === '#lab' || store.get('palace.lab', false); return labOn; }
+function labToggle(v) { labOn = v == null ? !labIsOn() : v; store.set('palace.lab', labOn); $('#lab').hidden = !labOn || !S.running; labRender(true); }
+function labRender(force) {
+  if (!labIsOn() || !S.running) { $('#lab').hidden = true; return; }
+  const t = now(); if (!force && t - labLast < 1000) return; labLast = t;
+  $('#lab').hidden = false;
+  const st = adoState(), cv = $('#labCv'), d = window.devicePixelRatio || 1, W = 296, rowH = 36, secH = 22, sparkH = 34;
+  const H = secH * 2 + rowH * (LAB_ROWS.lantern.length + LAB_ROWS.palace.length) + (sparkH + 14) * 2 + 6;
+  if (cv.width !== W * d || cv.height !== H * d) { cv.width = W * d; cv.height = H * d; cv.style.height = H + 'px'; }
+  const g = cv.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, W, H);
+  const brass = '#e0a84a', dim = '#6d5530', muted = '#968b7d', paper = '#e6dcc4', font = '11px "Special Elite", monospace';
+  let y = 0;
+  const section = (title, model) => {
+    g.fillStyle = brass; g.font = '12px "IM Fell English SC", serif'; g.fillText(title, 0, y + 14);
+    g.fillStyle = muted; g.font = font; g.textAlign = 'right'; g.fillText(`${S.adoN[model]} trial${S.adoN[model] === 1 ? '' : 's'} today`, W, y + 14); g.textAlign = 'left';
+    y += secH;
+    const M = ADO.marginals(st[model]), P = S.adoPrior[model], sm = ADO.summary(st[model]);
+    LAB_ROWS[model].forEach(([key, label, fmt]) => {
+      // label and estimate on one line; the marginal histogram underneath: filled = now, outline = start of session
+      const m = M[key], pr = P[key], n = m.vals.length, cw = W / n, bh = rowH - 17, maxp = Math.max(...m.p, ...pr.p, 1e-6), s = sm[key], base = y + rowH - 3;
+      g.fillStyle = muted; g.font = font; g.fillText(label, 0, y + 10);
+      g.fillStyle = paper; g.textAlign = 'right'; g.fillText(`${fmt(s.mean)}  80%: ${fmt(s.lo)} to ${fmt(s.hi)}`, W, y + 10); g.textAlign = 'left';
+      for (let k = 0; k < n; k++) {
+        const inInt = m.vals[k] >= s.lo && m.vals[k] <= s.hi, h = Math.max(1, (m.p[k] / maxp) * bh), hp = (pr.p[k] / maxp) * bh;
+        g.fillStyle = inInt ? brass : dim; g.fillRect(k * cw + 1.5, base - h, cw - 3, h);
+        g.strokeStyle = 'rgba(230,220,196,.45)'; g.lineWidth = 1; g.strokeRect(k * cw + 2, base - hp, cw - 4, hp);
+      }
+
+      y += rowH;
+    });
+  };
+  const spark = (model, label) => {
+    const h = S.adoHist[model], h0 = h[0], gained = h0 - h[h.length - 1];
+    g.fillStyle = muted; g.font = font; g.fillText(label, 0, y + 10);
+    g.fillStyle = paper; g.textAlign = 'right'; g.fillText(`${gained.toFixed(1)} bits learned`, W, y + 10); g.textAlign = 'left';
+    const top = y + 14, x0 = 0, w = W, ht = sparkH - 4, lo = Math.min(...h) - .2, hi = h0 + .2;
+    g.strokeStyle = '#3a322b'; g.beginPath(); g.moveTo(x0, top + ht); g.lineTo(x0 + w, top + ht); g.stroke();
+    if (h.length > 1) {
+      g.strokeStyle = brass; g.lineWidth = 1.5; g.beginPath();
+      h.forEach((v, i) => { const X = x0 + (i / Math.max(1, h.length - 1)) * w, Y = top + (1 - (v - lo) / (hi - lo)) * ht; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.stroke();
+      const v = h[h.length - 1]; g.fillStyle = brass; g.beginPath(); g.arc(x0 + w, top + (1 - (v - lo) / (hi - lo)) * ht, 2.5, 0, 7); g.fill();
+    } else { g.fillStyle = muted; g.fillText('no trials yet', x0, top + ht - 4); }
+    y += sparkH + 14;
+  };
+  section('Path integration · lantern', 'lantern');
+  section('Integrating a glimpse · palace', 'palace');
+  y += 6; spark('lantern', 'Lantern: uncertainty'); spark('palace', 'Palace: uncertainty');
+  const L = S.adoLast, nx = [];
+  if (L.lanternNext) nx.push(`Next lantern path: ${L.lanternNext.L.toFixed(1)} m out, ${L.lanternNext.c.toFixed(1)} m home${L.lanternNext.anchor ? ' (fixed anchor)' : ` · expected gain ${(L.lanternNext.eig / Math.LN2).toFixed(2)} bits`}`);
+  if (L.palaceNext) nx.push(`Next reshuffle: ${({ swap: 'swap', rotate: 'rotation', none: 'no change' })[L.palaceNext.kind]}${L.palaceNext.anchor ? ' (fixed anchor)' : ` · expected gain ${(L.palaceNext.eig / Math.LN2).toFixed(2)} bits`}`);
+  if (L.lanternObs) nx.push(`Last return: ${L.lanternObs.err.toFixed(1)} m off after ${L.lanternObs.L.toFixed(1)} m`);
+  if (L.palaceObs) nx.push(`Last glimpse test: ${L.palaceObs.kind}, ${L.palaceObs.cls}`);
+  $('#labNext').innerHTML = nx.join('<br>');
+  // behavioral measures that don't run through a model
+  const c = S.log, m = c.motor, F = c.figures, aims = c.shots.map(s => s.aimErr).filter(v => v != null), J = c.junctions;
+  const rows = [
+    ['Chapter', TITLE[S.spec.id] || S.spec.id],
+    ['Walking speed (straight)', m.straightT > 3 ? (m.straightD / m.straightT).toFixed(2) + ' m/s' : '—'],
+    ['Wall scrapes', m.dist > 10 ? (10 * m.scrapes / m.dist).toFixed(1) + ' /10 m' : '—'],
+    ['Aim error (median)', aims.length ? median(aims).toFixed(1) + '°' : '—'],
+    ['Figures correct', F.length ? `${F.filter(f => f.correct).length}/${F.length}` : '—'],
+    ['Figure sway scale', calib().swayScale.toFixed(2)],
+    ['Junction choices optimal', J.length ? `${J.filter(j => j.optimal).length}/${J.length}` : '—'],
+    ['Moved-doorway bumps', String(c.staleBumps || 0)],
+    ['Closure revisits', `${c.closureRevisits || 0}/${c.closureFinds || 0}`],
+  ];
+  $('#labLive').innerHTML = rows.map(([k, v]) => `<span class="k">${k}</span><span class="v">${v}</span>`).join('');
+  $('#labMeta').textContent = `session ${new Date(S.session.startedAt).toLocaleDateString()}`;
+}
+addEventListener('keydown', e => { if (e.code === 'KeyL' && S.running && !dlgOpen()) labToggle(); if (e.code === 'KeyN') { audio(); SND.setMusic(!SND.musicOn); toast(SND.musicOn ? 'Music on' : 'Music off'); musicLabel(); } });
+function musicLabel() { const b = $('#musicBtn'); if (b) b.textContent = SND.musicOn ? 'Music: on' : 'Music: off'; }
+$('#musicBtn').addEventListener('click', () => { audio(); SND.setMusic(!SND.musicOn); musicLabel(); }); musicLabel();
+$('#labBtn').addEventListener('click', () => labToggle());
+
 /* ---------- the API chapters script against ---------- */
 /* ---------- adaptive design: one posterior per player, carried across sessions with drift ---------- */
 const ADO = window.PALACE_ADO;
-function adoState() { if (!S.adoState) S.adoState = ADO.newState(store.get('palace.ado', null)); return S.adoState; }
+function adoState() {
+  if (!S.adoState) {
+    S.adoState = ADO.newState(store.get('palace.ado', null));
+    // what this session started from, so the overlay can show how far today's play has moved each estimate
+    const st = S.adoState, H = g => ADO.entropy(ADO.weights(g)) / Math.LN2;
+    S.adoPrior = { lantern: ADO.marginals(st.lantern), palace: ADO.marginals(st.palace), Hl: H(st.lantern), Hp: H(st.palace) };
+    S.adoHist = { lantern: [S.adoPrior.Hl], palace: [S.adoPrior.Hp] }; S.adoLast = {}; S.adoN = { lantern: 0, palace: 0 };
+  }
+  return S.adoState;
+}
+function adoTrack(model) {
+  const st = adoState(); S.adoHist[model].push(ADO.entropy(ADO.weights(st[model])) / Math.LN2); S.adoN[model]++; labRender(true);
+}
 function adoSave() { store.set('palace.ado', ADO.save(adoState())); S.log.ado = { lantern: ADO.summary(adoState().lantern), palace: ADO.summary(adoState().palace) }; }
 
 const api = {
@@ -756,10 +834,10 @@ const api = {
   endChapter: () => endChapter(),
   hold: holdEnemy,
   ado: {
-    chooseLantern: (cands, anchor) => ADO.chooseLantern(adoState(), cands, Math.random, anchor),
-    lanternUpdate: (d, res) => { const o = ADO.lanternObs(res); ADO.lanternUpdate(adoState().lantern, { L: d.length, c: o.c }, o.er, o.et); adoSave(); },
-    choosePalace: (kinds, anchor) => ADO.choosePalace(adoState(), kinds, anchor),
-    palaceUpdate: (kind, cls) => { ADO.palaceUpdate(adoState().palace, kind, cls); adoSave(); },
+    chooseLantern: (cands, anchor) => { const ch = ADO.chooseLantern(adoState(), cands, Math.random, anchor); S.adoLast.lanternNext = { L: ch.pick.length, c: ch.pick.homeDist, eig: ch.eig, anchor: ch.anchor }; labRender(true); return ch; },
+    lanternUpdate: (d, res) => { const o = ADO.lanternObs(res); ADO.lanternUpdate(adoState().lantern, { L: d.length, c: o.c }, o.er, o.et); S.adoLast.lanternObs = { L: d.length, err: res.err }; S.adoLast.lanternNext = null; adoSave(); adoTrack('lantern'); },
+    choosePalace: (kinds, anchor) => { const ch = ADO.choosePalace(adoState(), kinds, anchor); S.adoLast.palaceNext = ch; labRender(true); return ch; },
+    palaceUpdate: (kind, cls) => { ADO.palaceUpdate(adoState().palace, kind, cls); S.adoLast.palaceObs = { kind, cls }; S.adoLast.palaceNext = null; adoSave(); adoTrack('palace'); },
   },
   holdAll: on => S.enemies.forEach(e => holdEnemy(e.id, on)),
   isTaken: id => { const it = S.items.find(i => i.id === id); return !it || it.taken; },
@@ -788,6 +866,7 @@ function startChapter(i) {
   S.chapter = i;
   const sc = calib().swayScale, spec = L.generate(i, S.session.seedBase * 10 + i, { swayScale: sc });
   loadSpec(spec, i === 0 ? 12 : Math.max(S.ammo, 10)); S.log.swayScale = sc;
+  SND.scene('card');
   showScreen('end', `<div class="sub">${CH_NAMES[i]}</div><h1>${spec.title}</h1><p style="color:var(--muted)">${spec.sub}</p><button class="btn" id="begin">Begin</button>`, () => $('#begin').onclick = () => beginPlay(spec));
 }
 function loadSpec(spec, ammo) {
@@ -797,7 +876,8 @@ function loadSpec(spec, ammo) {
   placeAtSpawn(); hud(); $('#title').hidden = true; $('#end').hidden = true;
 }
 function beginPlay(spec) {
-  $('#end').hidden = true; audio(); startDrone(); S.running = true; S.paused = false; S.t0 = now(); resize();
+  $('#end').hidden = true; audio(); S.running = true; S.paused = false; S.t0 = now(); resize();
+  SND.scene(spec.id); adoState(); if (TOUCH) $('#labBtn').hidden = false; labIsOn(); labRender(true);
   if (!TOUCH) { try { const p = cvEl.requestPointerLock && cvEl.requestPointerLock(); if (p && p.catch) p.catch(() => { }); } catch (e) { } }
   if (S.hooks.onStart) S.hooks.onStart();
   say(spec.intro);
@@ -825,6 +905,7 @@ function endChapter() {
   showChapterCard();
 }
 function showChapterCard() {
+  SND.scene('card');
   const last = S.chapter === 2, mins = (S.log.duration / 60).toFixed(1);
   showScreen('end', last
     ? `<h1>The Palace</h1><div class="sub">The end of the beta</div><p>Elias Locke walks out into the grey morning and does not look back at the house.</p><p>Below it, the palace keeps every room exactly where it belongs.</p><button class="btn" id="notesB">Session notes</button><br><button class="btn small" id="again">Play again</button>`
@@ -883,6 +964,20 @@ function notes() {
     $('#back').onclick = showChapterCard;
   });
 }
+/* ---------- what the score is allowed to know ---------- */
+// Only threats the player could already perceive: a ghoul or the Guardian that is hunting, or one in plain sight.
+// Standing figures are not enemies until they move, so they never touch the music.
+function audioFrame(dt) {
+  if (!S.spec) return;
+  let threat = 0; const [tx, ty] = tileOf(PL.x, PL.z);
+  S.enemies.forEach(o => {
+    if (o.state === 'dead' || o.state === 'dormant') return; const d = Math.hypot(PL.x - o.x, PL.z - o.z);
+    if (o.state === 'chase') threat = Math.max(threat, 1 - .6 * Math.min(1, d / 16));
+    else if (d < 10 && los(PL.x, PL.z, o.x, o.z)) threat = Math.max(threat, .45 * (1 - d / 10));
+  });
+  SND.update({ dt, x: PL.x, z: PL.z, yaw: PL.yaw, threat, dark: S.dark, safe: S.running && isSafe(tx, ty), hp: S.hp, blind: !!(S.homing || S.lantern), running: S.running && !S.paused });
+}
+
 /* ---------- loop ---------- */
 let last = now();
 function loop() {
@@ -894,6 +989,8 @@ function loop() {
     S.veils.forEach((v, i) => v.mesh.material.opacity = .7 + .15 * Math.sin(t / 400 + i));
     S.lights.forEach(l => { if (l.flicker === 'candle') l.light.intensity = l.base * (1 + Math.sin(t / 130) * .05 + Math.sin(t / 57) * .03); else if (l.flicker === 'fire') l.light.intensity = l.base * (.9 + Math.random() * .3); });
     flash.intensity = S.dark ? (Math.random() < .035 ? .9 : .06) : 2.4;
+    if (labOn) labRender(false);
+    audioFrame(dt);
     findFocus();
   }
   renderer.render(scene, camera);

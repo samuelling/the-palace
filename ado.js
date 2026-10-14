@@ -125,7 +125,13 @@
     return { kind: best, eig: +be.toFixed(4), anchor: false };
   }
 
-  const api = { Grid, weights, entropy, summary, drift, serialize, restore, LANTERN_AXES, PALACE_AXES, lanternUpdate, lanternEIG, lanternObs, palaceProbs, palaceUpdate, palaceEIG, newState, save, chooseLantern, choosePalace };
+  // marginal posterior per parameter, for display
+  function marginals(g) {
+    const w = weights(g), out = {};
+    g.names.forEach(n => { const vals = g.axes[n], p = vals.map(() => 0); for (let i = 0; i < g.N; i++) p[vals.indexOf(g.cols[n][i])] += w[i]; out[n] = { vals, p }; });
+    return out;
+  }
+  const api = { Grid, weights, entropy, summary, marginals, drift, serialize, restore, LANTERN_AXES, PALACE_AXES, lanternUpdate, lanternEIG, lanternObs, palaceProbs, palaceUpdate, palaceEIG, newState, save, chooseLantern, choosePalace };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.PALACE_ADO = api;
 })(typeof window !== 'undefined' ? window : globalThis);

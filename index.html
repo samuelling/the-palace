@@ -62,6 +62,23 @@ body{margin:0}
 #tFire{right:max(28px,env(safe-area-inset-right,0px));bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 #tUse{right:max(104px,calc(env(safe-area-inset-right,0px) + 80px));bottom:calc(60px + env(safe-area-inset-bottom,0px))}
 #tMap{right:max(28px,env(safe-area-inset-right,0px));bottom:calc(40px + env(safe-area-inset-bottom,0px));width:52px;height:52px}
+#lab{position:absolute;top:calc(56px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));width:min(320px,calc(100% - 32px));max-height:calc(100% - 140px);overflow:auto;
+  background:rgba(10,8,7,.86);border:1px solid var(--brass-dim);padding:10px 12px 12px;font-family:var(--type);font-size:.72rem;color:var(--paper);pointer-events:auto;z-index:2}
+#lab .lab-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+#lab .lab-head b{font-family:var(--display);font-weight:400;font-size:1rem;color:var(--brass);letter-spacing:.04em}
+#lab .lab-meta{color:var(--muted);font-size:.66rem;text-align:right}
+#labCv{display:block;width:100%;height:auto}
+#lab .live{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;margin-top:8px;border-top:1px solid #3a322b;padding-top:6px;font-variant-numeric:tabular-nums}
+#lab .live .k{color:var(--muted)}#lab .live .v{color:var(--paper);text-align:right}
+#lab .next{margin-top:6px;color:var(--brass);line-height:1.45}
+@media (min-width:860px) and (min-height:520px){
+  #lab{width:600px}
+  #lab .lab-body{display:grid;grid-template-columns:296px minmax(0,1fr);gap:16px;align-items:start}
+  #lab .lab-side .live{margin-top:0}
+  #lab .lab-side .next{margin:0 0 8px}
+}
+#labBtn{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);pointer-events:auto;font-family:var(--type);font-size:.7rem;letter-spacing:.08em;
+  background:rgba(16,13,11,.6);color:var(--muted);border:1px solid #3a322b;padding:4px 10px;z-index:2}
 @media (prefers-reduced-motion:reduce){#room,#prompt,#hurt,#toast,#fade{transition:none}}
 </style>
 
@@ -79,6 +96,14 @@ body{margin:0}
     <button class="tbtn" id="tUse">Use</button>
     <button class="tbtn" id="tMap">Map</button>
   </div>
+  <div id="lab" hidden role="region" aria-label="Model estimates">
+    <div class="lab-head"><b>Model estimates</b><span class="lab-meta" id="labMeta"></span></div>
+    <div class="lab-body">
+      <canvas id="labCv" width="296" height="420"></canvas>
+      <div class="lab-side"><div class="next" id="labNext"></div><div class="live" id="labLive"></div></div>
+    </div>
+  </div>
+  <button id="labBtn" hidden>Lab</button>
   <div id="dialog" hidden><div class="who" id="dWho"></div><div id="dText"></div><div class="more">▼</div></div>
   <div class="hud" id="fade"></div>
   <div class="screen" id="mapView" hidden><div class="card"><canvas id="mapCv" width="560" height="460"></canvas><p class="keys" id="mapNote"></p><button class="btn small" id="mapClose">Step back</button></div></div>
@@ -88,7 +113,8 @@ body{margin:0}
     <p>Dr. Elias Locke's letter arrived three days ago. Tonight his front door was unlocked.</p>
     <button class="btn" id="start">Enter Locke Hall</button>
     <div id="chapters"></div>
-    <div class="keys" id="keyhelp">WASD move · mouse look (click to capture) · click fire · E use · Shift run · M read the plan when you're at it</div>
+    <div class="keys" id="keyhelp">WASD move · mouse look (click to capture) · click fire · E use · Shift run · M read the plan when you're at it · L model estimates · N music on/off</div>
+    <button class="btn small" id="musicBtn">Music: on</button>
     <div class="keys">Every session builds new layouts. Nothing you do is a visible test.</div>
   </div></div>
   <div class="screen" id="end" hidden><div class="card" id="endCard"></div></div>
@@ -97,6 +123,7 @@ body{margin:0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="levels.js"></script>
 <script src="ado.js"></script>
+<script src="audio.js"></script>
 <script src="game.js"></script>
 
 </html>
