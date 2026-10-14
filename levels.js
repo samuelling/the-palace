@@ -313,9 +313,14 @@
         }
         function nextTrial() {
           S.trials++;
-          const d = lanternPath();
-          if (!d || S.trials > 5) return finishBlackout();
+          if (S.trials > 5) return finishBlackout();
+          // ten candidate paths; the adaptive layer picks the most informative (the first trial is a fixed anchor)
+          const cands = []; for (let k = 0; k < 10; k++) { const c = lanternPath(); if (c) { const a = c.pts[0], b = c.pts[c.pts.length - 1]; c.homeDist = Math.hypot(b[0] - a[0], b[1] - a[1]); cands.push(c); } }
+          if (!cands.length) return finishBlackout();
+          const ch = api.ado.chooseLantern(cands, S.trials === 1), d = ch.pick;
+          api.event('ado-lantern', { anchor: ch.anchor, eig: ch.eig, length: d.length, homeDist: +d.homeDist.toFixed(2) });
           api.lantern(d, res => {
+            api.ado.lanternUpdate(d, res);
             api.say([res.err < 1.5 ? 'The match flares. You are almost exactly where the lantern first waited.' : res.err < 3.5 ? 'The match flares. Close, but not quite.' : 'The match flares on bare lawn. The lantern waited somewhere else entirely.',
               S.trials < 5 ? 'Out in the steam, the little light kindles again, waiting.' : 'The lantern does not come back.'], '', nextTrial);
           });
@@ -458,9 +463,15 @@
         // Reshuffles are built so one local glimpse is enough to work out the answer:
         // a swap exchanges the room you are in with the target room (the target is now behind the veil you came in by);
         // a rotation shifts every veil by the same step (seeing where you come out tells you the step).
-        function reshuffle(cur, target) {
+        const anchors = shuffle(api.rng, ['swap', 'rotate', 'none']);
+        function pickKind() {
+          const a = S.shuffles < anchors.length ? anchors[S.shuffles] : null; S.shuffles++;
+          const ch = api.ado.choosePalace(['swap', 'rotate', 'none'], a);
+          api.event('ado-palace', { anchor: ch.anchor, eig: ch.eig, kind: ch.kind });
+          return ch.kind;
+        }
+        function reshuffle(cur, target, kind) {
           S.prev = S.perm.slice(); const iv = inv(S.perm);
-          const kind = S.shuffles++ % 2 ? 'rotate' : 'swap';
           if (kind === 'swap') { const a = iv[cur], b = iv[target]; [S.perm[a], S.perm[b]] = [S.perm[b], S.perm[a]]; }
           else { const k = 1 + Math.floor(api.rng() * 5); S.perm = S.perm.map((_, i) => S.prev[(i + k) % 6]); }
           api.event('reshuffle', { kind, cur: roomDefs[cur].name, target: roomDefs[target].name, perm: S.perm.slice(), prev: S.prev });
@@ -482,6 +493,7 @@
                 const correct = inv(S.perm)[T_.room], stale = inv(T_.prev)[T_.room];
                 const cls = i === correct ? 'correct' : i === stale ? 'stale' : i === T_.glimpse ? 'glimpse' : 'other';
                 api.event('integrate', { phase: T_.phase, cond: T_.cond, kind: T_.kind, veil: i, correct, stale, glimpse: T_.glimpse, cls, target: roomDefs[T_.room].name });
+                api.ado.palaceUpdate(T_.kind, cls);
                 S.test = null;
               }
               S.enteredBy = i; S.inRoom = S.perm[i];
@@ -495,8 +507,9 @@
             if (!it.memory) return;
             S.carrying = it.id; S.trip++;
             const cur = S.inRoom, hi = roomDefs.findIndex(d => d.home === it.id), prevPerm = S.perm.slice();
-            const kind = reshuffle(cur, hi); setTest('carry', 'TR', kind, hi, prevPerm);
-            api.say(['As your fingers close on it, the floor shivers. Somewhere, a doorway has changed its mind.']);
+            const kind = pickKind(); if (kind !== 'none') reshuffle(cur, hi, kind); else S.prev = S.perm.slice();
+            setTest('carry', kind === 'none' ? 'RR' : 'TR', kind, hi, prevPerm);
+            api.say([kind === 'none' ? 'As your fingers close on it, the palace holds its breath. Nothing moves.' : 'As your fingers close on it, the floor shivers. Somewhere, a doorway has changed its mind.']);
             const home = roomDefs[hi];
             api.goal(api.tilesAround(...[Math.round((home.rect[0] + home.rect[2]) / 2), Math.round((home.rect[1] + home.rect[3]) / 2)]));
           },
@@ -508,7 +521,7 @@
                 if (S.placed === 3) S.blackPending = true;
                 api.goal(null);
                 if (S.placed < 6) {
-                  const cond = (S.placed + S.condOffset) % 2 ? 'TR' : 'RR', prevPerm = S.perm.slice();
+                  const kindP = pickKind(), cond = kindP === 'none' ? 'RR' : 'TR', prevPerm = S.perm.slice();
                   // move one waiting memory to another room and let the player hear where it went
                   const waiting = items.filter(m => m.memory && !api.isTaken(m.id));
                   const m = waiting[Math.floor(api.rng() * waiting.length)];
@@ -517,7 +530,7 @@
                   const to = choices[Math.floor(api.rng() * choices.length)], d = roomDefs[to];
                   let x, y, guard = 0; do { x = d.rect[0] + 1 + Math.floor(api.rng() * (d.rect[2] - d.rect[0] - 1)); y = d.rect[1] + 1 + Math.floor(api.rng() * (d.rect[3] - d.rect[1] - 1)); } while (!api.free(x, y) && ++guard < 50);
                   api.moveItem(m.id, x, y);
-                  const kind = cond === 'TR' ? reshuffle(S.inRoom, to) : 'none';
+                  const kind = kindP; if (kind !== 'none') reshuffle(S.inRoom, to, kind);
                   setTest('seek', cond, kind, to, prevPerm);
                   api.event('revalue', { cond, item: m.id, room: d.name });
                   api.say(['The memory settles onto the plinth as if it had never left.', `Somewhere far off, ${m.name.toLowerCase()} falls to the floor of the ${d.name.toLowerCase()}. You hear it as clearly as if it were beside you.`].concat(cond === 'TR' ? ['Then stone grinds against stone. The palace has moved again.'] : ['The palace stays quiet.']));

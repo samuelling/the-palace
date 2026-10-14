@@ -731,6 +731,11 @@ function updateLantern(dt) {
 }
 
 /* ---------- the API chapters script against ---------- */
+/* ---------- adaptive design: one posterior per player, carried across sessions with drift ---------- */
+const ADO = window.PALACE_ADO;
+function adoState() { if (!S.adoState) S.adoState = ADO.newState(store.get('palace.ado', null)); return S.adoState; }
+function adoSave() { store.set('palace.ado', ADO.save(adoState())); S.log.ado = { lantern: ADO.summary(adoState().lantern), palace: ADO.summary(adoState().palace) }; }
+
 const api = {
   say, toast, sfx, rng: Math.random, wake,
   event: (n, d) => { if (n === 'reshuffle') S.changedOnce = true; logEvent(n, d); },
@@ -750,6 +755,12 @@ const api = {
   showMemoryOn: p => { const c = ctr(p.x, p.y), m = itemMesh('memory'); m.position.set(c.x, 1.12, c.z); add(m); },
   endChapter: () => endChapter(),
   hold: holdEnemy,
+  ado: {
+    chooseLantern: (cands, anchor) => ADO.chooseLantern(adoState(), cands, Math.random, anchor),
+    lanternUpdate: (d, res) => { const o = ADO.lanternObs(res); ADO.lanternUpdate(adoState().lantern, { L: d.length, c: o.c }, o.er, o.et); adoSave(); },
+    choosePalace: (kinds, anchor) => ADO.choosePalace(adoState(), kinds, anchor),
+    palaceUpdate: (kind, cls) => { ADO.palaceUpdate(adoState().palace, kind, cls); adoSave(); },
+  },
   holdAll: on => S.enemies.forEach(e => holdEnemy(e.id, on)),
   isTaken: id => { const it = S.items.find(i => i.id === id); return !it || it.taken; },
   itemPos: id => { const it = S.items.find(i => i.id === id); return it ? [it.x, it.y] : null; },
@@ -835,6 +846,11 @@ function summarize(c) {
     ['Aim', aims.length ? `${median(aims).toFixed(1)}° median error · ${c.hits}/${c.shotsN} hits` : '—', 'Aiming skill, also a covariate.'],
     ['Plan readings', `${c.mapViews.length} · ${Math.round(c.mapViews.reduce((s, v) => s + v.dur, 0))} s`, `${c.mapViews.filter(v => v.changed).length} after the house changed, when the plan no longer matched.`],
   ];
+  if (c.ado && (c.id === 'conservatory' || c.id === 'palace')) {
+    const f = (o, d) => `${o.mean.toFixed(d)} (${o.lo}–${o.hi})`;
+    if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `noise ${f(l.acc, 2)}`, `Accumulating noise per √m, with an 80% interval. Reporting noise ${f(l.rep, 2)}, gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)}. Estimated from every lantern return so far, across sessions.`]); }
+    if (c.id === 'palace') { const q = c.ado.palace; rows.push(['Model: integrating a glimpse', `inference ${f(q.rho, 2)}`, `Probability of working out the whole rearrangement from one glimpse. Local updating ${f(q.alpha, 2)}, memory for unchanged links ${f(q.m, 2)}. Reshuffle types after the first three were chosen to be as informative as possible about these.`]); }
+  }
   if (c.id === 'grounds') rows.unshift(['Warm-up', 'not scored', 'Calibrates movement and aim for this session, so the chapters measure decisions rather than controls.']);
   if (J.length) rows.push(['Route choices at junctions', `${pct(J.filter(j => j.optimal).length, J.length)} optimal of ${J.length}`, Jpost.length ? `After the change: ${pct(Jpost.filter(j => j.optimal).length, Jpost.length)} optimal. Where the plan and the house disagreed, you followed the old plan ${pct(Jconf.filter(j => j.planOptimal).length, Jconf.length)} of the time (${Jconf.length} choices).` : 'Choices are scored against the true layout and against the plan.']);
   if (c.staleBumps) rows.push(['Walked into moved doorways', String(c.staleBumps), 'Reaching for a doorway that used to be there.']);
