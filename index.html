@@ -3,481 +3,576 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}[hidden]{display:none!important}</style>
+<style>*,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}</style>
 <title>The Palace</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap">
 <style>
-/* Layout: a single lamp-lit stage (4:3 canvas) with a parchment sheet that slides over it; controls sit below like a brass control plate. Deliberately single dark theme. */
+/* Layout: full-bleed 3D view; HUD text inset from every edge; RE-style text box across the bottom. Deliberately single dark theme. */
 :root{
-  --ink:#0e0c0b; --soot:#1a1614; --wall:#2c2520; --brass:#e0a84a; --brass-dim:#8a6a33;
-  --blood:#a8372f; --fog:#9aa49e; --paper:#e2d6bd; --paper-ink:#2a221b; --muted:#91877a;
-  --display:"IM Fell English SC", "Iowan Old Style", Georgia, serif;
-  --body:"IM Fell English", "Iowan Old Style", Georgia, serif;
-  --type:"Special Elite", "Courier New", ui-monospace, monospace;
+  --ink:#070605; --soot:rgba(16,13,11,.82); --brass:#e0a84a; --brass-dim:#8a6a33;
+  --blood:#b23b30; --herb:#7fae6a; --paper:#e6dcc4; --muted:#968b7d;
+  --display:"IM Fell English SC","Iowan Old Style",Georgia,serif;
+  --body:"IM Fell English","Iowan Old Style",Georgia,serif;
+  --type:"Special Elite","Courier New",ui-monospace,monospace;
   color-scheme:dark;
 }
-html,body{height:100%}
-body{background:var(--ink);color:var(--paper);font-family:var(--body);font-size:16px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px}
-#app{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
-.bar{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.brand{font-family:var(--display);font-size:1.5rem;letter-spacing:.06em;color:var(--brass)}
-#where{font-family:var(--type);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-#stage{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;background:#000;border:1px solid var(--wall);overflow:hidden;touch-action:none}
-#cv{display:block;width:100%;height:100%}
-#toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);max-width:88%;font-family:var(--type);font-size:.85rem;
-  color:var(--paper);background:rgba(14,12,11,.82);border:1px solid var(--brass-dim);padding:6px 12px;text-align:center;opacity:0;transition:opacity .25s;pointer-events:none}
-#toast.on{opacity:1}
-#panel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,4,4,.72);padding:12px}
-.sheet{background:var(--paper);color:var(--paper-ink);max-width:560px;width:100%;max-height:100%;overflow:auto;padding:18px 20px;
-  box-shadow:0 10px 40px rgba(0,0,0,.6);border:1px solid #b9a988}
-.sheet h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0 0 8px;text-wrap:balance;letter-spacing:.03em}
-.sheet p{margin:0 0 10px;line-height:1.45}
-.sheet .note{font-family:var(--type);font-size:.92rem;line-height:1.5}
-.sheet .small{font-size:.82rem;color:#5d5246}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-button{font-family:var(--type);font-size:.95rem;letter-spacing:.04em;cursor:pointer;border-radius:2px}
-.sheet button{background:var(--paper-ink);color:var(--paper);border:1px solid var(--paper-ink);padding:9px 14px}
-.sheet button.ghost{background:transparent;color:var(--paper-ink)}
-.sheet button:focus-visible,#controls button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
-.sheet canvas{display:block;max-width:100%;margin:6px auto;background:#1b1714}
-#controls{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;min-height:52px;align-items:center}
-.plate{background:var(--soot);color:var(--brass);border:1px solid var(--brass-dim);padding:12px 22px;font-size:1rem;min-width:120px}
-.plate:active{background:var(--wall)}
-#pad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,48px);gap:6px}
-#pad button{background:var(--soot);color:var(--brass);border:1px solid var(--brass-dim);font-size:1.2rem;touch-action:none}
-#pad .u{grid-column:2;grid-row:1}#pad .l{grid-column:1;grid-row:2}#pad .d{grid-column:2;grid-row:2}#pad .r{grid-column:3;grid-row:2}
-#odd{background:transparent;color:var(--blood);border:1px solid var(--blood);padding:10px 16px}
-.keys{font-family:var(--type);font-size:.75rem;color:var(--muted);text-align:center}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:240px;margin:8px auto}
-.grid3 button{padding:12px 0}
-.codeshow{font-family:var(--type);font-size:2rem;letter-spacing:.4em;text-align:center;margin:8px 0}
-/* ledger */
-.ledger h2{font-size:1.6rem}
-.entry{border-top:1px solid #b9a988;padding:10px 0;display:grid;grid-template-columns:1fr auto;gap:2px 12px}
-.entry .k{font-family:var(--display);font-size:1.02rem}
-.entry .v{font-family:var(--type);font-size:1.05rem;font-variant-numeric:tabular-nums;text-align:right}
-.entry .m{grid-column:1/-1;font-size:.84rem;color:#5d5246;line-height:1.4}
-@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+html,body{height:100%;background:var(--ink);color:var(--paper);font-family:var(--body);overflow:hidden}
+body{margin:0}
+#game{position:relative;width:100%;height:100%;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#game canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;pointer-events:none;font-family:var(--type);letter-spacing:.06em}
+#room{top:calc(14px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));font-family:var(--display);font-size:1.15rem;color:var(--brass);text-shadow:0 1px 4px #000;opacity:0;transition:opacity .6s}
+#room.on{opacity:1}
+#status{top:calc(12px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));text-align:right;font-size:.82rem;display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+#cond{font-size:.95rem}
+#cond.fine{color:var(--herb)}#cond.caution{color:var(--brass)}#cond.danger{color:var(--blood)}
+#ammo{color:var(--paper)}
+#inv{bottom:calc(14px + env(safe-area-inset-bottom,0px));right:max(16px,env(safe-area-inset-right,0px));font-size:.72rem;color:var(--muted);text-align:right;max-width:46%;line-height:1.5}
+#cross{top:50%;left:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(230,220,196,.55)}
+#prompt{top:58%;left:50%;transform:translateX(-50%);font-size:.85rem;color:var(--paper);background:var(--soot);border:1px solid var(--brass-dim);padding:4px 10px;opacity:0;transition:opacity .15s;white-space:nowrap}
+#prompt.on{opacity:1}
+#hurt{inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(150,20,15,.55));opacity:0;transition:opacity .4s}
+#dialog{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(640px,calc(100% - 32px));
+  background:var(--soot);border:1px solid var(--brass-dim);padding:14px 18px 12px;font-family:var(--body);font-size:1.05rem;line-height:1.5;color:var(--paper);cursor:pointer}
+#dialog .who{font-family:var(--display);color:var(--brass);font-size:.95rem;letter-spacing:.05em;margin-bottom:2px}
+#dialog .more{font-family:var(--type);font-size:.7rem;color:var(--muted);text-align:right;margin-top:6px}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,3,3,.88);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+.card{max-width:520px;width:100%;text-align:center}
+.card h1{font-family:var(--display);font-weight:400;font-size:clamp(2.6rem,9vw,4.4rem);margin:0;color:var(--brass);letter-spacing:.08em;text-wrap:balance}
+.card .sub{font-family:var(--type);font-size:.78rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin:4px 0 22px}
+.card p{line-height:1.55;margin:0 0 12px}
+.card .letter{font-style:italic;color:var(--paper)}
+.card .keys{font-family:var(--type);font-size:.74rem;color:var(--muted);line-height:1.7;margin-top:14px}
+.btn{font-family:var(--type);font-size:1rem;letter-spacing:.08em;background:transparent;color:var(--brass);border:1px solid var(--brass);padding:11px 22px;cursor:pointer;margin-top:8px}
+.btn:hover,.btn:focus-visible{background:rgba(224,168,74,.12);outline:none}
+.btn.small{font-size:.8rem;padding:7px 14px;color:var(--muted);border-color:var(--muted)}
+#mapView canvas{max-width:100%;height:auto;background:#d8ccb4;box-shadow:0 8px 30px #000}
+#notes{max-width:560px;text-align:left;font-size:.92rem}
+#notes .row{display:grid;grid-template-columns:1fr auto;gap:2px 12px;border-top:1px solid #3a322b;padding:8px 0}
+#notes .k{font-family:var(--display);color:var(--paper)}#notes .v{font-family:var(--type);color:var(--brass);font-variant-numeric:tabular-nums;text-align:right}
+#notes .m{grid-column:1/-1;font-size:.8rem;color:var(--muted);line-height:1.4}
+/* touch controls */
+#touch{position:absolute;inset:0;pointer-events:none}
+#joy{position:absolute;left:max(24px,env(safe-area-inset-left,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;border:1px solid rgba(224,168,74,.35);background:rgba(16,13,11,.35);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(224,168,74,.35)}
+.tbtn{position:absolute;pointer-events:auto;width:64px;height:64px;border-radius:50%;border:1px solid var(--brass-dim);background:rgba(16,13,11,.55);color:var(--brass);font-family:var(--type);font-size:.72rem;touch-action:none}
+#tFire{right:max(28px,env(safe-area-inset-right,0px));bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+#tUse{right:max(104px,calc(env(safe-area-inset-right,0px) + 80px));bottom:calc(60px + env(safe-area-inset-bottom,0px))}
+#tMap{right:max(28px,env(safe-area-inset-right,0px));bottom:calc(40px + env(safe-area-inset-bottom,0px));width:52px;height:52px}
+@media (prefers-reduced-motion:reduce){#room,#prompt,#hurt{transition:none}}
 </style>
 
-<div id="app">
-  <div class="bar"><span class="brand">The Palace</span><span id="where">Beta · Locke Hall, East Wing</span></div>
-  <div id="stage">
-    <canvas id="cv" aria-label="Game view"></canvas>
-    <div id="toast" role="status" aria-live="polite"></div>
-    <div id="panel" hidden><div class="sheet" id="sheet"></div></div>
+<div id="game">
+  <div class="hud" id="hurt"></div>
+  <div class="hud" id="room"></div>
+  <div class="hud" id="status"><span id="cond" class="fine">Fine</span><span id="ammo">Handgun 12</span></div>
+  <div class="hud" id="inv"></div>
+  <div class="hud" id="cross"></div>
+  <div class="hud" id="prompt"></div>
+  <div id="touch" hidden>
+    <div id="joy"><div id="knob"></div></div>
+    <button class="tbtn" id="tFire">Fire</button>
+    <button class="tbtn" id="tUse">Use</button>
+    <button class="tbtn" id="tMap">Map</button>
   </div>
-  <div id="controls">
-    <div id="driveCtl" hidden style="display:flex;gap:14px">
-      <button class="plate" id="bStatue">Statue (F)</button>
-      <button class="plate" id="bGhoul">Ghoul (J)</button>
-    </div>
-    <div id="pad" hidden>
-      <button class="u" data-d="0,-1" aria-label="Move up">▲</button>
-      <button class="l" data-d="-1,0" aria-label="Move left">◀</button>
-      <button class="d" data-d="0,1" aria-label="Move down">▼</button>
-      <button class="r" data-d="1,0" aria-label="Move right">▶</button>
-    </div>
-    <button id="odd" hidden>Something's wrong here</button>
-  </div>
-  <div class="keys" id="keys">Arrow keys or WASD to move. Walk into objects to examine them.</div>
+  <div id="dialog" hidden><div class="who" id="dWho"></div><div id="dText"></div><div class="more">▼</div></div>
+  <div class="screen" id="mapView" hidden><div class="card"><canvas id="mapCv" width="520" height="380"></canvas><p class="keys">The plan hangs in the foyer. You can only read it here.</p><button class="btn small" id="mapClose">Step back</button></div></div>
+  <div class="screen" id="title"><div class="card">
+    <h1>The Palace</h1><div class="sub">Locke Hall · East Wing beta</div>
+    <p class="letter">"Come quickly. I can no longer find the rooms. The house does not stay where I put it. — E. L."</p>
+    <p>Dr. Elias Locke's letter arrived three days ago. Tonight his front door was unlocked.</p>
+    <button class="btn" id="start">Enter Locke Hall</button>
+    <div class="keys" id="keyhelp">WASD move · mouse look (click to capture) · click fire · E use · M read the plan in the foyer</div>
+  </div></div>
+  <div class="screen" id="end" hidden><div class="card" id="endCard"></div></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 /* ---------- core ---------- */
 const $=s=>document.querySelector(s);
-const cv=$('#cv'), cx=cv.getContext('2d');
-const R=(a,b)=>a+Math.random()*(b-a), RI=(a,b)=>Math.floor(R(a,b+1));
+const R=(a,b)=>a+Math.random()*(b-a);
 const now=()=>performance.now();
-const mean=a=>a.reduce((s,x)=>s+x,0)/Math.max(1,a.length);
-const variance=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/Math.max(1,a.length-1);};
-const S={phase:'title',modal:false,log:{steps:0,hits:0,hitsDuringHold:0},start:now()};
-let W=640,H=480;
-function resize(){const r=cv.getBoundingClientRect();const d=window.devicePixelRatio||1;W=r.width;H=r.height;cv.width=Math.round(W*d);cv.height=Math.round(H*d);cx.setTransform(d,0,0,d,0,0);}
-window.addEventListener('resize',resize);
-let toastT=0;
-function toast(msg,ms=2200){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms);}
-function setWhere(s){$('#where').textContent=s;}
-function openPanel(html,mount){$('#sheet').innerHTML=html;$('#panel').hidden=false;S.modal=true;if(mount)mount($('#sheet'));const b=$('#sheet button');if(b)b.focus();}
-function closePanel(){$('#panel').hidden=true;S.modal=false;}
+const TOUCH=matchMedia('(pointer:coarse)').matches;
+const S={running:false,paused:true,hp:3,ammo:12,inv:{},flags:{},log:{events:[],shots:0,hits:0,dmg:0,mapViews:0,mapTime:0,dist:0,path:[]},t0:0};
 
-/* ---------- sound (starts after first click) ---------- */
-let AC=null;
-function audio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}
-function thud(delay=0,vol=.6){if(!AC)return;const t=AC.currentTime+delay,o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(70,t);o.frequency.exponentialRampToValueAtTime(32,t+.25);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.4);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+.45);}
-
-/* ---------- EZ-diffusion (Wagenmakers, van der Maas & Grasman, 2007) ---------- */
-function ezDiffusion(tr){
-  const n=tr.length;let pc=tr.filter(t=>t.correct).length/n;
-  let edge=false;
-  if(pc>=1){pc=1-1/(2*n);edge=true;} if(pc<=.5){pc=.5+1/(2*n);edge=true;}
-  const crt=tr.filter(t=>t.correct).map(t=>t.rt);
-  const mrt=mean(crt),vrt=Math.max(variance(crt),1e-4),s=.1,L=Math.log(pc/(1-pc));
-  const x=L*(L*pc*pc-L*pc+pc-.5)/vrt, v=Math.sign(pc-.5)*s*Math.pow(x,.25);
-  const a=s*s*L/v, y=-v*a/(s*s), mdt=(a/(2*v))*(1-Math.exp(y))/(1+Math.exp(y));
-  return {v,a,ter:mrt-mdt,pc:tr.filter(t=>t.correct).length/n,mrt,n,edge};
+/* ---------- canvas textures ---------- */
+function ctex(w,h,draw,rx=1,ry=1){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.anisotropy=4;return t;}
+function noise(g,w,h,a,n=1800){for(let i=0;i<n;i++){g.fillStyle=`rgba(0,0,0,${R(0,a)})`;g.fillRect(R(0,w),R(0,h),R(1,3),R(1,3));}}
+function wallpaper(base,motif){return ctex(256,384,(g,w,h)=>{
+  g.fillStyle=base;g.fillRect(0,0,w,h);
+  for(let x=0;x<w;x+=32){g.fillStyle='rgba(0,0,0,.12)';g.fillRect(x,0,10,h*.68);}
+  g.fillStyle=motif;for(let y=20;y<h*.66;y+=48)for(let x=(y/48%2)*16+8;x<w;x+=32){g.beginPath();g.moveTo(x,y-9);g.lineTo(x+6,y);g.lineTo(x,y+9);g.lineTo(x-6,y);g.fill();}
+  g.fillStyle='#2b1a10';g.fillRect(0,h*.68,w,h*.32);g.fillStyle='#3a2416';for(let x=6;x<w;x+=64)g.fillRect(x,h*.72,52,h*.24);
+  g.fillStyle='#1a0f08';g.fillRect(0,h*.68,w,6);noise(g,w,h,.18);});}
+const TEX={
+  foyerWall:wallpaper('#3c2a24','rgba(200,150,80,.18)'),
+  galleryWall:wallpaper('#1f3029','rgba(170,190,150,.14)'),
+  libWall:ctex(256,384,(g,w,h)=>{g.fillStyle='#24170e';g.fillRect(0,0,w,h);for(let y=8;y<h*.9;y+=46){g.fillStyle='#160d07';g.fillRect(0,y+38,w,8);
+    for(let x=4;x<w;){const bw=R(7,15);g.fillStyle=`hsl(${R(0,40)},${R(20,45)}%,${R(14,28)}%)`;g.fillRect(x,y+R(2,8),bw,38-R(0,6));x+=bw+1;}}noise(g,w,h,.2);}),
+  studyWall:wallpaper('#3a1a19','rgba(210,170,110,.15)'),
+  stone:ctex(256,256,(g,w,h)=>{g.fillStyle='#34322e';g.fillRect(0,0,w,h);g.strokeStyle='#1d1b18';g.lineWidth=3;
+    for(let y=0;y<h;y+=42){g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();for(let x=(y/42%2)*40;x<w;x+=80){g.beginPath();g.moveTo(x,y);g.lineTo(x,y+42);g.stroke();}}noise(g,w,h,.3,3000);}),
+  marble:ctex(256,256,(g,w,h)=>{for(let i=0;i<2;i++)for(let j=0;j<2;j++){g.fillStyle=(i+j)%2?'#d4cbbb':'#1c1a18';g.fillRect(i*128,j*128,128,128);}
+    g.strokeStyle='rgba(120,110,100,.35)';for(let k=0;k<8;k++){g.beginPath();g.moveTo(R(0,w),R(0,h));g.bezierCurveTo(R(0,w),R(0,h),R(0,w),R(0,h),R(0,w),R(0,h));g.stroke();}}),
+  wood:ctex(256,256,(g,w,h)=>{for(let x=0;x<w;x+=32){g.fillStyle=`hsl(25,${R(30,40)}%,${R(14,20)}%)`;g.fillRect(x,0,32,h);g.fillStyle='#0d0805';g.fillRect(x,0,2,h);g.fillRect(x,R(0,h),32,2);}noise(g,w,h,.2);}),
+  carpet:ctex(256,256,(g,w,h)=>{g.fillStyle='#4a1414';g.fillRect(0,0,w,h);g.strokeStyle='rgba(200,150,70,.25)';g.lineWidth=4;g.strokeRect(14,14,w-28,h-28);
+    g.fillStyle='rgba(200,150,70,.15)';for(let y=40;y<h-30;y+=36)for(let x=40;x<w-30;x+=36){g.beginPath();g.arc(x,y,5,0,7);g.fill();}noise(g,w,h,.25);}),
+  ceiling:ctex(128,128,(g,w,h)=>{g.fillStyle='#1d1916';g.fillRect(0,0,w,h);noise(g,w,h,.3,600);}),
+  door:ctex(128,256,(g,w,h)=>{g.fillStyle='#3d2414';g.fillRect(0,0,w,h);g.strokeStyle='#1c0f07';g.lineWidth=5;g.strokeRect(14,16,w-28,h*.4);g.strokeRect(14,h*.52,w-28,h*.42);
+    g.fillStyle='#c9a35a';g.beginPath();g.arc(w-24,h*.5,6,0,7);g.fill();noise(g,w,h,.2,500);}),
+};
+/* ---------- sound ---------- */
+let AC=null,droneG=null;
+function audio(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume();}catch(e){}}
+function noiseBuf(d){const b=AC.createBuffer(1,AC.sampleRate*d,AC.sampleRate),a=b.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1;return b;}
+function sfx(type,vol=1){if(!AC)return;const t=AC.currentTime,g=AC.createGain();g.connect(AC.destination);
+  if(type==='shot'){const s=AC.createBufferSource();s.buffer=noiseBuf(.35);const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=1800;s.connect(f).connect(g);g.gain.setValueAtTime(.9*vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.32);s.start(t);}
+  else if(type==='step'){const s=AC.createBufferSource();s.buffer=noiseBuf(.08);const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=380;s.connect(f).connect(g);g.gain.setValueAtTime(.18*vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.08);s.start(t);}
+  else if(type==='moan'){const o=AC.createOscillator(),f=AC.createBiquadFilter();o.type='sawtooth';o.frequency.setValueAtTime(R(85,110),t);o.frequency.linearRampToValueAtTime(R(60,75),t+1.1);f.type='lowpass';f.frequency.value=420;o.connect(f).connect(g);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.16*vol,t+.25);g.gain.linearRampToValueAtTime(0,t+1.2);o.start(t);o.stop(t+1.25);}
+  else if(type==='thud'){const o=AC.createOscillator();o.frequency.setValueAtTime(70,t);o.frequency.exponentialRampToValueAtTime(30,t+.3);o.connect(g);g.gain.setValueAtTime(.7*vol,t);g.gain.exponentialRampToValueAtTime(.001,t+.45);o.start(t);o.stop(t+.5);}
+  else if(type==='creak'){const o=AC.createOscillator(),f=AC.createBiquadFilter();o.type='square';o.frequency.setValueAtTime(140,t);o.frequency.linearRampToValueAtTime(95,t+.6);f.type='bandpass';f.frequency.value=600;f.Q.value=8;o.connect(f).connect(g);g.gain.setValueAtTime(.12*vol,t);g.gain.linearRampToValueAtTime(0,t+.65);o.start(t);o.stop(t+.7);}
+  else if(type==='pickup'){[660,880].forEach((fq,i)=>{const o=AC.createOscillator(),gg=AC.createGain();o.type='triangle';o.frequency.value=fq;o.connect(gg).connect(AC.destination);gg.gain.setValueAtTime(.12,t+i*.09);gg.gain.exponentialRampToValueAtTime(.001,t+i*.09+.3);o.start(t+i*.09);o.stop(t+i*.09+.32);});}
+  else if(type==='hurt'){const o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(90,t+.2);o.connect(g);g.gain.setValueAtTime(.25,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.start(t);o.stop(t+.3);}
 }
-
-/* ---------- procedural crests (for the mnemonic similarity lock) ---------- */
-function newCrest(){return {h:RI(0,359),ang:R(0,180),ch:RI(0,3),n:RI(1,3),band:Math.random()<.5};}
-function lureOf(p){const q={...p},k=RI(0,2),sg=Math.random()<.5?-1:1;
-  if(k===0)q.ang=(p.ang+sg*R(26,38)+360)%180; else if(k===1)q.n=p.n===3?2:p.n+1; else q.h=(p.h+sg*R(28,40)+360)%360; return q;}
-function drawCrest(c,p,x,y,sz){
-  c.save();c.translate(x,y);const w=sz*.8,h=sz;
-  c.beginPath();c.moveTo(-w/2,-h/2);c.lineTo(w/2,-h/2);c.lineTo(w/2,0);c.quadraticCurveTo(w/2,h*.35,0,h/2);c.quadraticCurveTo(-w/2,h*.35,-w/2,0);c.closePath();
-  c.save();c.clip();
-  c.fillStyle=`hsl(${p.h},38%,30%)`;c.fillRect(-w,-h,2*w,2*h);
-  c.save();c.rotate(p.ang*Math.PI/180);c.fillStyle=`hsl(${p.h},28%,62%)`;c.fillRect(0,-h,h*2,h*2);c.restore();
-  if(p.band){c.strokeStyle='rgba(20,15,10,.55)';c.lineWidth=sz*.09;c.beginPath();c.moveTo(-w/2,h*.15);c.lineTo(0,-h*.12);c.lineTo(w/2,h*.15);c.stroke();}
-  const pos=p.n===1?[[0,0]]:p.n===2?[[-w*.2,0],[w*.2,0]]:[[0,-h*.17],[-w*.2,h*.12],[w*.2,h*.12]];
-  pos.forEach(([px,py])=>charge(c,p.ch,px,py,sz*(p.n===1?.22:.15),p.h));
-  c.restore();
-  c.lineWidth=Math.max(1,sz*.035);c.strokeStyle='#c9a35a';c.stroke();c.restore();
-}
-function charge(c,t,x,y,r,h){c.save();c.translate(x,y);c.fillStyle='#e8c46a';c.strokeStyle='#e8c46a';
-  if(t===0){c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}c.closePath();c.fill();}
-  else if(t===1){c.beginPath();c.arc(0,0,r,0,7);c.fill();c.fillStyle=`hsl(${h},38%,22%)`;c.beginPath();c.arc(r*.45,-r*.2,r*.82,0,7);c.fill();}
-  else if(t===2){c.lineWidth=r*.28;c.beginPath();c.arc(0,-r*.55,r*.38,0,7);c.stroke();c.fillRect(-r*.12,-r*.2,r*.24,r*1.2);c.fillRect(0,r*.55,r*.4,r*.18);c.fillRect(0,r*.8,r*.3,r*.18);}
-  else{c.beginPath();c.moveTo(-r,0);c.quadraticCurveTo(0,-r*.9,r,0);c.quadraticCurveTo(0,r*.9,-r,0);c.fill();c.fillStyle='#1a1410';c.beginPath();c.arc(0,0,r*.32,0,7);c.fill();}
-  c.restore();}
-/* ---------- Scene 1: the drive (threat triage → EZ-diffusion) ---------- */
-const D={trials:[],amp:7,sigma:2.4,i:0,nStair:8,nFix:16,streak:0,cur:null,trees:[],fog:[]};
-function seedDrive(){D.trees=Array.from({length:14},()=>({x:Math.random(),h:R(.35,.7),w:R(.03,.07)}));
-  D.fog=Array.from({length:9},()=>({x:Math.random(),y:R(.35,.85),r:R(.18,.4),vx:R(-.012,.012),a:R(.18,.34)}));}
-function startDrive(){
-  S.phase='drive';setWhere('The drive · calibration');seedDrive();
-  $('#driveCtl').hidden=false;$('#pad').hidden=true;$('#keys').textContent='F = Statue · J = Ghoul';
-  nextDriveTrial();
-}
-function nextDriveTrial(){
-  if(D.i>=D.nStair+D.nFix)return endDrive();
-  D.cur={ghoul:Math.random()<.5,x:R(.28,.72),onset:now()+R(700,1300),amp:D.amp,p1:R(0,6.3),p2:R(0,6.3),p3:R(0,6.3),done:false};
-  const c=D.cur;c.timer=setTimeout(()=>{if(!c.done)driveRespond(null);},3000+(c.onset-now()));
-}
-function driveRespond(saidGhoul){
-  const c=D.cur;if(!c||c.done||S.modal)return;const t=now();if(t<c.onset)return;
-  c.done=true;clearTimeout(c.timer);
-  const rt=Math.min(3,(t-c.onset)/1000),correct=saidGhoul===c.ghoul,stair=D.i<D.nStair;
-  D.trials.push({rt,correct,amp:c.amp,stair,timeout:saidGhoul===null});
-  if(stair){if(correct){if(++D.streak>=2){D.amp=Math.max(.8,D.amp*.72);D.streak=0;}}else{D.amp=Math.min(14,D.amp*1.4);D.streak=0;}}
-  D.i++;
-  toast(saidGhoul===null?'Too slow. The shape is gone.':c.ghoul?(correct?'It moved. You saw it.':'It moved. You missed it.'):(correct?'Only stone.':'Only stone. Your eyes played tricks.'),900);
-  D.cur=null;setTimeout(nextDriveTrial,650);
-}
-function endDrive(){
-  $('#driveCtl').hidden=true;
-  const fit=ezDiffusion(D.trials.filter(t=>!t.stair));
-  S.log.drive={...fit,amp:D.amp,sigma:D.sigma};
-  S.phase='letter';
-  openPanel(`<h2>The front door is unlocked</h2>
-   <p class="note">"Come quickly. I can no longer find the rooms. Clara's things keep moving. The house does not stay where I put it. — E. L."</p>
-   <p>Inside, the foyer is cold. A framed plan of the house hangs by the door. It is the only map you will find here, and it does not leave the wall.</p>
-   <div class="row"><button id="go">Enter Locke Hall</button></div>`,s=>s.querySelector('#go').onclick=()=>{closePanel();startExplore();});
-}
-function renderDrive(t){
-  const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0d10');g.addColorStop(.6,'#151a1a');g.addColorStop(1,'#0a0a09');
-  cx.fillStyle=g;cx.fillRect(0,0,W,H);
-  cx.fillStyle='#0a0c0c';D.trees.forEach(tr=>{const x=tr.x*W,b=H*.72;cx.beginPath();cx.moveTo(x-tr.w*W,b);cx.lineTo(x,b-tr.h*H);cx.lineTo(x+tr.w*W,b);cx.fill();});
-  cx.fillStyle='#0c0b0a';cx.fillRect(0,H*.72,W,H*.28);
-  const c=D.cur;
-  if(c&&!c.done&&t>=c.onset){
-    const s=(t-c.onset)/1000,fade=Math.min(1,s/.3);
-    let dx=D.sigma*(Math.sin(s*3.3+c.p1)+Math.sin(s*5.1+c.p2))/1.4*(W/640);
-    if(c.ghoul)dx+=c.amp*Math.sin(2*Math.PI*1.5*s+c.p3)*(W/640);
-    figure(c.x*W+dx,H*.72,H*.3,fade);
-  }
-  D.fog.forEach(f=>{f.x+=f.vx*.016;if(f.x<-.3)f.x=1.3;if(f.x>1.3)f.x=-.3;
-    const gx=cx.createRadialGradient(f.x*W,f.y*H,0,f.x*W,f.y*H,f.r*W);gx.addColorStop(0,`rgba(154,164,158,${f.a})`);gx.addColorStop(1,'rgba(154,164,158,0)');cx.fillStyle=gx;cx.fillRect(0,0,W,H);});
-  cx.fillStyle='rgba(224,168,74,.75)';cx.font=`${Math.max(11,W/48)}px "Special Elite",monospace`;
-  cx.fillText(`Shape ${Math.min(D.i+1,D.nStair+D.nFix)} of ${D.nStair+D.nFix}`,14,22);
-}
-function figure(x,base,h,a){cx.save();cx.globalAlpha=a*.92;cx.fillStyle='#2b2f2e';
-  cx.beginPath();cx.arc(x,base-h*.88,h*.08,0,7);cx.fill();
-  cx.beginPath();cx.moveTo(x-h*.16,base-h*.76);cx.lineTo(x+h*.16,base-h*.76);cx.lineTo(x+h*.12,base-h*.3);cx.lineTo(x+h*.1,base);cx.lineTo(x-h*.1,base);cx.lineTo(x-h*.12,base-h*.3);cx.closePath();cx.fill();
-  cx.fillRect(x-h*.15,base-h*.06,h*.3,h*.06);cx.restore();}
-$('#bStatue').onclick=()=>driveRespond(false);$('#bGhoul').onclick=()=>driveRespond(true);
-/* ---------- Locke Hall: map, movement, light ---------- */
-const MW=26,MH=18;let G=[],OBJ={};
-const P={x:11,y:13,rx:11,ry:13,fx:0,fy:-1};
-const Gh={x:9,y:7,dir:1,last:0,active:true};
-const CRESTS=Array.from({length:6},newCrest);
-S.lamp=3.3;S.nextMove=0;S.shakeUntil=0;S.flashUntil=0;S.room=null;S.seen=new Set();S.crestsSeen=new Set();S.items={};
+function startDrone(){if(!AC||droneG)return;droneG=AC.createGain();droneG.gain.value=0;droneG.connect(AC.destination);
+  [41,61.5,82.4].forEach(fq=>{const o=AC.createOscillator(),f=AC.createBiquadFilter();o.type='sawtooth';o.frequency.value=fq*R(.995,1.005);f.type='lowpass';f.frequency.value=180;o.connect(f).connect(droneG);o.start();});}
+function droneLevel(v){if(droneG)droneG.gain.setTargetAtTime(v,AC.currentTime,1.2);}
+/* ---------- Locke Hall layout (grid, 2 m tiles) ---------- */
+const MW=26,MH=18,T=2,WH=3.4;let G=[];
 function carve(x0,y0,x1,y1,c='.'){for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)G[y][x]=c;}
-function buildMap(){
-  G=Array.from({length:MH},()=>Array(MW).fill('#'));
-  carve(1,1,7,5);carve(16,1,22,5);carve(2,7,21,7);carve(8,9,14,15);carve(1,9,6,15);
-  G[8][11]='.';G[12][7]='.';G[6][4]='A';G[6][19]='B';
-  carve(23,3,24,3);carve(24,3,24,10);carve(18,10,24,10);carve(18,10,18,13);carve(16,13,18,13);G[13][15]='E';
-}
-function placeObjects(){
-  const o=(x,y,t,extra={})=>OBJ[x+','+y]={t,x,y,...extra};
-  o(9,9,'map');o(13,9,'portrait');o(14,11,'clock');
-  [[1,10],[1,13],[3,9],[5,9],[3,15],[5,15]].forEach(([x,y],i)=>o(x,y,'crest',{i}));
-  o(4,12,'glove');o(6,2,'book');o(2,4,'music');o(17,2,'desk');o(21,2,'locket');
-}
+G=Array.from({length:MH},()=>Array(MW).fill('#'));
+carve(1,1,7,5);carve(16,1,22,5);carve(2,7,21,7);carve(8,9,14,15);carve(1,9,6,15);
+carve(23,3,24,3);carve(24,3,24,10);carve(18,10,24,10);carve(18,10,18,13);carve(16,13,18,13);
+G[6][4]='A';G[6][19]='B';G[13][15]='E';
+['7,12','7,10','11,8','12,8'].forEach(k=>{const[x,y]=k.split(',').map(Number);G[y][x]='P';});
 function inCorr(x,y){return (y===3&&x>=23&&x<=24)||(x===24&&y>=3&&y<=10)||(y===10&&x>=18&&x<=24)||(x===18&&y>=10&&y<=13)||(y===13&&x>=16&&x<=18);}
 function roomAt(x,y){
   if(x>=1&&x<=7&&y>=1&&y<=5)return 'Library';if(x>=16&&x<=22&&y>=1&&y<=5)return 'Study';
-  if(y===7&&x>=2&&x<=21)return 'North hall';if(x>=8&&x<=14&&y>=9&&y<=15)return 'Foyer';
-  if(x>=1&&x<=6&&y>=9&&y<=15)return 'Portrait gallery';if(inCorr(x,y))return "Servants' corridor";return null;}
-const FLOOR={'Library':'#3a2a1c','Study':'#3b1f1c','North hall':'#2e2622','Portrait gallery':'#1f2b25',"Servants' corridor":'#262624'};
-function startExplore(){
-  buildMap();placeObjects();S.phase='explore';
-  $('#pad').hidden=false;$('#keys').textContent='Arrow keys or WASD to move. Walk into objects to examine them.';
-  S.t0=now();onEnter(P.x,P.y);
-  toast('The foyer. The framed plan hangs by the door, top left.',3200);
-}
-function tryMove(dx,dy){
-  if(S.phase!=='explore'||S.modal||now()<S.nextMove)return;S.nextMove=now()+135;
-  P.fx=dx;P.fy=dy;const nx=P.x+dx,ny=P.y+dy,k=nx+','+ny;
-  if(OBJ[k])return interact(OBJ[k]);
-  const ch=G[ny]&&G[ny][nx];if(!ch||ch==='#')return;
-  if(ch==='A')return doorA();if(ch==='B')return doorB();if(ch==='E')return doorE();
-  if(Gh.active&&nx===Gh.x&&ny===Gh.y)return hit();
-  P.x=nx;P.y=ny;S.log.steps++;onEnter(nx,ny);
-}
-function onEnter(x,y){
-  const r=roomAt(x,y);
-  if(r&&r!==S.room){S.room=r;setWhere('Locke Hall · '+r);if(!S.seen.has(r)){S.seen.add(r);if(r!=='Foyer')toast(r+'.',1400);}}
-  if(x===23&&y===3&&!S.darkStart){S.darkStart=now();S.lamp=.85;toast('Your flashlight sputters and dies.',2600);}
-  if(x===17&&y===13&&S.darkStart&&!S.pointed)pointing();
-  if(r==='Foyer'&&S.pointed&&!S.changeAt)armChange();
-}
-function hit(){
-  S.log.hits++;if(S.code&&!S.codeDone)S.log.hitsDuringHold++;
-  S.shakeUntil=now()+380;S.flashUntil=now()+260;thud(0,.5);toast('Cold hands catch your sleeve. You wrench free.',1600);
-  const bx=P.x-P.fx,by=P.y-P.fy;if(G[by]&&G[by][bx]==='.'&&!OBJ[bx+','+by]){P.x=bx;P.y=by;}
-}
-function updateGhoul(t){
-  if(!Gh.active||S.modal||t-Gh.last<540)return;Gh.last=t;
-  let nx=Gh.x+Gh.dir;if(nx>18||nx<8){Gh.dir*=-1;nx=Gh.x+Gh.dir;}
-  if(nx===P.x&&Gh.y===P.y){hit();return;}Gh.x=nx;
-}
-function renderExplore(t){
-  updateGhoul(t);
-  const ts=Math.floor(Math.min(W/11,H/8.25));P.rx+=(P.x-P.rx)*.3;P.ry+=(P.y-P.ry)*.3;
-  let ox=W/2-(P.rx+.5)*ts,oy=H/2-(P.ry+.5)*ts;
-  if(t<S.shakeUntil){ox+=R(-5,5);oy+=R(-5,5);}
-  cx.fillStyle='#000';cx.fillRect(0,0,W,H);
-  const c0=Math.max(0,Math.floor(-ox/ts)),c1=Math.min(MW-1,Math.ceil((W-ox)/ts)),r0=Math.max(0,Math.floor(-oy/ts)),r1=Math.min(MH-1,Math.ceil((H-oy)/ts));
-  for(let y=r0;y<=r1;y++)for(let x=c0;x<=c1;x++){
-    const ch=G[y][x],px=ox+x*ts,py=oy+y*ts;
-    if(ch==='#'){cx.fillStyle='#231d19';cx.fillRect(px,py,ts,ts);
-      if(G[y+1]&&G[y+1][x]!=='#'){cx.fillStyle='#3a3028';cx.fillRect(px,py+ts*.55,ts,ts*.45);cx.fillStyle='#4a3d31';cx.fillRect(px,py+ts*.55,ts,2);}continue;}
-    const rm=roomAt(x,y);
-    if(rm==='Foyer'){cx.fillStyle=(x+y)%2?'#3d3833':'#2a2622';}else cx.fillStyle=FLOOR[rm]||'#2a2420';
-    cx.fillRect(px,py,ts,ts);
-    if(ch==='A'||ch==='B'||ch==='E'){cx.fillStyle='#4a2f1d';cx.fillRect(px+2,py+2,ts-4,ts-4);cx.fillStyle='#c9a35a';cx.beginPath();cx.arc(px+ts*.72,py+ts*.5,ts*.07,0,7);cx.fill();}
+  if(y===7&&x>=2&&x<=21)return 'North Hall';if(x>=8&&x<=14&&y>=9&&y<=15)return 'Foyer';
+  if(x>=1&&x<=6&&y>=9&&y<=15)return 'Portrait Gallery';if(inCorr(x,y))return "Servants' Corridor";return null;}
+const tileOf=(px,pz)=>[Math.floor(px/T),Math.floor(pz/T)];
+const ctr=(x,y)=>new THREE.Vector3(x*T+T/2,0,y*T+T/2);
+
+/* ---------- renderer & scene ---------- */
+const renderer=new THREE.WebGLRenderer({antialias:!TOUCH,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,TOUCH?1.5:2));
+$('#game').prepend(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x030202);scene.fog=new THREE.FogExp2(0x050403,.075);
+const camera=new THREE.PerspectiveCamera(70,1,.05,60);camera.rotation.order='YXZ';scene.add(camera);
+function resize(){const w=$('#game').clientWidth,h=$('#game').clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+addEventListener('resize',resize);
+scene.add(new THREE.AmbientLight(0x3a2c22,.42));
+const flash=new THREE.SpotLight(0xfff1d6,2.4,22,.48,.55,1.6);flash.position.set(.18,-.15,0);camera.add(flash);camera.add(flash.target);flash.target.position.set(0,-.2,-3);
+const muzzle=new THREE.PointLight(0xffc070,0,8,2);camera.add(muzzle);muzzle.position.set(.2,-.2,-.6);
+
+const ROOMMAT={
+  'Foyer':{wall:TEX.foyerWall,floor:TEX.marble},'Portrait Gallery':{wall:TEX.galleryWall,floor:TEX.carpet},
+  'Library':{wall:TEX.libWall,floor:TEX.wood},'Study':{wall:TEX.studyWall,floor:TEX.wood},
+  'North Hall':{wall:TEX.foyerWall,floor:TEX.wood},"Servants' Corridor":{wall:TEX.stone,floor:TEX.stone}};
+const MAT={};const mat=(t,k)=>MAT[k]||(MAT[k]=new THREE.MeshPhongMaterial({map:t,shininess:6,specular:0x111111}));
+const wallGeo=new THREE.PlaneGeometry(T,WH),floorGeo=new THREE.PlaneGeometry(T,T);
+function buildStatic(){
+  const buckets={};const add=(key,tex,m)=>{(buckets[key]=buckets[key]||{tex,list:[]}).list.push(m);};
+  const o=new THREE.Object3D();
+  const solid=(x,y)=>!G[y]||G[y][x]==='#'||G[y][x]===undefined;
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){
+    if(G[y][x]==='#')continue;const rm=roomAt(x,y)||'North Hall',M=ROOMMAT[rm],c=ctr(x,y);
+    if(G[y][x]!=='P'){o.position.set(c.x,0,c.z);o.rotation.set(-Math.PI/2,0,0);o.updateMatrix();add('f'+rm,M.floor,o.matrix.clone());}
+    o.position.set(c.x,WH,c.z);o.rotation.set(Math.PI/2,0,0);o.updateMatrix();add('ceil',TEX.ceiling,o.matrix.clone());
+    [[0,-1,0],[0,1,Math.PI],[-1,0,Math.PI/2],[1,0,-Math.PI/2]].forEach(([dx,dy,ry])=>{
+      if(!solid(x+dx,y+dy))return;o.position.set(c.x+dx*T/2,WH/2,c.z+dy*T/2);o.rotation.set(0,ry,0);o.updateMatrix();add('w'+rm,M.wall,o.matrix.clone());});
   }
-  Object.values(OBJ).forEach(o=>{const px=ox+o.x*ts,py=oy+o.y*ts;if(px>-ts&&px<W&&py>-ts&&py<H)drawObj(o,px,py,ts,t);});
-  if(Gh.active){const gx=ox+Gh.x*ts+ts/2,gy=oy+Gh.y*ts+ts/2;cx.fillStyle='#b9c0b8';cx.beginPath();cx.ellipse(gx,gy,ts*.28,ts*.36,0,0,7);cx.fill();
-    cx.fillStyle='#a8372f';cx.fillRect(gx-ts*.12,gy-ts*.12,ts*.07,ts*.05);cx.fillRect(gx+ts*.05,gy-ts*.12,ts*.07,ts*.05);}
-  const px=ox+P.rx*ts+ts/2,py=oy+P.ry*ts+ts/2;
-  cx.fillStyle='#e0a84a';cx.beginPath();cx.arc(px,py,ts*.2,0,7);cx.fill();
-  cx.strokeStyle='#e0a84a';cx.lineWidth=2;cx.beginPath();cx.moveTo(px,py);cx.lineTo(px+P.fx*ts*.36,py+P.fy*ts*.36);cx.stroke();
-  const L=S.lamp*ts*(1+.03*Math.sin(t/90)),dg=cx.createRadialGradient(px,py,L*.15,px,py,L);
-  dg.addColorStop(0,'rgba(0,0,0,0)');dg.addColorStop(.6,'rgba(0,0,0,.35)');dg.addColorStop(1,'rgba(0,0,0,.97)');cx.fillStyle=dg;cx.fillRect(0,0,W,H);
-  if(t<S.flashUntil){cx.fillStyle='rgba(168,55,47,.25)';cx.fillRect(0,0,W,H);}
+  Object.entries(buckets).forEach(([k,b])=>{const im=new THREE.InstancedMesh(k[0]==='w'?wallGeo:floorGeo,mat(b.tex,k),b.list.length);b.list.forEach((m,i)=>im.setMatrixAt(i,m));scene.add(im);});
 }
-function drawObj(o,px,py,ts,t){
-  const m=ts/2,c=cx;c.save();
-  switch(o.t){
-    case 'map':c.fillStyle='#c9a35a';c.fillRect(px+4,py+4,ts-8,ts-8);c.fillStyle='#d8ccb4';c.fillRect(px+8,py+8,ts-16,ts-16);c.strokeStyle='#5a4a38';c.strokeRect(px+12,py+12,ts-24,ts-24);break;
-    case 'portrait':c.fillStyle='#a07a3a';c.fillRect(px+5,py+3,ts-10,ts-6);c.fillStyle='#2c2420';c.fillRect(px+9,py+7,ts-18,ts-14);c.fillStyle='#cbb9a0';c.beginPath();c.ellipse(px+m,py+m*.9,ts*.12,ts*.16,0,0,7);c.fill();break;
-    case 'clock':c.fillStyle='#4a2f1d';c.fillRect(px+m-ts*.2,py+3,ts*.4,ts-6);c.fillStyle='#d8ccb4';c.beginPath();c.arc(px+m,py+ts*.3,ts*.13,0,7);c.fill();c.strokeStyle='#2a221b';c.beginPath();c.moveTo(px+m,py+ts*.3);c.lineTo(px+m+ts*.08*Math.sin(t/900),py+ts*.3-ts*.08*Math.cos(t/900));c.stroke();break;
-    case 'crest':c.fillStyle='#2a2420';c.fillRect(px,py,ts,ts);drawCrest(c,CRESTS[o.i],px+m,py+m,ts*.72);break;
-    case 'glove':case 'music':case 'locket':c.fillStyle='#6b6258';c.beginPath();c.arc(px+m,py+m,ts*.3,0,7);c.fill();
-      if(!o.taken){c.fillStyle=o.t==='glove'?'#e2d6bd':o.t==='music'?'#8a5a3a':'#e0a84a';if(o.t==='locket'){c.beginPath();c.arc(px+m,py+m,ts*.12,0,7);c.fill();}else c.fillRect(px+m-ts*.13,py+m-ts*.1,ts*.26,ts*.2);}break;
-    case 'book':c.fillStyle='#4a2f1d';c.fillRect(px+6,py+ts*.45,ts-12,ts*.4);c.fillStyle='#e2d6bd';c.fillRect(px+ts*.18,py+ts*.28,ts*.3,ts*.24);c.fillRect(px+ts*.52,py+ts*.28,ts*.3,ts*.24);break;
-    case 'desk':c.fillStyle='#5a3a24';c.fillRect(px+3,py+ts*.25,ts-6,ts*.5);c.fillStyle='#e2d6bd';c.fillRect(px+ts*.3,py+ts*.32,ts*.25,ts*.18);break;
-    case 'cellar':c.fillStyle='#0a0807';c.fillRect(px+3,py+3,ts-6,ts-6);c.strokeStyle='#4a2f1d';c.lineWidth=3;for(let i=1;i<4;i++){c.beginPath();c.moveTo(px+4,py+i*ts/4);c.lineTo(px+ts-4,py+i*ts/4);c.stroke();}
-      c.fillStyle=`rgba(168,55,47,${.25+.2*Math.sin(t/300)})`;c.fillRect(px+3,py+3,ts-6,ts-6);break;
-  }c.restore();
+buildStatic();
+
+/* plugs: the doorways the Architect moves (gallery and north hall openings) */
+const PLUG={};
+function makePlug(x,y,openNow){
+  const c=ctr(x,y),g=new THREE.BoxGeometry(T,WH,T),fm=mat(TEX.foyerWall,'wFoyer'),
+    other=x===7?mat(TEX.galleryWall,'wPortrait Gallery'):mat(TEX.foyerWall,'wNorth Hall'),dark=mat(TEX.ceiling,'ceil');
+  const mats=x===7?[fm,other,dark,dark,dark,dark]:[dark,dark,dark,dark,fm,other];
+  const m=new THREE.Mesh(g,mats);m.position.set(c.x,WH/2,c.z);m.visible=!openNow;scene.add(m);
+  const f=new THREE.Mesh(floorGeo,mat(TEX.marble,'fFoyer'));f.rotation.x=-Math.PI/2;f.position.set(c.x,.001,c.z);scene.add(f);
+  PLUG[x+','+y]={mesh:m,open:openNow};
 }
-/* input */
-const KEYS={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0]};
-window.addEventListener('keydown',e=>{
-  if(S.phase==='drive'){if(e.key==='f'||e.key==='F')driveRespond(false);if(e.key==='j'||e.key==='J')driveRespond(true);return;}
-  const k=KEYS[e.key];if(k&&!S.modal){e.preventDefault();tryMove(k[0],k[1]);}
+makePlug(7,12,true);makePlug(7,10,false);makePlug(11,8,true);makePlug(12,8,false);
+function setPlug(k,open){PLUG[k].open=open;PLUG[k].mesh.visible=!open;}
+
+/* doors */
+const DOORS={};
+function makeDoor(x,y,axis,id,locked){
+  const c=ctr(x,y),piv=new THREE.Group();
+  const d=new THREE.Mesh(new THREE.BoxGeometry(axis==='z'?T*.92:.12,WH*.82,axis==='z'?.12:T*.92),mat(TEX.door,'door'));
+  if(axis==='z'){piv.position.set(c.x-T*.46,0,c.z);d.position.set(T*.46,WH*.41,0);}else{piv.position.set(c.x,0,c.z-T*.46);d.position.set(0,WH*.41,T*.46);}
+  piv.add(d);scene.add(piv);
+  const lintel=new THREE.Mesh(new THREE.BoxGeometry(axis==='z'?T:.3,WH*.18,axis==='z'?.3:T),mat(TEX.ceiling,'ceil'));lintel.position.set(c.x,WH*.91,c.z);scene.add(lintel);
+  DOORS[id]={x,y,piv,open:false,locked,ang:0};
+}
+makeDoor(4,6,'z','A','Lion Medallion');makeDoor(19,6,'z','B','Brass Key');makeDoor(15,13,'x','E','bolt');
+function openDoor(id){const d=DOORS[id];if(d.open)return;d.open=true;d.locked=null;sfx('creak');}
+
+/* walkability */
+const BLOCK=new Set();
+function passable(x,y){
+  const ch=G[y]&&G[y][x];if(!ch||ch==='#')return false;if(BLOCK.has(x+','+y))return false;
+  if(ch==='P')return PLUG[x+','+y].open;
+  if(ch==='A'||ch==='B'||ch==='E')return DOORS[ch].open;
+  return true;}
+
+/* ---------- props ---------- */
+const P3=(w,h,d,color,x,y,z,emis)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshLambertMaterial({color,emissive:emis||0}));m.position.set(x,y,z);scene.add(m);return m;};
+function paintedTex(fn){return ctex(256,320,fn);}
+const claraTex=paintedTex((g,w,h)=>{g.fillStyle='#2a1d14';g.fillRect(0,0,w,h);const gr=g.createRadialGradient(w/2,h*.4,10,w/2,h*.45,w*.6);gr.addColorStop(0,'#5a4636');gr.addColorStop(1,'#1d140e');g.fillStyle=gr;g.fillRect(0,0,w,h);
+  g.fillStyle='#1a120c';g.beginPath();g.ellipse(w/2,h*.36,58,70,0,0,7);g.fill();g.fillStyle='#cdb59a';g.beginPath();g.ellipse(w/2,h*.4,40,52,0,0,7);g.fill();
+  g.fillStyle='#2e1f19';g.beginPath();g.moveTo(w*.15,h);g.quadraticCurveTo(w/2,h*.55,w*.85,h);g.fill();g.fillStyle='#3a2a20';g.fillRect(w/2-14,h*.38,8,4);g.fillRect(w/2+6,h*.38,8,4);});
+const strangerTex=()=>paintedTex((g,w,h)=>{g.fillStyle=`hsl(${R(10,40)},25%,14%)`;g.fillRect(0,0,w,h);g.fillStyle=`hsl(30,20%,${R(45,60)}%)`;g.beginPath();g.ellipse(w/2,h*.42,38,50,0,0,7);g.fill();
+  g.fillStyle='#120c08';g.fillRect(w/2-50,h*.38,100,10);g.fillStyle='#1a120c';g.beginPath();g.moveTo(0,h);g.quadraticCurveTo(w/2,h*.55,w,h);g.fill();});
+function framed(tex,x,y,z,ry,w=1,h=1.25){const grp=new THREE.Group();grp.position.set(x,y,z);grp.rotation.y=ry;
+  const fr=new THREE.Mesh(new THREE.BoxGeometry(w+.16,h+.16,.06),new THREE.MeshLambertMaterial({color:0x8a6a33}));grp.add(fr);
+  const pic=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshLambertMaterial({map:tex}));pic.position.z=.035;grp.add(pic);scene.add(grp);return grp;}
+function planTex(){return ctex(520,380,(g,w,h)=>drawPlan(g,w,h,false));}
+function drawPlan(g,w,h,live){
+  const s=Math.floor(Math.min(w/MW,h/MH)),ox=(w-s*MW)/2,oy=(h-s*MH)/2;
+  g.fillStyle='#d8ccb4';g.fillRect(0,0,w,h);
+  const open=(x,y)=>{const ch=G[y]&&G[y][x];if(!ch||ch==='#')return false;if(ch==='P')return live?PLUG[x+','+y].open:(x===7?y===12:x===11);return true;};
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++)if(open(x,y)){g.fillStyle='#efe6d2';g.fillRect(ox+x*s,oy+y*s,s,s);}
+  g.strokeStyle='#2a221b';g.lineWidth=2;
+  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(!open(x,y))continue;const X=ox+x*s,Y=oy+y*s;g.beginPath();
+    if(!open(x,y-1)){g.moveTo(X,Y);g.lineTo(X+s,Y);}if(!open(x,y+1)){g.moveTo(X,Y+s);g.lineTo(X+s,Y+s);}if(!open(x-1,y)){g.moveTo(X,Y);g.lineTo(X,Y+s);}if(!open(x+1,y)){g.moveTo(X+s,Y);g.lineTo(X+s,Y+s);}g.stroke();}
+  g.fillStyle='#2a221b';g.font=`${Math.max(10,s*.72)}px "IM Fell English SC",serif`;g.textAlign='center';
+  [['Library',4,3.2],['Study',19,3.2],['Foyer',11,12.4],['Gallery',3.5,12.4],['North Hall',12,6.6],["Servants'",21,9.6]].forEach(([n,x,y])=>g.fillText(n,ox+x*s,oy+y*s));
+  g.font=`italic ${Math.max(10,s*.6)}px "IM Fell English",serif`;g.fillText('Locke Hall, East Wing',w/2,oy+s*17.4);
+}
+function buildProps(){
+  // foyer
+  framed(planTex(),9*T+T/2,1.7,9*T+.04,0,1.3,.95);
+  framed(claraTex,13*T+T/2,1.8,9*T+.04,0,.9,1.15).name='clara';
+  const clock=new THREE.Group();clock.position.set(14*T+T-.35,0,11*T+T/2);scene.add(clock);
+  const cb=new THREE.Mesh(new THREE.BoxGeometry(.5,2.3,.5),new THREE.MeshLambertMaterial({color:0x3a2212}));cb.position.y=1.15;clock.add(cb);
+  const face=new THREE.Mesh(new THREE.CircleGeometry(.17,24),new THREE.MeshLambertMaterial({color:0xd8ccb4}));face.position.set(-.26,1.85,0);face.rotation.y=-Math.PI/2;clock.add(face);
+  clock.name='clock';S.clock=clock;S.clara=scene.getObjectByName('clara');BLOCK.add('14,11');
+  const rug=new THREE.Mesh(new THREE.PlaneGeometry(T*2.4,T*3),new THREE.MeshLambertMaterial({map:TEX.carpet}));rug.rotation.x=-Math.PI/2;rug.position.set(11*T+T/2,.01,12*T+T/2);scene.add(rug);S.rug=rug;
+  const chand=new THREE.PointLight(0xffb060,1.5,16,1.6);chand.position.set(11*T+T/2,WH-.5,12*T);scene.add(chand);S.chand=chand;
+  P3(.5,.06,.5,0x8a6a33,11*T+T/2,WH-.45,12*T,0x3a2a10);
+  // gallery
+  [[1,10,Math.PI/2],[1,13,Math.PI/2],[3,15,Math.PI],[5,15,Math.PI],[6,14,-Math.PI/2]].forEach(([x,y,ry])=>{const c=ctr(x,y);framed(strangerTex(),c.x-Math.sin(ry)*(T/2-.04),1.75,c.z-Math.cos(ry)*(T/2-.04)+0,ry,.8,1);});
+  const gl=new THREE.PointLight(0xc9d6b0,.7,10,1.8);gl.position.set(3.5*T,WH-.6,12*T);scene.add(gl);
+  // library
+  P3(1.4,.08,.8,0x3d2414,6*T+T/2,.85,2*T+T/2);P3(1.3,.8,.7,0x2a170c,6*T+T/2,.42,2*T+T/2);BLOCK.add('6,2');
+  P3(.5,.7,.5,0x2a170c,2*T+T/2,.35,4*T+T/2);BLOCK.add('2,4');
+  const ll=new THREE.PointLight(0xffa850,.9,9,1.8);ll.position.set(6*T+T/2,1.6,2*T+T/2);scene.add(ll);P3(.12,.25,.12,0xe0a84a,6*T+T/2+.4,1.0,2*T+T/2,0x7a5010);
+  // study
+  P3(1.6,.8,.8,0x2a170c,17*T+T/2,.4,2*T+T/2);BLOCK.add('17,2');
+  P3(.3,1.2,1.6,0x1d1a17,22*T+T-.15,.6,4*T+T/2);
+  const fire=new THREE.PointLight(0xff6a2a,1.2,11,1.7);fire.position.set(22*T+T/2,.7,4*T+T/2);scene.add(fire);S.fire=fire;
+  P3(.1,.5,1.0,0xff7a30,22*T+T-.25,.35,4*T+T/2,0xc04010);
+  P3(.6,.9,.4,0x2a170c,21*T+T/2,.45,2*T+T/2);BLOCK.add('21,2');
+  // hall candelabra
+  [9,15].forEach(x=>P3(.08,1.4,.08,0x8a6a33,x*T+T/2,.7,7*T+.3));
+}
+buildProps();
+/* ---------- player ---------- */
+const PL={x:11*T+T/2,z:14*T+T/2,yaw:0,pitch:0,bob:0,stepAcc:0,lastTile:'',hurtUntil:0};
+const RAD=.28;
+function canStand(x,z){for(const[dx,dz]of[[-RAD,-RAD],[RAD,-RAD],[-RAD,RAD],[RAD,RAD]]){const[tx,tz]=tileOf(x+dx,z+dz);if(!passable(tx,tz))return false;}return true;}
+const keys={};let joy={x:0,y:0},locked=false;
+addEventListener('keydown',e=>{
+  if(!S.running)return;
+  if(dlgOpen()&&(e.code==='KeyE'||e.code==='Space'||e.code==='Enter')){e.preventDefault();advanceDialog();return;}
+  if(!$('#mapView').hidden&&(e.code==='KeyM'||e.code==='Escape'||e.code==='KeyE')){closeMap();return;}
+  keys[e.code]=true;
+  if(S.paused)return;
+  if(e.code==='KeyE')use();if(e.code==='KeyM')tryMap();if(e.code==='Space'||e.code==='KeyF'){e.preventDefault();fire();}
 });
-let padRep=0;
-document.querySelectorAll('#pad button').forEach(b=>{const [dx,dy]=b.dataset.d.split(',').map(Number);
-  b.addEventListener('pointerdown',e=>{e.preventDefault();tryMove(dx,dy);clearInterval(padRep);padRep=setInterval(()=>tryMove(dx,dy),150);});
-  ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>clearInterval(padRep)));});
-/* ---------- objects, locks and probes ---------- */
-const FRAG={glove:["Clara's glove","Kid leather, the left hand. The fingers still hold a shape, as if it were taken off a moment ago."],
-  music:["A music box","It plays four bars of a waltz and stops on the same note every time. Inside the lid: 'For C., so the tune stays put.'"],
-  locket:["A locket","A curl of dark hair under glass. The portrait opposite it has been scratched out, carefully, by someone who regretted it."]};
-function interact(o){
-  const close=s=>s.querySelector('#ok').onclick=closePanel;
-  switch(o.t){
-    case 'map':return showMap();
-    case 'portrait':return openPanel(`<h2>Clara Locke, 1871</h2><p>Someone has wiped the dust from her face, and only from her face.</p><div class="row"><button id="ok">Step back</button></div>`,close);
-    case 'clock':return openPanel(`<h2>The long-case clock</h2><p>It reads twelve past three. The pendulum swings, but the hands have not moved since you arrived.</p><div class="row"><button id="ok">Step back</button></div>`,close);
-    case 'crest':S.crestsSeen.add(o.i);
-      return openPanel(`<h2>A family crest</h2><canvas id="cc" width="200" height="220"></canvas><p class="small">Study it. The house keeps its secrets in small details.</p><div class="row"><button id="ok">Step back</button></div>`,
-        s=>{const c=s.querySelector('#cc').getContext('2d');drawCrest(c,CRESTS[o.i],100,110,180);close(s);});
-    case 'glove':case 'music':case 'locket':{
-      if(o.taken)return toast('The pedestal is empty now.');
-      o.taken=true;S.items[o.t]={x:o.x,y:o.y,at:now()};const [n,txt]=FRAG[o.t];
-      return openPanel(`<h2>${n}</h2><p>${txt}</p><p class="small">A memory of Clara. You keep it.</p><div class="row"><button id="ok">Take it</button></div>`,close);}
-    case 'book':
-      if(S.code)return toast('Only dust where the page was.');
-      S.code=Array.from({length:4},()=>RI(1,9)).join('');S.codeAt=now();
-      return openPanel(`<h2>An anatomy of memory</h2><p>In the margin of a chapter on the hippocampus, four numbers are pressed hard into the paper:</p>
-        <div class="codeshow">${S.code}</div><p class="note">"The study remembers what I don't."</p><p class="small">The page is brittle. It will not survive being read twice.</p>
-        <div class="row"><button id="ok">Close the book</button></div>`,s=>s.querySelector('#ok').onclick=()=>{closePanel();toast('The page crumbles to dust.');});
-    case 'desk':return openPanel(`<h2>Locke's journal</h2><p class="note">"Oct. 3. The east wing moved again in the night. I found the music box in the library, though I am certain I left it by the window.<br><br>I have begun building below the house. A palace, down in the cellar, where every room stays where I put it. Where she stays where I put her. No one will rearrange it. Not even me."</p><div class="row"><button id="ok">Close the journal</button></div>`,close);
-    case 'cellar':return ending();
+addEventListener('keyup',e=>keys[e.code]=false);
+const cvEl=renderer.domElement;
+cvEl.addEventListener('click',()=>{
+  if(!S.running||TOUCH)return;if(dlgOpen()){advanceDialog();return;}
+  if(!locked){try{const p=cvEl.requestPointerLock&&cvEl.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}return;}
+  if(!S.paused)fire();
+});
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===cvEl;});
+addEventListener('mousemove',e=>{
+  if(TOUCH||S.paused)return;
+  if(locked||e.buttons===1){PL.yaw-=e.movementX*.0024;PL.pitch=Math.max(-1.2,Math.min(1.2,PL.pitch-e.movementY*.0024));}
+});
+/* touch: joystick left, drag to look anywhere else */
+if(TOUCH){
+  $('#touch').hidden=false;$('#keyhelp').textContent='Left stick move · drag to look · Fire · Use · Map in the foyer';
+  const jz=$('#joy'),kn=$('#knob');let jid=null;
+  const jm=e=>{const r=jz.getBoundingClientRect();let dx=(e.clientX-r.left-r.width/2)/(r.width/2),dy=(e.clientY-r.top-r.height/2)/(r.height/2);const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m;}joy={x:dx,y:dy};kn.style.transform=`translate(${dx*36}px,${dy*36}px)`;};
+  jz.addEventListener('pointerdown',e=>{jid=e.pointerId;jz.setPointerCapture(jid);jm(e);});
+  jz.addEventListener('pointermove',e=>{if(e.pointerId===jid)jm(e);});
+  const jend=()=>{jid=null;joy={x:0,y:0};kn.style.transform='';};jz.addEventListener('pointerup',jend);jz.addEventListener('pointercancel',jend);
+  let lid=null,lx=0,ly=0;
+  cvEl.addEventListener('pointerdown',e=>{if(dlgOpen()){advanceDialog();return;}lid=e.pointerId;lx=e.clientX;ly=e.clientY;});
+  cvEl.addEventListener('pointermove',e=>{if(e.pointerId!==lid||S.paused)return;PL.yaw-=(e.clientX-lx)*.006;PL.pitch=Math.max(-1.1,Math.min(1.1,PL.pitch-(e.clientY-ly)*.006));lx=e.clientX;ly=e.clientY;});
+  ['pointerup','pointercancel'].forEach(ev=>cvEl.addEventListener(ev,e=>{if(e.pointerId===lid)lid=null;}));
+  $('#tFire').addEventListener('pointerdown',e=>{e.preventDefault();if(dlgOpen())return advanceDialog();if(!S.paused)fire();});
+  $('#tUse').addEventListener('pointerdown',e=>{e.preventDefault();if(dlgOpen())return advanceDialog();if(!S.paused)use();});
+  $('#tMap').addEventListener('pointerdown',e=>{e.preventDefault();if(!$('#mapView').hidden)return closeMap();if(!S.paused)tryMap();});
+}
+$('#dialog').addEventListener('click',()=>advanceDialog());
+function updatePlayer(dt){
+  let f=0,s=0;
+  if(keys.KeyW||keys.ArrowUp)f+=1;if(keys.KeyS||keys.ArrowDown)f-=1;if(keys.KeyD)s+=1;if(keys.KeyA)s-=1;
+  if(keys.ArrowLeft)PL.yaw+=2.2*dt;if(keys.ArrowRight)PL.yaw-=2.2*dt;
+  if(TOUCH){f-=joy.y;s+=joy.x;}
+  const mag=Math.min(1,Math.hypot(f,s));
+  const run=(keys.ShiftLeft||keys.ShiftRight||(TOUCH&&mag>.92))?1.55:1;
+  const sp=2.5*run*(S.hp<=1?.75:1);
+  if(mag>.05){
+    const fx=-Math.sin(PL.yaw),fz=-Math.cos(PL.yaw),rx=Math.cos(PL.yaw),rz=-Math.sin(PL.yaw);
+    let vx=(fx*f+rx*s)/Math.max(1,mag)*sp*mag,vz=(fz*f+rz*s)/Math.max(1,mag)*sp*mag;
+    const ox=PL.x,oz=PL.z;
+    if(canStand(PL.x+vx*dt,PL.z))PL.x+=vx*dt;else bump(PL.x+Math.sign(vx)*.5,PL.z);
+    if(canStand(PL.x,PL.z+vz*dt))PL.z+=vz*dt;else bump(PL.x,PL.z+Math.sign(vz)*.5);
+    const moved=Math.hypot(PL.x-ox,PL.z-oz);S.log.dist+=moved;
+    PL.bob+=moved*3.2;PL.stepAcc+=moved;if(PL.stepAcc>.9*run){PL.stepAcc=0;sfx('step');}
   }
+  camera.position.set(PL.x,1.6+Math.sin(PL.bob)*.035,PL.z);camera.rotation.set(PL.pitch,PL.yaw,0);
+  const[tx,tz]=tileOf(PL.x,PL.z),k=tx+','+tz;
+  if(k!==PL.lastTile){PL.lastTile=k;onTile(tx,tz);}
 }
-function drawOverview(cvs){
-  const c=cvs.getContext('2d'),s=Math.floor(Math.min(cvs.width/MW,cvs.height/MH)),ox=(cvs.width-s*MW)/2,oy=(cvs.height-s*MH)/2;
-  c.fillStyle='#d8ccb4';c.fillRect(0,0,cvs.width,cvs.height);
-  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(G[y][x]==='#')continue;c.fillStyle=G[y][x]==='.'?'#efe6d2':'#b98a5a';c.fillRect(ox+x*s,oy+y*s,s,s);}
-  c.strokeStyle='#2a221b';c.lineWidth=1.5;
-  for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){if(G[y][x]==='#')continue;const X=ox+x*s,Y=oy+y*s,w=(a,b)=>!G[b]||G[b][a]==='#';
-    c.beginPath();if(w(x,y-1)){c.moveTo(X,Y);c.lineTo(X+s,Y);}if(w(x,y+1)){c.moveTo(X,Y+s);c.lineTo(X+s,Y+s);}if(w(x-1,y)){c.moveTo(X,Y);c.lineTo(X,Y+s);}if(w(x+1,y)){c.moveTo(X+s,Y);c.lineTo(X+s,Y+s);}c.stroke();}
-  c.fillStyle='#2a221b';c.font=`${Math.max(9,s*.75)}px "IM Fell English SC",serif`;c.textAlign='center';
-  [['Library',4,3],['Study',19,3],['Foyer',11,12.4],['Gallery',3.5,12.4],['North hall',12,6.6],["Servants'",21,9.6]].forEach(([n,x,y])=>c.fillText(n,ox+x*s,oy+y*s));
-  return {s,ox,oy};
+/* ---------- ghouls ---------- */
+const GH=[];
+const skin=new THREE.MeshLambertMaterial({color:0x9aa394}),rag=new THREE.MeshLambertMaterial({color:0x2a2622}),eyeM=new THREE.MeshBasicMaterial({color:0xff3322});
+function makeGhoul(x,y,opts={}){
+  const g=new THREE.Group(),body=new THREE.Group();g.add(body);
+  const torso=new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,1.15,8),rag);torso.position.y=.95;torso.rotation.x=.18;body.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),skin);head.position.set(0,1.58,-.1);body.add(head);
+  [-.065,.065].forEach(ex=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.025,6,4),eyeM);e.position.set(ex,1.6,-.24);body.add(e);});
+  const arms=[-.25,.25].map(ax=>{const a=new THREE.Mesh(new THREE.BoxGeometry(.08,.08,.7),skin);a.position.set(ax,1.25,-.38);body.add(a);return a;});
+  [-.1,.1].forEach(lx=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.11,.5,.11),rag);l.position.set(lx,.25,0);body.add(l);});
+  const c=ctr(x,y);g.position.set(c.x,0,c.z);scene.add(g);
+  const o={g,body,arms,x:c.x,z:c.z,hp:opts.hp||4,state:opts.state||'idle',patrol:opts.patrol||null,pi:0,speed:opts.speed||1.05,cd:0,lost:0,next:null,bfsT:0,moanT:R(2,6),stagger:0,fall:0,t:R(0,6),id:opts.id};
+  GH.push(o);return o;
 }
-function showMap(){
-  const t0=now();
-  openPanel(`<h2>The plan of the East Wing</h2><canvas id="mc" width="520" height="360"></canvas><p class="small">Committed to memory or not, it stays on this wall.</p><div class="row"><button id="ok">Step back</button></div>`,
-    s=>{drawOverview(s.querySelector('#mc'));s.querySelector('#ok').onclick=()=>{S.log.mapTime=(S.log.mapTime||0)+(now()-t0)/1000;closePanel();};});
+const ghPass=(x,y)=>passable(x,y)&&roomAt(x,y)!=='Foyer'&&!(G[y]&&G[y][x]==='P');
+function los(ax,az,bx,bz){const d=Math.hypot(bx-ax,bz-az),n=Math.ceil(d/.25);for(let i=1;i<n;i++){const t=i/n,[tx,tz]=tileOf(ax+(bx-ax)*t,az+(bz-az)*t);if(!passable(tx,tz))return false;}return true;}
+function bfsNext(sx,sy,tx,ty){
+  if(sx===tx&&sy===ty)return null;const key=(x,y)=>x+','+y,prev={},q=[[sx,sy]];prev[key(sx,sy)]=null;
+  while(q.length){const[x,y]=q.shift();if(x===tx&&y===ty)break;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy,k=key(nx,ny);if(k in prev||!(ghPass(nx,ny)||(nx===tx&&ny===ty&&passable(nx,ny))))continue;prev[k]=[x,y];q.push([nx,ny]);}if(q.length>600)break;}
+  let cur=key(tx,ty);if(!(cur in prev))return null;let step=[tx,ty];while(prev[cur]&&key(...prev[cur])!==key(sx,sy)){step=prev[cur];cur=key(...step);}return step;
 }
-/* Library door: mnemonic similarity test (Stark et al.) */
-function doorA(){
-  if(S.crestsSeen.size<4)return toast(`A lock of six crest-shaped tumblers. The gallery crests must be the key. (${S.crestsSeen.size}/6 studied)`,3000);
-  const idx=[0,1,2,3,4,5].sort(()=>Math.random()-.5),tr=[];
-  idx.slice(0,3).forEach(i=>tr.push({p:CRESTS[i],k:'target'}));idx.slice(3,6).forEach(i=>tr.push({p:lureOf(CRESTS[i]),k:'lure'}));
-  tr.push({p:newCrest(),k:'foil'},{p:newCrest(),k:'foil'});tr.sort(()=>Math.random()-.5);
-  let i=0;const res=[];
-  const step=()=>{
-    if(i>=tr.length){
-      const P_=(k,r)=>{const a=res.filter(x=>x.k===k);return a.filter(x=>x.r===r).length/Math.max(1,a.length);};
-      S.log.mst={hit:P_('target','old'),ldi:P_('lure','similar')-P_('foil','similar'),lureOld:P_('lure','old')};
-      G[6][4]='.';closePanel();toast('The tumblers fall. The library door swings open.',2400);return;}
-    openPanel(`<h2>Tumbler ${i+1} of ${tr.length}</h2><canvas id="cc" width="180" height="200"></canvas>
-      <p>Was this crest in the gallery exactly as you see it?</p>
-      <div class="row"><button data-r="old">Exactly this</button><button data-r="similar" class="ghost">Similar, but changed</button><button data-r="new" class="ghost">Never seen</button></div>`,
-      s=>{drawCrest(s.querySelector('#cc').getContext('2d'),tr[i].p,90,100,165);
-        s.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{res.push({k:tr[i].k,r:b.dataset.r});i++;step();});});
-  };step();
+function updateGhouls(dt,t){
+  GH.forEach(o=>{
+    if(o.state==='dead'){if(o.fall<1){o.fall=Math.min(1,o.fall+dt*1.8);o.body.rotation.x=-o.fall*Math.PI/2;o.body.position.y=o.fall*.15;}return;}
+    if(o.state==='dormant')return;
+    o.t+=dt;o.cd-=dt;o.stagger=Math.max(0,o.stagger-dt);
+    const dx=PL.x-o.x,dz=PL.z-o.z,d=Math.hypot(dx,dz),see=d<11&&los(o.x,o.z,PL.x,PL.z);
+    if(see&&o.state!=='chase'){o.state='chase';sfx('moan',1);}
+    if(o.state==='chase'){if(see)o.lost=0;else if((o.lost+=dt)>7)o.state=o.patrol?'patrol':'idle';}
+    let tx=null,tz=null,sp=o.speed;
+    if(o.state==='chase'){
+      if(see&&d<3.5){tx=PL.x;tz=PL.z;}else{
+        if((o.bfsT-=dt)<=0){o.bfsT=.4;const[gx,gy]=tileOf(o.x,o.z),[px,py]=tileOf(PL.x,PL.z);o.next=bfsNext(gx,gy,px,py);}
+        if(o.next){const c=ctr(o.next[0],o.next[1]);tx=c.x;tz=c.z;}}
+    }else if(o.state==='patrol'&&o.patrol){const w=o.patrol[o.pi],c=ctr(w[0],w[1]);tx=c.x;tz=c.z;sp*=.55;if(Math.hypot(c.x-o.x,c.z-o.z)<.3)o.pi=(o.pi+1)%o.patrol.length;}
+    if(tx!==null&&o.stagger<=0){
+      const vx=tx-o.x,vz=tz-o.z,m=Math.hypot(vx,vz)||1,stepx=vx/m*sp*dt,stepz=vz/m*sp*dt;
+      const ok=(x,z)=>{const[a,b]=tileOf(x,z);return ghPass(a,b);};
+      if(d>.7){if(ok(o.x+stepx,o.z))o.x+=stepx;if(ok(o.x,o.z+stepz))o.z+=stepz;}
+      o.g.rotation.y=Math.atan2(-vx,-vz);
+    }
+    o.g.position.set(o.x,0,o.z);
+    o.body.rotation.z=Math.sin(o.t*3)*.06;o.body.position.y=Math.abs(Math.sin(o.t*3))*.04;
+    o.arms.forEach((a,i)=>a.rotation.x=Math.sin(o.t*3+i*1.4)*.2);
+    if((o.moanT-=dt)<=0){o.moanT=R(4,9);if(d<14)sfx('moan',Math.max(.15,1-d/14));}
+    if(o.state==='chase'&&d<.95&&o.cd<=0&&!S.paused){o.cd=1.7;hurtPlayer(dx/d,dz/d);}
+  });
 }
-/* Study door: working memory held across the ghoul's hallway */
-function doorB(){
-  if(!S.code)return toast('A brass keypad with four empty windows.',2200);
-  let typed='';
-  const paint=s=>s.querySelector('.codeshow').textContent=(typed+'____').slice(0,4);
-  openPanel(`<h2>The study door</h2><p>Four brass windows wait for numbers.</p><div class="codeshow">____</div>
-    <div class="grid3">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-n="${n}">${n}</button>`).join('')}</div>`,
-    s=>s.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{typed+=b.dataset.n;paint(s);if(typed.length===4){
-      let ok=0;for(let k=0;k<4;k++)if(typed[k]===S.code[k])ok++;
-      S.log.wm={correct:ok,delay:(now()-S.codeAt)/1000,hits:S.log.hitsDuringHold};S.codeDone=true;G[6][19]='.';
-      setTimeout(()=>{closePanel();toast(ok===4?'The lock turns. The study is open.':'Wrong numbers. The lock gives anyway. Something wants you inside.',2800);},350);}}));
+function hurtPlayer(nx,nz){
+  S.hp--;S.log.dmg++;sfx('hurt');PL.hurtUntil=now()+700;$('#hurt').style.opacity=1;setTimeout(()=>$('#hurt').style.opacity=S.hp<=1?.45:0,450);
+  for(let k=.7;k>0;k-=.1)if(canStand(PL.x+nx*k,PL.z+nz*k)){PL.x+=nx*k;PL.z+=nz*k;break;}
+  hud();if(S.hp<=0)die();
 }
-function doorE(){toast(S.pointed?'':'Bolted from the other side.',1800);}
-/* Corridor: egocentric pointing after path integration in the dark */
-function pointing(){
-  S.pointed=true;
-  const phi=Math.atan2(P.fx,-P.fy),theta=Math.atan2(23-P.x,-(3-P.y));
-  let rel=(theta-phi)*180/Math.PI;rel=((rel%360)+540)%360-180;
-  openPanel(`<h2>Lost in the dark</h2><p>You have no idea how far you've come. Point back toward the study door you came through. The top of the dial is the way you're facing.</p>
-    <canvas id="dial" width="240" height="240" style="cursor:crosshair;touch-action:none"></canvas>`,
-    s=>{const d=s.querySelector('#dial'),c=d.getContext('2d');
-      c.fillStyle='#1b1714';c.fillRect(0,0,240,240);c.strokeStyle='#8a6a33';c.lineWidth=2;c.beginPath();c.arc(120,120,100,0,7);c.stroke();
-      c.fillStyle='#e0a84a';c.beginPath();c.moveTo(120,12);c.lineTo(110,32);c.lineTo(130,32);c.fill();c.font='12px "Special Elite",monospace';c.textAlign='center';c.fillText('facing',120,48);
-      d.onclick=e=>{const r=d.getBoundingClientRect(),x=(e.clientX-r.left)*240/r.width-120,y=(e.clientY-r.top)*240/r.height-120;
-        const resp=Math.atan2(x,-y)*180/Math.PI;let err=Math.abs(((resp-rel)%360+540)%360-180);
-        S.log.pi={err,resp,truth:rel,dark:(now()-S.darkStart)/1000};
-        c.strokeStyle='#e2d6bd';c.lineWidth=3;c.beginPath();c.moveTo(120,120);c.lineTo(120+90*Math.sin(resp*Math.PI/180),120-90*Math.cos(resp*Math.PI/180));c.stroke();
-        setTimeout(()=>{closePanel();applyChange();S.lamp=3.3;G[13][15]='.';toast('A gas lamp flickers on ahead. The bolt slides back.',2600);},500);};});
+function die(){
+  S.paused=true;S.log.deaths=(S.log.deaths||0)+1;
+  if(document.exitPointerLock)document.exitPointerLock();
+  showEnd(`<h1 style="color:var(--blood)">You Died</h1><p>The house keeps you a while, then lets you go.</p><button class="btn" id="retry">Wake in the foyer</button>`,
+    ()=>$('#retry').onclick=()=>{$('#end').hidden=true;S.hp=3;PL.x=11*T+T/2;PL.z=14*T+T/2;PL.yaw=0;GH.forEach(o=>{if(o.state==='chase')o.state=o.patrol?'patrol':'idle';});hud();S.paused=false;$('#hurt').style.opacity=0;});
 }
-/* Foyer return: the Architect's change, then object-in-place */
-function moveObj(a,b){const o=OBJ[a];delete OBJ[a];[o.x,o.y]=b.split(',').map(Number);OBJ[b]=o;}
-function applyChange(){
-  S.changeAt=now();S.change=RI(0,2);
-  if(S.change===0){const p=OBJ['13,9'],k=OBJ['14,11'];delete OBJ['13,9'];delete OBJ['14,11'];p.x=14;p.y=11;k.x=13;k.y=9;OBJ['14,11']=p;OBJ['13,9']=k;}
-  else if(S.change===1){G[12][7]='#';G[10][7]='.';}
-  else moveObj('9,9','8,15');
-  Gh.active=false;
+function fire(){
+  if(S.ammo<=0){say(['Out of ammunition.']);return;}
+  S.ammo--;S.log.shots++;sfx('shot');muzzle.intensity=4;setTimeout(()=>muzzle.intensity=0,70);hud();
+  const o=camera.position.clone(),dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  let wall=30;for(let s=.2;s<30;s+=.15){const p=o.clone().addScaledVector(dir,s),[tx,tz]=tileOf(p.x,p.z);if(!passable(tx,tz)||p.y<0||p.y>WH){wall=s;break;}}
+  let best=null;
+  GH.forEach(g=>{if(g.state==='dead'||g.state==='dormant')return;
+    [[1.58,.2,2],[1.0,.36,1]].forEach(([hy,r,dmg])=>{const c=new THREE.Vector3(g.x,hy,g.z),oc=c.clone().sub(o),tc=oc.dot(dir);if(tc<0||tc>wall)return;
+      const d2=oc.lengthSq()-tc*tc;if(d2<r*r&&(!best||tc<best.t))best={g,t:tc,dmg};});});
+  if(best){const g=best.g;S.log.hits++;g.hp-=best.dmg;g.stagger=.45;g.state='chase';g.x+=dir.x*.25;g.z+=dir.z*.25;
+    if(g.hp<=0){g.state='dead';sfx('thud',.6);}}
 }
-function armChange(){
-  S.changeAt=now();thud(0,.3);
-  const b=$('#odd');b.hidden=false;b.onclick=()=>oddPrompt(false);
-  S.oddTimer=setTimeout(()=>{if(!S.oddDone&&!S.modal)oddPrompt(true);},40000);
+/* ---------- dialog, HUD ---------- */
+let DQ=[],dDone=null;
+function dlgOpen(){return !$('#dialog').hidden;}
+function say(lines,who='',done){DQ=lines.slice();dDone=done||null;$('#dWho').textContent=who;$('#dWho').hidden=!who;S.paused=true;showLine();}
+function showLine(){$('#dialog').hidden=false;$('#dText').textContent=DQ.shift();}
+function advanceDialog(){if(DQ.length){showLine();return;}$('#dialog').hidden=true;S.paused=false;const d=dDone;dDone=null;if(d)d();}
+const NAMES={medallion:'Lion Medallion',brass:'Brass Key (Study)',glove:"Clara's glove",music:'Music box',locket:'Locket'};
+function hud(){
+  const c=$('#cond');c.textContent=['Danger','Danger','Caution','Fine'][Math.max(0,S.hp)];c.className=['danger','danger','caution','fine'][Math.max(0,S.hp)];
+  $('#ammo').textContent='Handgun '+S.ammo;
+  $('#inv').innerHTML=Object.keys(S.inv).filter(k=>S.inv[k]).map(k=>NAMES[k]).join('<br>');
 }
-function oddPrompt(auto){
-  if(S.oddDone)return;S.oddDone=true;clearTimeout(S.oddTimer);$('#odd').hidden=true;
-  const lat=auto?null:(now()-S.changeAt)/1000;
-  const opts=[['The portrait and the clock traded places',0],['The gallery door moved',1],['The framed plan moved',2],["I can't tell",-1]];
-  openPanel(`<h2>${auto?'Look again':'The foyer is wrong'}</h2><p>${auto?'You have the feeling the house has been rearranged. ':''}What did it change?</p><div class="row" style="flex-direction:column">${opts.map(([t,k])=>`<button class="ghost" data-k="${k}">${t}</button>`).join('')}</div>`,
-    s=>s.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{S.log.change={latency:lat,correct:+b.dataset.k===S.change,noticed:!auto};placement();}));
+let roomT=0;
+function showRoom(n){const r=$('#room');r.textContent=n;r.classList.add('on');clearTimeout(roomT);roomT=setTimeout(()=>r.classList.remove('on'),2600);}
+function logEvent(name){const[tx,tz]=tileOf(PL.x,PL.z);S.log.events.push({name,t:(now()-S.t0)/1000,dist:S.log.dist,tile:[tx,tz]});}
+
+/* ---------- interactables ---------- */
+const IT=[];
+function addIt(o){IT.push(o);return o;}
+function pickupMesh(color,x,y,z,size=.12,shape='box'){const g=shape==='sphere'?new THREE.SphereGeometry(size,12,8):new THREE.BoxGeometry(size*1.6,size,size*1.2);
+  const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color,emissive:color,emissiveIntensity:.25}));m.position.set(x,y,z);scene.add(m);return m;}
+function pedestal(x,y){const c=ctr(x,y);P3(.45,1,.45,0x4a443d,c.x,.5,c.z);BLOCK.add(x+','+y);return c;}
+function take(key,mesh,lines){S.inv[key]=true;if(mesh)mesh.visible=false;sfx('pickup');logEvent('take:'+key);hud();say(lines);}
+function buildInteractables(){
+  let c;
+  // foyer
+  addIt({x:9*T+T/2,z:9*T+.3,y:1.7,label:'Read the plan',use:()=>openMap()});
+  S.claraIt=addIt({x:13*T+T/2,z:9*T+.3,y:1.8,label:'Examine the portrait',use:()=>say(['"Clara Locke, 1871."','Someone has wiped the dust from her face, and only from her face.'])});
+  S.clockIt=addIt({x:14*T+T-.6,z:11*T+T/2,y:1.6,label:'Examine the clock',use:()=>say(['The long-case clock reads twelve past three.','The pendulum swings, but the hands have not moved since you came in.'])});
+  S.trapIt=addIt({x:11*T+T/2,z:12*T+T/2,y:.2,label:'Examine the trapdoor',hidden:true,use:trapdoor});
+  // gallery
+  c=pedestal(2,11);const med=pickupMesh(0xc9a35a,c.x,1.08,c.z,.11,'sphere');
+  addIt({x:c.x,z:c.z,y:1.1,label:'Take the medallion',done:()=>S.inv.medallion||S.flags.usedMed,use(){take('medallion',med,['A heavy gold medallion: a lion, mouth open.','It matches a hollow you may have seen on a door.']);}});
+  c=pedestal(5,13);const glv=pickupMesh(0xe2d6bd,c.x,1.06,c.z,.1);
+  addIt({x:c.x,z:c.z,y:1.1,label:'Take the glove',done:()=>S.inv.glove,use(){take('glove',glv,["Clara's glove. Kid leather, the left hand.",'The fingers still hold a shape, as if it was taken off a moment ago.']);}});
+  c=ctr(6,15);P3(.4,.35,.4,0x3a2a1c,c.x+.4,.18,c.z+.4);const herb=pickupMesh(0x5e8a48,c.x+.4,.45,c.z+.4,.16,'sphere');
+  addIt({x:c.x+.4,z:c.z+.4,y:.4,label:'Take the herb',done:()=>S.flags.herb,use(){S.flags.herb=true;herb.visible=false;S.hp=3;$('#hurt').style.opacity=0;sfx('pickup');hud();say(['A bitter green herb. You chew it, and the pain eases.']);}});
+  // library
+  c=ctr(6,2);const key=pickupMesh(0xd4a64a,c.x-.2,.92,c.z,.07);
+  addIt({x:c.x,z:c.z,y:.9,label:'Take the key',done:()=>S.inv.brass||S.flags.usedBrass,use(){take('brass',key,['A brass key on a cardboard tag.','In Locke\'s hand: STUDY. Underneath, crossed out: "Don\'t let me in."']);}});
+  c=ctr(2,4);const mb=pickupMesh(0x7a4a2a,c.x,.78,c.z,.12);
+  addIt({x:c.x,z:c.z,y:.8,label:'Take the music box',done:()=>S.inv.music,use(){take('music',mb,['A music box. It plays four bars of a waltz and stops on the same note every time.','Inside the lid: "For C., so the tune stays put."']);}});
+  c=ctr(1,1);const am1=pickupMesh(0x5a5a3a,c.x,.1,c.z,.14);
+  addIt({x:c.x,z:c.z,y:.2,label:'Take the bullets',done:()=>S.flags.am1,use(){S.flags.am1=true;am1.visible=false;S.ammo+=8;sfx('pickup');hud();say(['Handgun bullets. Eight rounds.']);}});
+  // study
+  c=ctr(17,2);pickupMesh(0xd8ccb4,c.x,.84,c.z,.1);
+  addIt({x:c.x,z:c.z,y:.85,label:"Read Locke's journal",use:()=>say(['"Oct. 3. The east wing moved again in the night. I found the music box in the library, though I am certain I left it by the window."','"I have begun building below the house. A palace, down in the cellar, where every room stays where I put it."','"Where she stays where I put her. No one will rearrange it. Not even me."'],'Locke\'s journal')});
+  c=ctr(21,2);const lk=pickupMesh(0xe0a84a,c.x,.95,c.z,.07,'sphere');
+  addIt({x:c.x,z:c.z,y:.95,label:'Take the locket',done:()=>S.inv.locket,use(){take('locket',lk,['A locket with a curl of dark hair under glass.','The portrait inside has been scratched out, carefully, by someone who regretted it.']);}});
+  c=ctr(16,5);const am2=pickupMesh(0x5a5a3a,c.x,.1,c.z,.14);
+  addIt({x:c.x,z:c.z,y:.2,label:'Take the bullets',done:()=>S.flags.am2,use(){S.flags.am2=true;am2.visible=false;S.ammo+=8;sfx('pickup');hud();say(['Handgun bullets. Eight rounds.']);}});
+  // doors
+  addIt({x:4*T+T/2,z:6*T+T/2,y:1.4,label:'Open the door',done:()=>DOORS.A.open,use(){
+    if(S.inv.medallion){S.inv.medallion=false;S.flags.usedMed=true;openDoor('A');logEvent('open:library');hud();say(['The lion medallion fits the hollow. Something heavy turns inside the door.']);}
+    else say(['A heavy oak door. Set into the lock is a hollow shaped like a lion\'s head.']);}});
+  addIt({x:19*T+T/2,z:6*T+T/2,y:1.4,label:'Open the door',done:()=>DOORS.B.open,use(){
+    if(S.inv.brass){S.inv.brass=false;S.flags.usedBrass=true;openDoor('B');logEvent('open:study');hud();say(['The brass key turns. The study door swings in on warm air.']);}
+    else say(['Locked. A small brass keyhole, worn bright from use.']);}});
+  addIt({x:15*T+T/2,z:13*T+T/2,y:1.4,label:'Open the door',done:()=>DOORS.E.open,use(){
+    if(PL.x>15*T+T/2){openDoor('E');logEvent('open:corridor');say(['You slide the bolt back. Candlelight spills through from the foyer.']);}
+    else say(['It won\'t move. Bolted from the other side.']);}});
 }
-function placement(){
-  const keys=Object.keys(S.items);S.log.oip=[];let i=0;
-  const step=()=>{
-    if(i>=keys.length)return reveal();
-    const k=keys[i];
-    openPanel(`<h2>Where was it?</h2><p>Tap the plan where you found <b>${FRAG[k][0].toLowerCase()}</b>.</p><canvas id="mc" width="520" height="360" style="cursor:crosshair"></canvas>`,
-      s=>{const m=s.querySelector('#mc'),g=drawOverview(m);
-        m.onclick=e=>{const r=m.getBoundingClientRect(),x=((e.clientX-r.left)*m.width/r.width-g.ox)/g.s-.5,y=((e.clientY-r.top)*m.height/r.height-g.oy)/g.s-.5;
-          S.log.oip.push({item:k,err:Math.hypot(x-S.items[k].x,y-S.items[k].y)});i++;step();};});
-  };step();
+buildInteractables();
+let focus=null;
+function findFocus(){
+  const fx=-Math.sin(PL.yaw),fz=-Math.cos(PL.yaw);let best=null,bs=1e9;
+  IT.forEach(o=>{if(o.hidden||(o.done&&o.done()))return;const dx=o.x-PL.x,dz=o.z-PL.z,d=Math.hypot(dx,dz);if(d>2.1)return;
+    const dot=(dx*fx+dz*fz)/(d||1);if(dot<.55&&d>.6)return;const sc=d-dot;if(sc<bs){bs=sc;best=o;}});
+  focus=best;const p=$('#prompt');if(best&&!S.paused){p.textContent=(TOUCH?'Use · ':'E · ')+best.label;p.classList.add('on');}else p.classList.remove('on');
 }
-function reveal(){
-  closePanel();OBJ['11,15']={t:'cellar',x:11,y:15};
-  thud(0,.7);thud(.55,.7);thud(1.1,.75);
-  toast('A trapdoor stands open in the foyer floor. Above you, heavy footsteps. They are not Locke\'s.',4200);
+function use(){if(focus)focus.use();}
+
+/* ---------- the plan ---------- */
+let mapT0=0;
+function openMap(){S.paused=true;mapT0=now();S.log.mapViews++;if(S.flags.changed)S.log.mapViewsPost=(S.log.mapViewsPost||0)+1;
+  const c=$('#mapCv');drawPlan(c.getContext('2d'),c.width,c.height,false);$('#mapView').hidden=false;if(document.exitPointerLock)document.exitPointerLock();}
+function closeMap(){$('#mapView').hidden=true;S.log.mapTime+=(now()-mapT0)/1000;S.paused=false;}
+$('#mapClose').onclick=closeMap;
+function tryMap(){const d=Math.hypot(PL.x-(9*T+T/2),PL.z-(9*T+.3));if(d<2.6)openMap();else say(['The only map in the house hangs on the foyer wall.']);}
+
+/* ---------- story beats ---------- */
+function onTile(tx,ty){
+  const rm=roomAt(tx,ty);
+  if(rm&&rm!==S.room){S.room=rm;showRoom(rm);droneLevel(rm==='Foyer'?0:rm==="Servants' Corridor"?.09:.045);
+    S.visited=S.visited||{};if(!S.visited[rm]){S.visited[rm]=true;logEvent('enter:'+rm);}}
+  if(tx===23&&ty===3&&!S.flags.dark){S.flags.dark=true;logEvent('dark');architect();
+    say(['Your flashlight sputters.','...and dies. Somewhere ahead in the dark, something shifts its weight.'],'',()=>{setTimeout(()=>{const g=GH.find(o=>o.id==='corr');if(g&&g.state==='dormant')g.state='chase';},2500);});}
+  if(rm==='Foyer'&&S.flags.dark&&!S.flags.back){S.flags.back=true;S.flags.lightBack=true;S.backT=now();S.backDist=S.log.dist;logEvent('foyer-return');
+    sfx('thud',.8);setTimeout(()=>sfx('thud',.85),550);setTimeout(()=>sfx('thud',.9),1100);
+    say(['Your flashlight flickers back to life.','Overhead, heavy footsteps cross the floor. They are not Locke\'s.','The rug in the middle of the foyer has been pulled back. Beneath it is a trapdoor.']);}
+  if(rm==='Portrait Gallery'&&S.flags.changed){const g=GH.find(o=>o.id==='gal');if(g&&g.state==='dormant')g.state='idle';}
+}
+/* the Architect rearranges the foyer while the player is in the dark */
+function architect(){
+  S.flags.changed=true;
+  setPlug('7,12',false);setPlug('7,10',true);setPlug('11,8',false);setPlug('12,8',true);
+  const cp=S.clara.position.clone();S.clara.position.set(14*T+T-.04,1.8,11*T+T/2);S.clara.rotation.y=-Math.PI/2;
+  S.clock.position.set(13*T+T/2,0,9*T+.35);S.clock.rotation.y=Math.PI/2;BLOCK.delete('14,11');BLOCK.add('13,9');
+  S.claraIt.x=14*T+T-.3;S.claraIt.z=11*T+T/2;S.clockIt.x=13*T+T/2;S.clockIt.z=9*T+.6;
+  S.rug.position.x=11*T+T/2+T*.9;S.rug.rotation.z=.25;
+  const trap=new THREE.Mesh(new THREE.PlaneGeometry(1.4,1.4),new THREE.MeshLambertMaterial({map:TEX.door}));trap.rotation.x=-Math.PI/2;trap.position.set(11*T+T/2,.02,12*T+T/2);scene.add(trap);
+  S.trapIt.hidden=false;
+  makeGhoul(2,10,{id:'gal',state:'dormant',hp:5,speed:1.15});
+}
+function trapdoor(){
+  const have=['glove','music','locket'].filter(k=>S.inv[k]),miss=['glove','music','locket'].filter(k=>!S.inv[k]);
+  if(miss.length){say(['Three hollows are carved into the trapdoor: a glove, a music box, a locket.',
+    have.length?`You fit ${have.map(k=>NAMES[k].toLowerCase()).join(' and ')} into place. ${miss.length===1?'One hollow':'Two hollows'} still empty.`:'They are all empty.']);
+    if(have.length)logEvent('trap-partial');return;}
+  logEvent('trapdoor');S.flags.done=true;
+  say(['The glove, the music box, the locket. Each one settles into its hollow.','The trapdoor swings down. Stone steps descend, farther than the house is tall.','The air smells of candle wax and lilies.'],'',ending);
 }
 function ending(){
-  openPanel(`<h2>Down to the Palace</h2><p>Stone steps descend farther than the house is tall. The air smells of candle wax and lilies.</p>
-    <p class="note">Somewhere below, Elias Locke is still building. A palace where every room stays where he put it.</p>
+  S.paused=true;if(document.exitPointerLock)document.exitPointerLock();
+  showEnd(`<h1>The Palace</h1><div class="sub">End of the East Wing beta</div>
+    <p>Somewhere below, Elias Locke is still building. A palace where every room stays where he put it.</p>
     <p>The footsteps above stop at the top of the stairs.</p>
-    <p class="small">End of the East Wing beta.</p><div class="row"><button id="go">Read the Ledger</button></div>`,s=>s.querySelector('#go').onclick=ledger);
+    <button class="btn" id="again">Play again</button><br><button class="btn small" id="showNotes">Session notes</button>`,
+    ()=>{$('#again').onclick=()=>location.reload();$('#showNotes').onclick=notes;});
 }
-/* ---------- Locke's Ledger: the fitted parameters ---------- */
-function f(x,d=2){return x==null||!isFinite(x)?'—':(+x).toFixed(d);}
-function ledger(){
-  const L=S.log,dr=L.drive||{},oip=L.oip||[],oipM=oip.length?mean(oip.map(o=>o.err)):null,mins=(now()-S.start)/60000;
-  let hist=[];try{hist=JSON.parse(localStorage.getItem('palace.sessions')||'[]');}catch(e){}
-  hist.push({d:new Date().toISOString(),v:dr.v,a:dr.a,ter:dr.ter,ldi:L.mst&&L.mst.ldi,pi:L.pi&&L.pi.err,oip:oipM});
-  try{localStorage.setItem('palace.sessions',JSON.stringify(hist.slice(-60)));}catch(e){}
-  const vs=hist.map(h=>h.v).filter(x=>x!=null&&isFinite(x));
-  const iiv=vs.length>=2?Math.sqrt(variance(vs)):null;
-  const E=(k,v,m)=>`<div class="entry"><span class="k">${k}</span><span class="v">${v}</span><span class="m">${m}</span></div>`;
-  openPanel(`<div class="ledger"><h2>Locke's Ledger</h2>
-    <p class="small">What the house learned about you. ${f(mins,1)} minutes, ${L.steps} steps.</p>
-    ${E('Drift rate',f(dr.v,3),`Fog drive · EZ-diffusion fit to ${dr.n||0} fixed-difficulty trials. The rate evidence builds toward a decision: signal relative to noise, unfolding in time.${dr.edge?' Accuracy hit a ceiling or floor, so this estimate is rough.':''}`)}
-    ${E('Caution (boundary)',f(dr.a,3),'How much evidence you wait for before committing. Higher boundaries trade speed for accuracy and can hide a drop in drift.')}
-    ${E('Non-decision time',f(dr.ter,2)+' s','Seeing and pressing, separated from deciding. This is where motor slowing goes, so it does not contaminate drift.')}
-    ${E('Sway threshold',f(dr.amp,1)+' px',`Staircased ghoul sway against ${dr.sigma} px of fog jitter. Accuracy on fixed trials: ${f((dr.pc||0)*100,0)}%.`)}
-    ${E('Lure discrimination',L.mst?f(L.mst.ldi,2):'—',`Crest lock · mnemonic similarity task. P(similar | lure) minus P(similar | new). A dentate gyrus and CA3 pattern-separation index. Exact-match recognition: ${L.mst?f(L.mst.hit*100,0)+'%':'—'}.`)}
-    ${E('Code held',L.wm?`${L.wm.correct}/4`:'—',L.wm?`Study door · held for ${f(L.wm.delay,0)} s through the ghoul's hall, with ${L.wm.hits} contact${L.wm.hits===1?'':'s'}. The ghoul is the kick against the attractor's walls.`:'The code was never entered.')}
-    ${E('Pointing error',L.pi?f(L.pi.err,0)+'°':'—',L.pi?`Servants' corridor · egocentric pointing after ${f(L.pi.dark,0)} s of path integration in the dark. Leans on entorhinal and retrosplenial computation.`:'')}
-    ${E('Change detection',L.change?(L.change.noticed?f(L.change.latency,1)+' s':'prompted'):'—',L.change?`The Architect's rearrangement of the foyer. ${L.change.correct?'Correctly identified.':'Not identified.'} Noticing a broken map is a prediction-error signal, the first step in remapping.`:'')}
-    ${E('Object-in-place error',oipM==null?'—':f(oipM,1)+' tiles',`Clara's belongings placed on the plan from memory (${oip.length} item${oip.length===1?'':'s'}). Hippocampal item–location binding.`)}
-    ${E('Plan study time',f(L.mapTime||0,0)+' s','Time spent reading the only map in the house. A strategy marker, and a covariate for every navigation score.')}
-    ${E('Sessions on record',String(hist.length),iiv==null?'Drift-rate variability across days is the signal this design is built around. Play again on another day to start that series.':`Drift-rate variability across sessions: SD = ${f(iiv,3)}. This is the day-to-day noise that tends to rise before averages fall.`)}
-    <p class="small" style="margin-top:12px">Beta. Each value is a single-session point estimate from a short tutorial block. The models are meant to be fit across many sessions, where change over time carries the information.</p>
-    <div class="row"><button id="again">Play again</button></div></div>`,s=>s.querySelector('#again').onclick=()=>location.reload());
+function showEnd(html,mount){$('#endCard').innerHTML=html;$('#end').hidden=false;if(mount)mount();}
+/* ---------- silent measures ---------- */
+S.lastBump=0;S.log.oldDoorBumps=0;
+function bump(x,z){if(!S.flags.changed)return;const[tx,tz]=tileOf(x,z),k=tx+','+tz;
+  if((k==='7,12'||k==='11,8')&&now()-S.lastBump>1200){S.lastBump=now();S.log.oldDoorBumps++;}}
+function notes(){
+  const L=S.log,f=(x,d=0)=>x==null||!isFinite(x)?'—':(+x).toFixed(d),mins=(now()-S.t0)/60000;
+  const tr=L.events.find(e=>e.name==='trapdoor'),post=S.backT&&tr?{t:tr.t-(S.backT-S.t0)/1000,d:tr.dist-S.backDist}:null;
+  const row=(k,v,m)=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span><span class="m">${m}</span></div>`;
+  let hist=[];try{hist=JSON.parse(localStorage.getItem('palace.runs')||'[]');}catch(e){}
+  if(!S.saved){S.saved=true;hist.push({d:Date.now(),mins,dist:L.dist,mapViews:L.mapViews,postT:post&&post.t,postD:post&&post.d,bumps:L.oldDoorBumps});try{localStorage.setItem('palace.runs',JSON.stringify(hist.slice(-50)));}catch(e){}}
+  showEnd(`<div id="notes"><h1 style="font-size:2rem;text-align:center">Session notes</h1>
+    <p style="font-size:.85rem;color:var(--muted);text-align:center">Recorded silently while you played. Nothing here was a test you could see.</p>
+    ${row('Run time',f(mins,1)+' min',`${f(L.dist)} m walked through the East Wing.`)}
+    ${row('Plan readings',`${L.mapViews} · ${f(L.mapTime)} s`,'How often you went back to the only map, and how long you studied it. A strategy marker for every navigation score below.')}
+    ${row('After the house changed',post?`${f(post.t)} s · ${f(post.d)} m`:'—','From the foyer return to opening the trapdoor. The Architect moved two doorways, so this is how fast your map updated.')}
+    ${row('Walked into sealed doorways',String(L.oldDoorBumps),'Attempts to use an old doorway after it was moved. Perseveration on a stale map.')}
+    ${row('Plan readings after the change',String(L.mapViewsPost||0),'The plan on the wall was never updated, so it now lies. Returning to it is a reasonable instinct that stops paying off.')}
+    ${row('Shooting',`${L.hits}/${L.shots}`,`Hits per shot. Damage taken: ${L.dmg}. Deaths: ${L.deaths||0}.`)}
+    ${row('Runs on record',String(hist.length),hist.length>1?'Run-to-run variability is where the signal will come from once the full game exists.':'Change across runs is the point. One run is an anecdote.')}
+    <div style="text-align:center"><button class="btn" id="again">Play again</button></div></div>`,()=>$('#again').onclick=()=>location.reload());
 }
 /* ---------- boot ---------- */
-function frame(t){
-  if(S.phase==='explore')renderExplore(t);else renderDrive(t);
-  requestAnimationFrame(frame);
+makeGhoul(17,7,{id:'hall',state:'patrol',patrol:[[8,7],[20,7]]});
+makeGhoul(4,2,{id:'lib',state:'idle',hp:3,speed:.9});
+makeGhoul(24,8,{id:'corr',state:'dormant',speed:1.3});
+hud();resize();
+let last=now();
+function loop(){
+  requestAnimationFrame(loop);const t=now(),dt=Math.min(.05,(t-last)/1000);last=t;
+  if(S.running&&!S.paused){updatePlayer(dt);updateGhouls(dt,t);}
+  else{camera.position.set(PL.x,1.6,PL.z);camera.rotation.set(PL.pitch,PL.yaw,0);}
+  Object.values(DOORS).forEach(d=>{const tg=d.open?-1.75:0;d.ang+=(tg-d.ang)*Math.min(1,dt*3);d.piv.rotation.y=d.ang;});
+  S.chand.intensity=1.5+Math.sin(t/130)*.08+Math.sin(t/57)*.05;S.fire.intensity=1.05+Math.random()*.35;
+  flash.intensity=(S.flags.dark&&!S.flags.lightBack)?(Math.random()<.035?.9:.06):2.4;
+  if(!S.running)PL.yaw+=dt*.05;
+  findFocus();renderer.render(scene,camera);
 }
-resize();seedDrive();requestAnimationFrame(frame);
-openPanel(`<h2>The Palace</h2>
-  <p>A letter arrived from Dr. Elias Locke, in handwriting that shook: <i>"Come quickly. I can no longer find the rooms."</i></p>
-  <p>Your car dies at the bottom of the drive. Shapes wait among the trees between you and Locke Hall. Most are garden statues. Some are not.</p>
-  <p class="small">If a shape sways, it's a ghoul. Decide as quickly and accurately as you can: Statue (F) or Ghoul (J). Sound on for the full effect.</p>
-  <div class="row"><button id="go">Walk up the drive</button></div>`,
-  s=>s.querySelector('#go').onclick=()=>{audio();closePanel();startDrive();});
+loop();
+$('#start').onclick=()=>{
+  audio();startDrone();$('#title').hidden=true;S.running=true;S.paused=false;S.t0=now();resize();
+  if(!TOUCH){try{const p=cvEl.requestPointerLock&&cvEl.requestPointerLock();if(p&&p.catch)p.catch(()=>{});}catch(e){}}
+  say(['The foyer of Locke Hall. The chandelier is lit, and the candles are fresh.','Someone has been here tonight.','The framed plan by the door is the only map in the house.']);
+};
 </script>
 
 </html>

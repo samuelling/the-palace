@@ -6,17 +6,11 @@ Dr. Elias Locke has turned Locke Hall into a memory palace, and he keeps rearran
 
 ## Beta: the East Wing
 
-Open `index.html` in a browser. Every room doubles as a measurement:
+A first-person 3D survival-horror slice. Open `index.html` (or the GitHub Pages site) in a browser.
 
-| Scene | What the player does | What it fits |
-| --- | --- | --- |
-| The drive | Statue or ghoul, in fog | EZ-diffusion: drift rate, boundary, non-decision time; staircased signal-to-noise threshold |
-| Portrait gallery → library door | Study six crests, then pass a crest lock | Mnemonic similarity task: lure discrimination index (pattern separation) |
-| Library → study door | Hold a 4-digit code through the ghoul's hall | Working memory under distraction (attractor depth vs. noise) |
-| Servants' corridor | Flashlight dies; point back to the start | Path integration, egocentric pointing error |
-| Foyer return | Notice what the Architect moved | Change detection / remapping latency |
-| Foyer return | Place Clara's belongings on the plan | Object-in-place binding error |
+- Desktop: WASD to move, mouse to look (click to capture), click or Space to fire, E to use, Shift to run, M to read the plan while standing at it in the foyer.
+- Phone: left stick to move, drag to look, Fire and Use buttons.
 
-Results appear at the end in Locke's Ledger. Sessions are stored in the browser so drift-rate variability across days can accumulate.
+Find the lion medallion, open the library, take the study key, follow the servants' corridor through the dark, and bring Clara's three mementos back to the trapdoor in the foyer. The Architect rearranges the foyer while you are in the corridor, and the framed plan is never updated.
 
-Beta caveat: single-session estimates from short blocks are noisy. The design intends repeated play, with change over time as the signal.
+Nothing during play is a visible test. The game silently records navigation behavior (distance, plan readings, time and distance to re-route after the rearrangement, walking into sealed doorways, shooting accuracy) and shows it only as optional session notes at the end.
