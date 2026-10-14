@@ -1,0 +1,395 @@
+{
+ "base": {
+  "knobs": {
+   "effect": 1.0,
+   "decline": 1.0
+  },
+  "single": {
+   "per_measure": {
+    "total_time": {
+     "hp": 0.69,
+     "np": 0.704
+    },
+    "total_dist": {
+     "hp": 0.639,
+     "np": 0.607
+    },
+    "c1_post_dist": {
+     "hp": 0.575,
+     "np": 0.567
+    },
+    "c1_bumps": {
+     "hp": 0.626,
+     "np": 0.637
+    },
+    "c1_jopt_post": {
+     "hp": 0.624,
+     "np": 0.603
+    },
+    "c2_jopt": {
+     "hp": 0.66,
+     "np": 0.614
+    },
+    "c2_jopt_post": {
+     "hp": 0.548,
+     "np": 0.555
+    },
+    "c2_post_dist": {
+     "hp": 0.564,
+     "np": 0.573
+    },
+    "c2_bumps": {
+     "hp": 0.536,
+     "np": 0.533
+    },
+    "homing_err": {
+     "hp": 0.701,
+     "np": 0.62
+    },
+    "c3_first_correct": {
+     "hp": 0.62,
+     "np": 0.594
+    },
+    "c3_stale": {
+     "hp": 0.523,
+     "np": 0.524
+    },
+    "c3_per_trip": {
+     "hp": 0.619,
+     "np": 0.575
+    },
+    "fig_acc": {
+     "hp": 0.619,
+     "np": 0.592
+    },
+    "speed": {
+     "hp": 0.642,
+     "np": 0.793
+    },
+    "scrape_rate": {
+     "hp": 0.718,
+     "np": 0.975
+    },
+    "aim": {
+     "hp": 0.552,
+     "np": 0.731
+    },
+    "fig_rt": {
+     "hp": 0.804,
+     "np": 0.8
+    }
+   },
+   "sets": {
+    "legacy": {
+     "auc": 0.682,
+     "fpr_healthy": 0.532,
+     "novice_flagged": 0.938
+    },
+    "model": {
+     "auc": 0.834,
+     "fpr_healthy": 0.325,
+     "novice_flagged": 0.482
+    },
+    "model, motor-adjusted": {
+     "auc": 0.83,
+     "fpr_healthy": 0.347,
+     "novice_flagged": 0.505
+    },
+    "legacy, motor-adjusted": {
+     "auc": 0.661,
+     "fpr_healthy": 0.537,
+     "novice_flagged": 0.795
+    }
+   }
+  },
+  "longitudinal": {
+   "legacy": {
+    "auc": 0.884,
+    "fpr_healthy": 0.17,
+    "novice_flagged": 0.54
+   },
+   "model": {
+    "auc": 0.999,
+    "fpr_healthy": 0.0,
+    "novice_flagged": 0.13
+   },
+   "model, motor-adjusted": {
+    "auc": 0.999,
+    "fpr_healthy": 0.0,
+    "novice_flagged": 0.46
+   },
+   "legacy, motor-adjusted": {
+    "auc": 0.95,
+    "fpr_healthy": 0.05,
+    "novice_flagged": 0.89
+   },
+   "ez_drift_only": {
+    "hp": 0.941,
+    "np": 0.924,
+    "ter_np": 0.753
+   }
+  }
+ },
+ "no_decline": {
+  "knobs": {
+   "effect": 1.0,
+   "decline": 0.0
+  },
+  "single": {
+   "per_measure": {
+    "total_time": {
+     "hp": 0.69,
+     "np": 0.704
+    },
+    "total_dist": {
+     "hp": 0.639,
+     "np": 0.607
+    },
+    "c1_post_dist": {
+     "hp": 0.575,
+     "np": 0.567
+    },
+    "c1_bumps": {
+     "hp": 0.626,
+     "np": 0.637
+    },
+    "c1_jopt_post": {
+     "hp": 0.624,
+     "np": 0.603
+    },
+    "c2_jopt": {
+     "hp": 0.66,
+     "np": 0.614
+    },
+    "c2_jopt_post": {
+     "hp": 0.548,
+     "np": 0.555
+    },
+    "c2_post_dist": {
+     "hp": 0.564,
+     "np": 0.573
+    },
+    "c2_bumps": {
+     "hp": 0.536,
+     "np": 0.533
+    },
+    "homing_err": {
+     "hp": 0.701,
+     "np": 0.62
+    },
+    "c3_first_correct": {
+     "hp": 0.62,
+     "np": 0.594
+    },
+    "c3_stale": {
+     "hp": 0.523,
+     "np": 0.524
+    },
+    "c3_per_trip": {
+     "hp": 0.619,
+     "np": 0.575
+    },
+    "fig_acc": {
+     "hp": 0.619,
+     "np": 0.592
+    },
+    "speed": {
+     "hp": 0.642,
+     "np": 0.793
+    },
+    "scrape_rate": {
+     "hp": 0.718,
+     "np": 0.975
+    },
+    "aim": {
+     "hp": 0.552,
+     "np": 0.731
+    },
+    "fig_rt": {
+     "hp": 0.804,
+     "np": 0.8
+    }
+   },
+   "sets": {
+    "legacy": {
+     "auc": 0.682,
+     "fpr_healthy": 0.532,
+     "novice_flagged": 0.938
+    },
+    "model": {
+     "auc": 0.834,
+     "fpr_healthy": 0.325,
+     "novice_flagged": 0.482
+    },
+    "model, motor-adjusted": {
+     "auc": 0.83,
+     "fpr_healthy": 0.347,
+     "novice_flagged": 0.505
+    },
+    "legacy, motor-adjusted": {
+     "auc": 0.661,
+     "fpr_healthy": 0.537,
+     "novice_flagged": 0.795
+    }
+   }
+  },
+  "longitudinal": {
+   "legacy": {
+    "auc": 0.844,
+    "fpr_healthy": 0.31,
+    "novice_flagged": 0.58
+   },
+   "model": {
+    "auc": 0.995,
+    "fpr_healthy": 0.0,
+    "novice_flagged": 0.33
+   },
+   "model, motor-adjusted": {
+    "auc": 0.998,
+    "fpr_healthy": 0.0,
+    "novice_flagged": 0.78
+   },
+   "legacy, motor-adjusted": {
+    "auc": 0.92,
+    "fpr_healthy": 0.06,
+    "novice_flagged": 0.89
+   },
+   "ez_drift_only": {
+    "hp": 0.877,
+    "np": 0.857,
+    "ter_np": 0.772
+   }
+  }
+ },
+ "half_effect": {
+  "knobs": {
+   "effect": 0.5,
+   "decline": 0.0
+  },
+  "single": {
+   "per_measure": {
+    "total_time": {
+     "hp": 0.571,
+     "np": 0.798
+    },
+    "total_dist": {
+     "hp": 0.569,
+     "np": 0.535
+    },
+    "c1_post_dist": {
+     "hp": 0.538,
+     "np": 0.53
+    },
+    "c1_bumps": {
+     "hp": 0.526,
+     "np": 0.537
+    },
+    "c1_jopt_post": {
+     "hp": 0.575,
+     "np": 0.555
+    },
+    "c2_jopt": {
+     "hp": 0.564,
+     "np": 0.519
+    },
+    "c2_jopt_post": {
+     "hp": 0.53,
+     "np": 0.538
+    },
+    "c2_post_dist": {
+     "hp": 0.538,
+     "np": 0.547
+    },
+    "c2_bumps": {
+     "hp": 0.522,
+     "np": 0.519
+    },
+    "homing_err": {
+     "hp": 0.629,
+     "np": 0.537
+    },
+    "c3_first_correct": {
+     "hp": 0.558,
+     "np": 0.529
+    },
+    "c3_stale": {
+     "hp": 0.527,
+     "np": 0.528
+    },
+    "c3_per_trip": {
+     "hp": 0.555,
+     "np": 0.512
+    },
+    "fig_acc": {
+     "hp": 0.55,
+     "np": 0.521
+    },
+    "speed": {
+     "hp": 0.559,
+     "np": 0.851
+    },
+    "scrape_rate": {
+     "hp": 0.612,
+     "np": 0.989
+    },
+    "aim": {
+     "hp": 0.571,
+     "np": 0.728
+    },
+    "fig_rt": {
+     "hp": 0.669,
+     "np": 0.909
+    }
+   },
+   "sets": {
+    "legacy": {
+     "auc": 0.563,
+     "fpr_healthy": 0.725,
+     "novice_flagged": 0.97
+    },
+    "model": {
+     "auc": 0.674,
+     "fpr_healthy": 0.595,
+     "novice_flagged": 0.723
+    },
+    "model, motor-adjusted": {
+     "auc": 0.671,
+     "fpr_healthy": 0.598,
+     "novice_flagged": 0.718
+    },
+    "legacy, motor-adjusted": {
+     "auc": 0.567,
+     "fpr_healthy": 0.718,
+     "novice_flagged": 0.65
+    }
+   }
+  },
+  "longitudinal": {
+   "legacy": {
+    "auc": 0.68,
+    "fpr_healthy": 0.63,
+    "novice_flagged": 0.79
+   },
+   "model": {
+    "auc": 0.891,
+    "fpr_healthy": 0.19,
+    "novice_flagged": 0.78
+   },
+   "model, motor-adjusted": {
+    "auc": 0.939,
+    "fpr_healthy": 0.09,
+    "novice_flagged": 0.86
+   },
+   "legacy, motor-adjusted": {
+    "auc": 0.762,
+    "fpr_healthy": 0.44,
+    "novice_flagged": 0.94
+   },
+   "ez_drift_only": {
+    "hp": 0.657,
+    "np": 0.627,
+    "ter_np": 0.89
+   }
+  }
+ }
+}

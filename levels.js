@@ -192,18 +192,18 @@
       if (G[wy][wx] === '#' && r() < .14) G[wy][wx] = '.';
     }
     carve(G, LAWN[0], LAWN[1], LAWN[2], LAWN[3]);
-    carve(G, 12, 19, 16, 22); carve(G, 14, 17, 14, 18);          // office + its corridor
+    carve(G, 2, 19, 6, 22); carve(G, 2, 17, 2, 18);              // office (south-west corner) + its corridor
     carve(G, 28, 6, 30, 10); G[8][27] = '.'; G[8][26] = '.';      // boiler room
     const niches = { Owl: [1, 2], Stag: [27, 2], Hare: [1, 16], Swan: [27, 16] };
     Object.values(niches).forEach(([x, y]) => G[y][x] = '.');
     const inMaze = (x, y) => x >= 2 && x <= 26 && y >= 2 && y <= 16;
-    const rooms = [{ name: 'Office', rect: [12, 19, 16, 22], theme: 'office' }, { name: 'Lawn', rect: LAWN, theme: 'lawn' },
+    const rooms = [{ name: 'Office', rect: [2, 19, 6, 22], theme: 'office' }, { name: 'Lawn', rect: LAWN, theme: 'lawn' },
       { name: 'Boiler Room', rect: [28, 6, 30, 10], theme: 'boiler' }];
-    const roomAt = makeRoomAt(rooms, (x, y) => (inMaze(x, y) || (x === 14 && (y === 17 || y === 18)) || (y === 8 && x === 27) || Object.values(niches).some(n => n[0] === x && n[1] === y)) ? 'Greenhouse' : null);
+    const roomAt = makeRoomAt(rooms, (x, y) => (inMaze(x, y) || (x === 2 && (y === 17 || y === 18)) || (y === 8 && x === 27) || Object.values(niches).some(n => n[0] === x && n[1] === y)) ? 'Greenhouse' : null);
     const themes = { Office: 'office', Lawn: 'lawn', 'Boiler Room': 'boiler', Greenhouse: 'greenhouse' };
 
     // pick the lawn gate the return trip will most likely use, then plan the regrowth around it
-    const officeDoor = [14, 17], fountain = [14, 9];
+    const officeDoor = [2, 17], fountain = [14, 9];
     const blockedProps = new Set([K(14, 9)]);
     const isWallBetween = (x, y) => inMaze(x, y) && !inRect(x, y, LAWN) && ((x % 2 === 1) !== (y % 2 === 1));
     const openWall = (x, y) => isWallBetween(x, y) && G[y][x] === '.';
@@ -248,36 +248,36 @@
     const items = roseAt.map((n, i) => ({ id: 'rose' + i, kind: 'rose', x: niches[n][0], y: niches[n][1], on: 'statue', name: `Rose cutting (${n})`,
       lines: [`At the foot of the ${n.toLowerCase()} statue, a rose cutting wrapped in damp paper.`, 'A tag in Locke\'s hand: "From C.\'s garden. Keep alive."'] }));
     const props = Object.entries(niches).map(([n, [x, y]]) => ({ type: 'statue', variant: n.toLowerCase(), x, y, block: true, name: `The ${n}` }));
-    props.push({ type: 'fountain', x: 14, y: 9, block: true }, { type: 'plan', x: 13, y: 19, wall: 'n' }, { type: 'boiler', id: 'boiler', x: 30, y: 8, block: true, interact: true, label: 'Turn the valve' },
-      { type: 'desk', x: 16, y: 21, block: true }, { type: 'hatch', id: 'hatch', x: 12, y: 22, hidden: true, interact: true, label: 'Open the cellar hatch' });
+    props.push({ type: 'fountain', x: 14, y: 9, block: true }, { type: 'plan', x: 4, y: 19, wall: 'n' }, { type: 'boiler', id: 'boiler', x: 30, y: 8, block: true, interact: true, label: 'Turn the valve' },
+      { type: 'desk', x: 6, y: 21, block: true }, { type: 'hatch', id: 'hatch', x: 4, y: 22, hidden: true, interact: true, label: 'Open the cellar hatch' });
 
     // dead ends hold supplies, scarecrows and still gardeners
     const deadEnds = [];
     for (let j = 0; j < CJ; j++) for (let i = 0; i < CI; i++) {
       const x = cx(i), y = cy(j); if (inRect(x, y, LAWN) || G[y][x] !== '.') continue;
       const deg = N4.filter(([dx, dy]) => G[y + dy] && G[y + dy][x + dx] !== '#').length;
-      if (deg === 1 && Math.abs(x - 14) + Math.abs(y - 17) > 4) deadEnds.push([x, y]);
+      if (deg === 1 && Math.abs(x - 2) + Math.abs(y - 17) > 4) deadEnds.push([x, y]);
     }
     const de = shuffle(r, deadEnds);
     const supplies = de.slice(0, 3);
     supplies.forEach(([x, y], i) => items.push(i === 0 ? { id: 'herb2', kind: 'herb', x, y, on: 'planter', name: 'Green herb', heal: true, lines: ['A bitter green herb. You chew it, and the pain eases.'] }
       : { id: 'ammoC' + i, kind: 'ammo', x, y, on: 'floor', name: 'Handgun bullets', ammo: 8, lines: ['Handgun bullets. Eight rounds.'] }));
     supplies.forEach(([x, y], i) => { if (i === 0) props.push({ type: 'planter', x, y }); });
-    const openCells = []; for (let j = 0; j < CJ; j++) for (let i = 0; i < CI; i++) { const x = cx(i), y = cy(j); if (!inRect(x, y, LAWN) && G[y][x] === '.' && Math.abs(x - 14) + Math.abs(y - 17) > 5) openCells.push([x, y]); }
+    const openCells = []; for (let j = 0; j < CJ; j++) for (let i = 0; i < CI; i++) { const x = cx(i), y = cy(j); if (!inRect(x, y, LAWN) && G[y][x] === '.' && Math.abs(x - 2) + Math.abs(y - 17) > 5) openCells.push([x, y]); }
     const used = new Set([...supplies, ...route].map(([x, y]) => K(x, y)));
     const figSpots = shuffle(r, de.slice(3).concat(shuffle(r, openCells).slice(0, 6))).filter(([x, y]) => !used.has(K(x, y))).slice(0, 5);
     const figures = figSpots.map(([x, y], i) => ({ id: 'scare' + i, type: r() < .5 ? 'mannequin' : 'sleeper', look: 'scarecrow', x, y, sway: pick(r, [.012, .02, .03, .045]), yaw: r() * 6.28 }));
     const pa = pick(r, openCells), pb = pick(r, openCells), pc = pick(r, openCells), pd = pick(r, openCells);
     const enemies = [{ id: 'g1', type: 'ghoul', look: 'gardener', x: pa[0], y: pa[1], state: 'patrol', patrol: [pa, pb] },
       { id: 'g2', type: 'ghoul', look: 'gardener', x: pc[0], y: pc[1], state: 'patrol', patrol: [pc, pd] }];
-    const lights = [{ x: 14, y: 20.5, h: 2.6, color: 0xffb87a, i: 1.3, d: 12, flicker: 'candle' }, { x: 14, y: 9, h: 3.0, color: 0x9fb7d6, i: .8, d: 14 },
+    const lights = [{ x: 4.5, y: 21, h: 2.6, color: 0xffb87a, i: 1.3, d: 12, flicker: 'candle' }, { x: 14, y: 9, h: 3.0, color: 0x9fb7d6, i: .8, d: 14 },
       { x: 29.5, y: 8, h: 1.2, color: 0xff7a3a, i: 1.1, d: 10, flicker: 'fire' }];
 
     const planG = G.map(row => row.slice());
     return {
       id: 'conservatory', index: 1, title: 'The Conservatory', sub: 'Locke Hall', seed, W, H, G, planG, rooms, roomAt, themes, plugs, doors: [], items, props, lights, figures, enemies,
-      spawn: [14, 21, 'n'], safe: ['Office'], fog: .06, ambient: [0x26303a, .38],
-      planLabels: [['Office', 14, 21], ['Lawn', 14, 7.2], ['Boiler', 29, 7.6], ['Owl', 1, 1.4], ['Stag', 27, 1.4], ['Hare', 1, 17.8], ['Swan', 27, 17.8]],
+      spawn: [4, 21, 'n'], safe: ['Office'], fog: .06, ambient: [0x26303a, .38],
+      planLabels: [['Office', 4.5, 21.2], ['Lawn', 14, 7.2], ['Boiler', 29, 7.6], ['Owl', 1, 1.4], ['Stag', 27, 1.4], ['Hare', 1, 17.8], ['Swan', 27, 17.8]],
       planTitle: "The Conservatory, as planted",
       regrow: { close, open: [shortcut, extraOpen].filter(Boolean), shortcutGain: best },
       roses: roseAt, lawn: LAWN,
@@ -322,7 +322,7 @@
                   api.flashlight(true); api.fog(.06); api.showProp('hatch');
                   api.say([res.err < 2.5 ? 'The match flares. The hedge gap is right beside you.' : 'The match flares. You are nowhere near the gap. The steam is thinning, at least.',
                     'The hedges look different. Fresh growth, thick and dark, where there was none an hour ago.', 'Get back to the office.']);
-                  api.goal([[14, 18], [14, 17]]);
+                  api.goal([[2, 18], [2, 17]]);
                 }));
             }
           },

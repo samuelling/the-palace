@@ -37,3 +37,17 @@ Across sessions: everyone learns the house (prodromal at about half the rate), n
 | half effect, no decline | .64 · 99% | .67 · 96% | .84 · 75% | .79 · 83% |
 
 Time and distance measures carry most of the single-session signal and cannot tell a prodromal player from a healthy one who is new to 3D games. Map-updating measures (walking into sealed doorways, post-change distance) separate prodromal players from novices about as well as from experienced healthy players, once the post-change leg is long enough to measure.
+
+## Version 2: the three-chapter beta (`sim2.py`, `analyze2.py`)
+
+Agents now play the real seeded layouts (`node export_layouts.js` writes `layouts.json`, which is not committed). Navigation uses a three-state map (known open, known closed, unknown) built from the plan, sees down straight corridors, updates at rate `alpha` when the world contradicts it, and can re-read the stale plan. New parameters: path-integration noise for the conservatory blackout, a diffusion-model decision for each standing figure (drift scales with sway), and motor/control covariates (speed, wall scrapes, aim) generated separately.
+
+Healthy vs prodromal AUC · share of healthy novices flagged at 80% sensitivity:
+
+| Scenario | 1 session, time + distance | 1 session, model measures | 10 sessions, time + distance | 10 sessions, model measures |
+| --- | --- | --- | --- | --- |
+| base (decline) | .68 · 94% | .83 · 48% | .88 · 54% | >.99 · 13% |
+| no decline | .68 · 94% | .83 · 48% | .84 · 58% | >.99 · 33% |
+| half effect, no decline | .56 · 97% | .67 · 72% | .68 · 79% | .89 · 78% |
+
+"Model measures" are route choices at junctions, walking into moved doorways, distance after each rearrangement, homing error, veil choices, and figure accuracy, plus EZ-diffusion parameters pooled across sessions. Regressing out motor covariates using healthy players did not help, because novices sit outside the healthy range of control skill; that adjustment needs a norming sample that includes novices.
