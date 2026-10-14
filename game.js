@@ -132,7 +132,7 @@ function sph(r, m, x, y, z) { const o = new THREE.Mesh(new THREE.SphereGeometry(
 function clearWorld() {
   if (S.world) { scene.remove(S.world); S.world.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   S.world = new THREE.Group(); scene.add(S.world);
-  S.props = {}; S.propList = []; S.items = []; S.figures = []; S.enemies = []; S.targets = []; S.blocked = new Set(); S.doors = {}; S.doorAt = {}; S.veils = []; S.lights = []; S.plugs = {}; S.follower = null; S.homing = null; S.goal = null;
+  S.props = {}; S.propList = []; S.items = []; S.figures = []; S.enemies = []; S.targets = []; S.blocked = new Set(); S.doors = {}; S.doorAt = {}; S.veils = []; S.lights = []; S.plugs = {}; S.follower = null; S.homing = null; S.goal = null; S.lantern = null; S.leg = null;
 }
 
 function buildLevel(spec) {
@@ -522,10 +522,11 @@ function onTile(tx, ty, prev) {
       const best = d => { const v = opts.map(([x, y]) => d.has(KEY(x, y)) ? d.get(KEY(x, y)) : 1e9), m = Math.min(...v); return opts.filter((o, i) => v[i] === m).map(([x, y]) => KEY(x, y)); };
       const bt = best(dt_), bp = best(dp), ch = KEY(tx, ty);
       S.log.junctions.push({ t: +((now() - S.t0) / 1000).toFixed(2), at: [px, py], to: [tx, ty], options: opts.length, optimal: bt.includes(ch), planOptimal: bp.includes(ch),
-        conflict: bt.join() !== bp.join(), changed: !!S.changedOnce, distToGoal: dt_.get(prev) ?? null });
+        conflict: bt.join() !== bp.join(), changed: !!S.changedOnce, distToGoal: dt_.get(prev) ?? null, leg: S.leg ? S.leg.name : null });
     }
   }
   if (cell(tx, ty) === 'V' && now() > (S.veilLock || 0)) { const v = S.veils.find(v => v.x === tx && v.y === ty); if (v) return throughVeil(v); }
+  checkLeg(tx, ty);
   if (S.hooks.onTile) S.hooks.onTile(tx, ty, room);
 }
 function throughVeil(v) {
@@ -656,16 +657,65 @@ $('#mapClose').onclick = closeMap;
 function tryMap() { const p = S.propList.find(p => p.type === 'plan'); if (!p) return; const w = wallPose(p.x, p.y, p.wall, .3); if (Math.hypot(PL.x - w.x, PL.z - w.z) < 2.6) openMap(); else toast('The only map hangs in the ' + S.spec.safe[0].toLowerCase() + '.'); }
 
 /* ---------- homing: walk back in the dark, then mark where you think you are ---------- */
-function homing(target, label, cb) {
-  const c = ctr(target[0], target[1]);
-  S.homing = { tx: c.x, tz: c.z, label, cb, t0: now(), sx: PL.x, sz: PL.z, d0: S.log.motor.dist };
+function homing(target, label, cb, meta) {
+  const c = Array.isArray(target) ? ctr(target[0], target[1]) : target;
+  S.homing = { tx: c.x, tz: c.z, label, cb, t0: now(), sx: PL.x, sz: PL.z, d0: S.log.motor.dist, meta: meta || { kind: 'free' } };
   S.homing.timer = setTimeout(() => { if (S.homing) finishHoming(true); }, 90000);
 }
 function finishHoming(timeout) {
   const h = S.homing; if (!h) return; S.homing = null; clearTimeout(h.timer); sfx('match');
   const err = Math.hypot(PL.x - h.tx, PL.z - h.tz), res = { err: +err.toFixed(2), dx: +(PL.x - h.tx).toFixed(2), dz: +(PL.z - h.tz).toFixed(2),
     startDist: +Math.hypot(h.sx - h.tx, h.sz - h.tz).toFixed(2), walked: +(S.log.motor.dist - h.d0).toFixed(2), dur: +((now() - h.t0) / 1000).toFixed(2), timeout: !!timeout };
+  // in the frame of the correct homing vector: distance ratio and signed turning error
+  const cx_ = h.tx - h.sx, cz_ = h.tz - h.sz, rx_ = PL.x - h.sx, rz_ = PL.z - h.sz, cl = Math.hypot(cx_, cz_), rl = Math.hypot(rx_, rz_);
+  res.distRatio = cl > .1 ? +(rl / cl).toFixed(3) : null;
+  res.angErr = cl > .1 && rl > .1 ? +(Math.atan2(cx_ * rz_ - cz_ * rx_, cx_ * rx_ + cz_ * rz_) * 180 / Math.PI).toFixed(1) : null;
+  Object.assign(res, h.meta);
   S.log.homing.push(res); logEvent('homing', res); h.cb(res);
+}
+
+/* ---------- legs: a trip to one goal, scored against the shortest true route at its start ---------- */
+function shortestFrom(tile, tiles) {
+  const goal = new Set(tiles.map(([x, y]) => KEY(x, y))), d = new Map([[KEY(...tile), 0]]), q = [tile];
+  while (q.length) { const [x, y] = q.shift(), dd = d.get(KEY(x, y)); if (goal.has(KEY(x, y))) return dd; for (const [dx, dy] of N4) { const k = KEY(x + dx, y + dy); if (!d.has(k) && passable(x + dx, y + dy)) { d.set(k, dd + 1); q.push([x + dx, y + dy]); } } }
+  return null;
+}
+function startLeg(name, tiles) {
+  const t = tileOf(PL.x, PL.z);
+  S.leg = { name, tiles: new Set(tiles.map(([x, y]) => KEY(x, y))), t0: now(), d0: S.log.motor.dist, scrapes0: S.log.motor.scrapes, start: t, shortest: shortestFrom(t, tiles), j0: S.log.junctions.length };
+  api.goal(tiles); logEvent('leg-start', { leg: name, shortest: S.leg.shortest });
+}
+function checkLeg(tx, ty) {
+  const L = S.leg; if (!L || !L.tiles.has(KEY(tx, ty))) return;
+  S.leg = null;
+  const walked = S.log.motor.dist - L.d0, J = S.log.junctions.slice(L.j0);
+  const rec = { leg: L.name, shortest: L.shortest, walked: +walked.toFixed(1), efficiency: L.shortest ? +(walked / (L.shortest * T)).toFixed(3) : null,
+    dur: +((now() - L.t0) / 1000).toFixed(1), junctions: J.length, optimal: J.filter(j => j.optimal).length, scrapes: S.log.motor.scrapes - L.scrapes0 };
+  S.log.legs.push(rec); logEvent('leg-end', rec);
+  if (S.hooks.onLegEnd) S.hooks.onLegEnd(L.name);
+}
+
+/* ---------- the lantern: triangle completion in the dark ---------- */
+function lanternTrial(design, cb) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(.1, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffe3a0, fog: false })));
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(.28, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffb040, transparent: true, opacity: .22, fog: false, depthWrite: false })));
+  const [x, z] = design.pts[0]; g.position.set(x, 1.25, z); add(g);
+  S.lantern = { g, design, x, z, i: 0, phase: 'wait', cb, t: 0 };
+}
+function updateLantern(dt) {
+  const L = S.lantern; if (!L) return; L.t += dt;
+  const pd = Math.hypot(PL.x - L.x, PL.z - L.z), pts = L.design.pts;
+  if (L.phase === 'wait' && pd < 1.3) { L.phase = 'walk'; L.i = 1; logEvent('lantern-start', { design: L.design }); }
+  else if (L.phase === 'walk') {
+    if (pd < 2.6) { const [tx, tz] = pts[L.i], vx = tx - L.x, vz = tz - L.z, m = Math.hypot(vx, vz), st = Math.min(m, 1.3 * dt); if (m > 1e-3) { L.x += vx / m * st; L.z += vz / m * st; } if (m < .05) { L.i++; if (L.i >= pts.length) L.phase = 'end'; } }
+  } else if (L.phase === 'end' && pd < 1.3) {
+    S.world.remove(L.g); S.lantern = null; sfx('veil', .6);
+    const d = L.design;
+    homing({ x: pts[0][0], z: pts[0][1] }, 'Strike a match', res => L.cb(res), { kind: 'lantern', length: d.length, legs: d.legs, lens: d.lens, turns: d.turns });
+    return;
+  }
+  L.g.position.set(L.x, 1.25 + Math.sin(L.t * 2.2) * .06, L.z);
 }
 
 /* ---------- the API chapters script against ---------- */
@@ -688,12 +738,19 @@ const api = {
   showMemoryOn: p => { const c = ctr(p.x, p.y), m = itemMesh('memory'); m.position.set(c.x, 1.12, c.z); add(m); },
   endChapter: () => endChapter(),
   hold: holdEnemy,
+  holdAll: on => S.enemies.forEach(e => holdEnemy(e.id, on)),
+  isTaken: id => { const it = S.items.find(i => i.id === id); return !it || it.taken; },
+  itemPos: id => { const it = S.items.find(i => i.id === id); return it ? [it.x, it.y] : null; },
+  free: (x, y) => passable(x, y) && !S.items.some(i => !i.taken && i.x === x && i.y === y) && !S.figures.some(f => !f.decided && tileOf(f.wx, f.wz).join() === x + ',' + y),
+  moveItem: (id, x, y) => { const it = S.items.find(i => i.id === id); if (!it) return; const c = ctr(x, y); it.x = x; it.y = y; it.wx = c.x; it.wz = c.z; it.mesh.position.set(c.x, it.mesh.position.y, c.z); },
+  lantern: (design, cb) => lanternTrial(design, cb),
+  leg: (name, tiles) => startLeg(name, tiles),
 };
 /* ---------- chapters ---------- */
 const CH_NAMES = ['Chapter One', 'Chapter Two', 'Chapter Three'];
 const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { } } };
 function newLog(spec) {
-  return { id: spec.id, seed: spec.seed, startedAt: Date.now(), duration: null, events: [], junctions: [], figures: [], homing: [], shots: [], mapViews: [], path: [],
+  return { id: spec.id, seed: spec.seed, startedAt: Date.now(), duration: null, events: [], junctions: [], figures: [], homing: [], legs: [], shots: [], mapViews: [], path: [],
     motor: { dist: 0, runDist: 0, scrapes: 0, straightT: 0, straightD: 0 }, shotsN: 0, hits: 0, dmg: 0, deaths: 0, staleBumps: 0, done: false };
 }
 function placeAtSpawn() { const sp = S.spec.spawn, c = ctr(sp[0], sp[1]); PL.x = c.x; PL.z = c.z; PL.yaw = FACE[sp[2]]; PL.pitch = 0; PL.lastTile = ''; camera.position.set(PL.x, 1.6, PL.z); camera.rotation.set(0, PL.yaw, 0); }
@@ -770,7 +827,13 @@ function summarize(c) {
   if (J.length) rows.push(['Route choices at junctions', `${pct(J.filter(j => j.optimal).length, J.length)} optimal of ${J.length}`, Jpost.length ? `After the change: ${pct(Jpost.filter(j => j.optimal).length, Jpost.length)} optimal. Where the plan and the house disagreed, you followed the old plan ${pct(Jconf.filter(j => j.planOptimal).length, Jconf.length)} of the time (${Jconf.length} choices).` : 'Choices are scored against the true layout and against the plan.']);
   if (c.staleBumps) rows.push(['Walked into moved doorways', String(c.staleBumps), 'Reaching for a doorway that used to be there.']);
   if (F.length) { const rts = F.filter(f => f.rt != null).map(f => f.rt); rows.push(['Figures in the dark', `${pct(F.filter(f => f.correct).length, F.length)} correct of ${F.length}`, `Shoot or walk past. Median time from first seeing a figure to deciding: ${rts.length ? median(rts).toFixed(1) + ' s' : '—'}.`]); }
-  if (H.length) rows.push(['Homing in the dark', `${H[0].err.toFixed(1)} m off`, `You walked ${H[0].walked.toFixed(0)} m to get there. A path-integration endpoint.`]);
+  const HL = H.filter(h => h.kind === 'lantern'), HF = H.filter(h => h.kind !== 'lantern');
+  if (HL.length) rows.push(['Following the lantern', `${median(HL.map(h => h.err)).toFixed(1)} m median error`, `${HL.length} return${HL.length === 1 ? '' : 's'} in the dark after outbound paths of ${HL.map(h => h.length.toFixed(0)).join(', ')} m. Across sessions, how error grows with path length separates accumulating noise from a fixed offset.`]);
+  if (HF.length) rows.push(['Finding your way in the dark', `${HF[0].err.toFixed(1)} m off`, `You walked ${HF[0].walked.toFixed(0)} m to get there. A path-integration endpoint.`]);
+  const LG = c.legs || [], lt = LG.find(l => l.leg === 'transition'), lr = LG.find(l => l.leg === 'reward');
+  if (lt && lr && lt.efficiency && lr.efficiency) rows.push(['Map change vs goal change', `${lt.efficiency.toFixed(2)} vs ${lr.efficiency.toFixed(2)}`, 'Distance walked relative to the shortest route, after the hedges regrew (the map changed) and on the way to the key (only the goal changed). The gap between the two is the measure; controls affect both equally.']);
+  const SK = c.events.filter(e => e.name === 'seek-veil' && e.first), sTR = SK.filter(e => e.cond === 'TR'), sRR = SK.filter(e => e.cond === 'RR');
+  if (SK.length) rows.push(['First veil after a goal change', `${pct(sRR.filter(e => e.veil === e.correct).length, sRR.length)} vs ${pct(sTR.filter(e => e.veil === e.correct).length, sTR.length)}`, 'Right first time when only the memory moved, vs when the veils moved too.']);
   if (V.length) { const st = V.filter(v => v.stale != null); rows.push(['Veil choices while carrying a memory', `${pct(V.filter(v => v.veil === v.correct).length, V.length)} correct of ${V.length}`, `Chose where the room used to be ${pct(st.filter(v => v.veil === v.stale && v.stale !== v.correct).length, st.length)} of the time after a reshuffle. Chose the plan's veil ${pct(V.filter(v => v.veil === v.plan && v.plan !== v.correct).length, V.length)}.`]); }
   return rows;
 }
@@ -794,7 +857,7 @@ let last = now();
 function loop() {
   requestAnimationFrame(loop); const t = now(), dt = Math.min(.05, (t - last) / 1000); last = t;
   if (S.spec) {
-    if (S.running && !S.paused) { updatePlayer(dt, t); updateEnemies(dt); updateFigures(dt, t); updateFollower(dt); updateTargets(dt); }
+    if (S.running && !S.paused) { updatePlayer(dt, t); updateEnemies(dt); updateFigures(dt, t); updateFollower(dt); updateTargets(dt); updateLantern(dt); }
     else { if (!S.running) PL.yaw += dt * .05; camera.position.set(PL.x, 1.6, PL.z); camera.rotation.set(PL.pitch, PL.yaw, 0); }
     Object.values(S.doors).forEach(d => { const tg = d.open ? -1.75 : 0; d.ang += (tg - d.ang) * Math.min(1, dt * 3); d.piv.rotation.y = d.ang; });
     S.veils.forEach((v, i) => v.mesh.material.opacity = .7 + .15 * Math.sin(t / 400 + i));

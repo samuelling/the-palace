@@ -252,9 +252,39 @@ def chapter_conservatory(lay, p, rng):
     for t in lay['regrow']['open']: w.plugs[tuple(t)] = True
     w.ver += 1; a.changed = True
     t0, s0 = a.time, a.steps
-    a.nav({(2, 17), (2, 18)})
+    office = {(2, 17), (2, 18)}
+    tr_short = bfs_dist(list(office), w.truth).get(a.pos)
+    a.nav(office)
+    tr_eff = (a.steps - s0) / max(1, tr_short) if tr_short else np.nan
+    out = {}
+    if KNOBS['design'] == 'v4':
+        # lantern trials: outbound path, then return to the start in the dark
+        trials = []
+        for _ in range(KNOBS.get('lanterns', 3)):
+            Lp = rng.uniform(4, 22) if KNOBS.get('lanterns', 3) > 3 else rng.uniform(6, 16); c = rng.uniform(.45, .85) * Lp       # outbound length and straight-line homing distance
+            g = p['pi_gain'] * np.exp(-p['pi_leak'] * Lp)
+            sd = np.sqrt(p['pi_noise'] ** 2 * Lp + p['pi_rep'] ** 2)
+            ex, ey = (g - 1) * c + rng.normal(0, sd), rng.normal(0, sd)
+            trials.append((Lp, float(np.hypot(ex, ey))))
+        homing_err = float(np.mean([e for _, e in trials])); out['_lantern'] = trials
+        # reward revaluation: the key is at a statue already visited; the maze is as it is now
+        trs, rrs = [tr_eff], []
+        for pair in range(KNOBS.get('pairs', 1)):
+            if pair > 0:
+                # another unseen regrowth, then back to the office
+                for t in list(w.plugs): w.plugs[t] = not w.plugs[t]
+                w.ver += 1; a.pos = (14, 9) if w.truth((14, 10)) else a.pos
+                sh = bfs_dist(list(office), w.truth).get(a.pos); s2 = a.steps; a.nav(office)
+                if sh: trs.append((a.steps - s2) / max(1, sh))
+            ks = roses[rng.integers(len(roses))]; goal = w.adj_goal(ks['x'], ks['y'])
+            rr_short = bfs_dist(list(goal), w.truth).get(a.pos); s1 = a.steps
+            a.nav(goal)
+            if rr_short: rrs.append((a.steps - s1) / max(1, rr_short))
+            a.nav(office)
+        tr_eff = float(np.nanmean(trs)); rr_eff = float(np.nanmean(rrs)) if rrs else np.nan
+        out.update(tr_eff=tr_eff, rr_eff=rr_eff, trrr=np.log(tr_eff) - np.log(rr_eff) if tr_eff == tr_eff and rr_eff == rr_eff and tr_eff > 0 and rr_eff > 0 else np.nan)
     pj = [o for o, c in a.junctions if c]
-    return dict(c2_time=a.time, c2_dist=a.steps * 2, c2_post_dist=(a.steps - s0) * 2, c2_bumps=a.bumps, homing_err=homing_err,
+    return dict(**out, c2_time=a.time, c2_dist=a.steps * 2, c2_post_dist=(a.steps - s0) * 2, c2_bumps=a.bumps, homing_err=homing_err,
                 c2_jopt=np.mean([o for o, c in a.junctions]) if a.junctions else np.nan, c2_jopt_post=np.mean(pj) if pj else np.nan, c2_consults=a.consults)
 
 
@@ -280,6 +310,11 @@ def chapter_palace(lay, p, rng):
             if ri == r and m not in where and rng.random() < p['p_enc']: where[m] = r
         return r
 
+    def come_back(r):
+        # stepping out of room r lands you at the veil that now leads to it: a local transition observation
+        v = perm.index(r)
+        if belief.get(v) != r and rng.random() < p['alpha']: belief[v] = r
+
     def choose(target_room, tried):
         cands = [v for v, r in belief.items() if r == target_room and v not in tried]
         if cands and rng.random() > min(.5, p['tau']):
@@ -298,9 +333,11 @@ def chapter_palace(lay, p, rng):
             k = int(rng.integers(1, 6)); perm = [prev[(i + k) % 6] for i in range(6)]
         shuffles += 1
 
-    v3 = KNOBS['design'] == 'v3'
+    v3 = KNOBS['design'] in ('v3', 'v4')
+    seek = {'RR': [], 'TR': []}; cond_off = int(rng.integers(2)); done = set()
     order = list(rng.permutation(list(item_room.keys())))
     for m in order:
+        done.add(m)
         # find the memory
         tried = set()
         for _ in range(12):
@@ -308,6 +345,7 @@ def chapter_palace(lay, p, rng):
             else: v = choose(-1, tried)
             tried.add(v); r = cross(v)
             if r == item_room[m]: break
+        come_back(item_room[m])
         if v3: reshuffle()                           # the palace moves as you pick a memory up
         # carry it home
         tried = set(); n = 0
@@ -322,14 +360,28 @@ def chapter_palace(lay, p, rng):
             if r == home[m]: break
         per_trip.append(n)
         placed += 1
-        reshuffle()
+        come_back(home[m])
+        if KNOBS['design'] == 'v4':
+            # announced goal change: one waiting memory moves to a new room; on TR events the veils move too
+            waiting = [mm for mm in order if mm not in done and mm != m]
+            if waiting:
+                mm = waiting[rng.integers(len(waiting))]
+                newroom = int(rng.choice([r for r in range(6) if r != item_room[mm] and r != home[mm]]))
+                item_room[mm] = newroom; where[mm] = newroom
+                cond = 'TR' if (placed + cond_off) % 2 else 'RR'
+                if cond == 'TR': reshuffle()
+                v = choose(newroom, set())
+                seek[cond].append(perm[v] == newroom)
+        else:
+            reshuffle()
         for mm in list(where):
             if rng.random() < p['forget'] * 400: where.pop(mm)
     h2 = np.nan
-    if v3:
+    if KNOBS['design'] == 'v3':
         L = rng.uniform(3, 7) * 2.0; sd = np.sqrt(p['pi_noise'] ** 2 * L + .5 ** 2)
         h2 = float(np.hypot(rng.normal(p['pi_bias'], sd), rng.normal(0, sd)))
-    return dict(c3_homing=h2, c3_time=t, c3_veils=veils, c3_first_correct=float(np.mean(first_correct)), c3_stale=float(np.mean(stale)) if stale else np.nan,
+    rr = float(np.mean(seek['RR'])) if seek['RR'] else np.nan; trc = float(np.mean(seek['TR'])) if seek['TR'] else np.nan
+    return dict(c3_rr=rr, c3_tr=trc, c3_seek_contrast=rr - trc if rr == rr and trc == trc else np.nan, c3_homing=h2, c3_time=t, c3_veils=veils, c3_first_correct=float(np.mean(first_correct)), c3_stale=float(np.mean(stale)) if stale else np.nan,
                 c3_per_trip=float(np.mean(per_trip)))
 
 
@@ -340,7 +392,7 @@ def figures(lays, p, rng, scale=1.0):
     for lay, cap in zip(lays, caps):
         for f in lay['figures'][:cap]:
             sleeper = f['type'] == 'sleeper'
-            sway = min(.07, max(.005, f['sway'] * (scale if KNOBS['design'] == 'v3' else 1)))
+            sway = min(.07, max(.005, f['sway'] * (scale if KNOBS['design'] in ('v3', 'v4') else 1)))
             v = p['k'] * (sway / .03) * .22 if sleeper else -p['k'] * .14
             a, z, dt, s = p['a'], p['a'] / 2, .005, .1
             x, tt = z, 0.0
@@ -364,23 +416,31 @@ def ez(trials):
 
 # ---------------------------------------------------------------- populations
 GROUPS = {
-    'healthy': dict(p_enc=(.90, .55), alpha=(.60, .6), tau=(.25, .35), forget=(.0004, .5), pi_noise=(.30, .25), pi_bias=(.2, .3),
+    'healthy': dict(pi_gain=(1.0, .08), pi_leak=(.004, .4), pi_rep=(.5, .2), p_enc=(.90, .55), alpha=(.60, .6), tau=(.25, .35), forget=(.0004, .5), pi_noise=(.30, .25), pi_bias=(.2, .3),
                     k=(1.0, .2), a=(.12, .15), ter=(.50, .12), speed=(1.0, .15), scrape=(1.0, .3), aim=(.55, .5), p_glove=(.80, .6), iiv=.25),
-    'prodromal': dict(p_enc=(.75, .55), alpha=(.38, .6), tau=(.40, .35), forget=(.0012, .5), pi_noise=(.55, .25), pi_bias=(.4, .3),
+    'prodromal': dict(pi_gain=(.95, .08), pi_leak=(.012, .4), pi_rep=(.55, .2), p_enc=(.75, .55), alpha=(.38, .6), tau=(.40, .35), forget=(.0012, .5), pi_noise=(.55, .25), pi_bias=(.4, .3),
                       k=(.75, .2), a=(.13, .15), ter=(.56, .12), speed=(.90, .15), scrape=(1.25, .3), aim=(.50, .5), p_glove=(.65, .6), iiv=.50),
-    'healthy_novice': dict(p_enc=(.86, .55), alpha=(.57, .6), tau=(.32, .35), forget=(.0005, .5), pi_noise=(.38, .25), pi_bias=(.25, .3),
+    'healthy_novice': dict(pi_gain=(.9, .08), pi_leak=(.005, .4), pi_rep=(.85, .2), p_enc=(.86, .55), alpha=(.57, .6), tau=(.32, .35), forget=(.0005, .5), pi_noise=(.38, .25), pi_bias=(.25, .3),
                            k=(.95, .2), a=(.12, .15), ter=(.72, .12), speed=(.70, .15), scrape=(2.6, .3), aim=(.32, .5), p_glove=(.75, .6), iiv=.30),
 }
 PROB = {'p_enc', 'alpha', 'aim', 'p_glove'}
-LOGN = {'tau', 'forget', 'pi_noise', 'k', 'a', 'ter', 'scrape'}
+LOGN = {'tau', 'forget', 'pi_noise', 'k', 'a', 'ter', 'scrape', 'pi_leak', 'pi_rep'}
 BASE = {g: dict(v) for g, v in GROUPS.items()}
-KNOBS = dict(decline=1.0, effect=1.0, design='v2')
+KNOBS = dict(decline=1.0, effect=1.0, design='v2', profile='general')
 
 
-def set_knobs(decline=1.0, effect=1.0, design='v2'):
-    KNOBS.update(decline=decline, effect=effect, design=design)
+PROFILES = {
+    'general': {},
+    # deficit concentrated in updating a map that has changed, with map memory itself near normal
+    'transition': dict(p_enc=(.88, .55), forget=(.0006, .5), alpha=(.30, .6), tau=(.30, .35)),
+}
+
+
+def set_knobs(decline=1.0, effect=1.0, design='v2', profile='general', **extra):
+    KNOBS.update(decline=decline, effect=effect, design=design, profile=profile, **extra)
     h = BASE['healthy']
-    for k, v in BASE['prodromal'].items():
+    src = dict(BASE['prodromal']); src.update(PROFILES[profile])
+    for k, v in src.items():
         if k == 'iiv': GROUPS['prodromal'][k] = h[k] + effect * (v - h[k])
         else: GROUPS['prodromal'][k] = (h[k][0] + effect * (v[0] - h[k][0]), v[1])
 
@@ -399,7 +459,7 @@ def sample_person(g, rng):
 
 def session_params(person, g, s, rng):
     iiv = person['iiv']; q = {}
-    prac = 1 - .82 ** s; ctrl = 1 - .75 ** (s + (1 if KNOBS['design'] == 'v3' else 0))
+    prac = 1 - .82 ** s; ctrl = 1 - .75 ** (s + (1 if KNOBS['design'] in ('v3', 'v4') else 0))
     dec = s * KNOBS['decline'] if g == 'prodromal' else 0
     nov = g == 'healthy_novice'
     q['p_enc'] = sig(person['p_enc'] + .6 * prac * (.55 if g == 'prodromal' else 1) - .06 * dec + rng.normal(0, iiv))
@@ -410,6 +470,8 @@ def session_params(person, g, s, rng):
     q['forget'] = float(np.exp(person['forget'] + .05 * dec + rng.normal(0, iiv * .5)))
     q['pi_noise'] = float(np.exp(person['pi_noise'] + .03 * dec - .15 * ctrl * nov + rng.normal(0, iiv * .4)))
     q['pi_bias'] = person['pi_bias']
+    q['pi_gain'] = person['pi_gain']; q['pi_leak'] = float(np.exp(person['pi_leak'] + .03 * dec))
+    q['pi_rep'] = float(np.exp(person['pi_rep'] - (.35 * ctrl if nov else .05 * ctrl) + rng.normal(0, .1)))
     q['k'] = float(np.exp(person['k'] - .02 * dec + rng.normal(0, iiv * .3)))
     q['a'] = float(np.exp(person['a'] + rng.normal(0, .05)))
     q['ter'] = float(np.exp(person['ter'] - (.25 * ctrl if nov else .03 * ctrl) + rng.normal(0, .05)))

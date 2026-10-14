@@ -64,3 +64,16 @@ Healthy vs prodromal AUC · healthy novices flagged at 80% sensitivity:
 | half effect, no decline | .69 · 74% | .71 · 70% | .87 · 89% | .92 · 73% | .89 · 73% |
 
 Gains are real but modest. Homing became the strongest single measure (AUC .77 with two trials). The palace's stale-choice rate stays near chance in the simulation, partly because the agents ignore what the arrival point after each veil reveals; the palace model is the crudest part of the simulation.
+
+## Step 1 revisions: revaluation contrasts and lantern homing (`analyze4.py`, `analyze4b.py`)
+
+Half-sized effects, no decline, 10 sessions. Two hypotheses about the prodromal deficit: "general" (map memory and map updating both worse) and "transition" (map memory near normal, updating a changed map worse).
+
+| | 10-session AUC · novices flagged |
+| --- | --- |
+| tuned design (v3), general | .85 · 80% |
+| + lantern trials (3) and revaluation probes, general | .89 · 84% |
+| + 8 lantern trials over a wider range of path lengths, 3 revaluation pairs, general | .94 · 68% |
+| same, transition-specific deficit | .94 · 69% |
+
+The lantern trials carry the gain: pooled across sessions, the slope of squared error on outbound length separates groups at AUC .83 to .86. It needs many trials over a wide range of lengths. The reward-vs-transition contrasts stay near chance even with three pairs per session, for two reasons the simulation exposes: hedge closures are visible as you approach, so they are corrected by sight rather than memory; and veil choices right after an unseen reshuffle are guesses for everyone. A transition probe needs a learning opportunity first (a local glimpse of the new link) and then a choice that requires integrating it.

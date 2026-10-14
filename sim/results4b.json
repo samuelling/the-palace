@@ -1,0 +1,120 @@
+{
+ "general": {
+  "single": {
+   "auc": 0.785,
+   "fpr_healthy": 0.403,
+   "novice_flagged": 0.803
+  },
+  "per_measure": {
+   "homing_mean": {
+    "hp": 0.764,
+    "np": 0.525,
+    "hn": 0.798
+   },
+   "trrr": {
+    "hp": 0.521,
+    "np": 0.525,
+    "hn": 0.505
+   },
+   "tr_eff": {
+    "hp": 0.501,
+    "np": 0.505,
+    "hn": 0.503
+   },
+   "rr_eff": {
+    "hp": 0.567,
+    "np": 0.574,
+    "hn": 0.507
+   },
+   "c3_seek_contrast": {
+    "hp": 0.57,
+    "np": 0.545,
+    "hn": 0.526
+   },
+   "c3_rr": {
+    "hp": 0.593,
+    "np": 0.556,
+    "hn": 0.54
+   },
+   "c3_tr": {
+    "hp": 0.508,
+    "np": 0.505,
+    "hn": 0.513
+   }
+  },
+  "longitudinal": {
+   "auc": 0.939,
+   "fpr_healthy": 0.075,
+   "novice_flagged": 0.675
+  },
+  "lantern_slope": {
+   "hp": 0.829,
+   "np": 0.567,
+   "hn": 0.807
+  },
+  "lantern_intercept": {
+   "hp": 0.713,
+   "np": 0.546,
+   "hn": 0.693
+  }
+ },
+ "transition": {
+  "single": {
+   "auc": 0.797,
+   "fpr_healthy": 0.387,
+   "novice_flagged": 0.81
+  },
+  "per_measure": {
+   "homing_mean": {
+    "hp": 0.78,
+    "np": 0.504,
+    "hn": 0.798
+   },
+   "trrr": {
+    "hp": 0.554,
+    "np": 0.55,
+    "hn": 0.505
+   },
+   "tr_eff": {
+    "hp": 0.559,
+    "np": 0.561,
+    "hn": 0.503
+   },
+   "rr_eff": {
+    "hp": 0.551,
+    "np": 0.558,
+    "hn": 0.507
+   },
+   "c3_seek_contrast": {
+    "hp": 0.573,
+    "np": 0.549,
+    "hn": 0.526
+   },
+   "c3_rr": {
+    "hp": 0.584,
+    "np": 0.544,
+    "hn": 0.54
+   },
+   "c3_tr": {
+    "hp": 0.511,
+    "np": 0.524,
+    "hn": 0.513
+   }
+  },
+  "longitudinal": {
+   "auc": 0.937,
+   "fpr_healthy": 0.1,
+   "novice_flagged": 0.688
+  },
+  "lantern_slope": {
+   "hp": 0.857,
+   "np": 0.595,
+   "hn": 0.807
+  },
+  "lantern_intercept": {
+   "hp": 0.743,
+   "np": 0.553,
+   "hn": 0.693
+  }
+ }
+}

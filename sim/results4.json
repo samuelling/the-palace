@@ -1,0 +1,158 @@
+{
+ "general:v3": {
+  "single": {
+   "auc": 0.726,
+   "fpr_healthy": 0.447,
+   "novice_flagged": 0.62
+  },
+  "per_measure": {
+   "homing_mean": {
+    "hp": 0.673,
+    "np": 0.565,
+    "hn": 0.619
+   }
+  },
+  "longitudinal": {
+   "auc": 0.854,
+   "fpr_healthy": 0.3,
+   "novice_flagged": 0.8
+  }
+ },
+ "general:v4": {
+  "single": {
+   "auc": 0.725,
+   "fpr_healthy": 0.51,
+   "novice_flagged": 0.787
+  },
+  "per_measure": {
+   "homing_mean": {
+    "hp": 0.717,
+    "np": 0.505,
+    "hn": 0.73
+   },
+   "trrr": {
+    "hp": 0.515,
+    "np": 0.517,
+    "hn": 0.501
+   },
+   "tr_eff": {
+    "hp": 0.501,
+    "np": 0.505,
+    "hn": 0.503
+   },
+   "rr_eff": {
+    "hp": 0.532,
+    "np": 0.544,
+    "hn": 0.512
+   },
+   "c3_seek_contrast": {
+    "hp": 0.539,
+    "np": 0.513,
+    "hn": 0.552
+   },
+   "c3_rr": {
+    "hp": 0.552,
+    "np": 0.518,
+    "hn": 0.538
+   },
+   "c3_tr": {
+    "hp": 0.519,
+    "np": 0.532,
+    "hn": 0.514
+   }
+  },
+  "longitudinal": {
+   "auc": 0.885,
+   "fpr_healthy": 0.15,
+   "novice_flagged": 0.838
+  },
+  "lantern_slope": {
+   "hp": 0.711,
+   "np": 0.542,
+   "hn": 0.695
+  },
+  "lantern_intercept": {
+   "hp": 0.578,
+   "np": 0.53,
+   "hn": 0.562
+  }
+ },
+ "transition:v3": {
+  "single": {
+   "auc": 0.717,
+   "fpr_healthy": 0.503,
+   "novice_flagged": 0.673
+  },
+  "per_measure": {
+   "homing_mean": {
+    "hp": 0.683,
+    "np": 0.577,
+    "hn": 0.619
+   }
+  },
+  "longitudinal": {
+   "auc": 0.853,
+   "fpr_healthy": 0.287,
+   "novice_flagged": 0.825
+  }
+ },
+ "transition:v4": {
+  "single": {
+   "auc": 0.734,
+   "fpr_healthy": 0.51,
+   "novice_flagged": 0.79
+  },
+  "per_measure": {
+   "homing_mean": {
+    "hp": 0.708,
+    "np": 0.51,
+    "hn": 0.73
+   },
+   "trrr": {
+    "hp": 0.551,
+    "np": 0.549,
+    "hn": 0.501
+   },
+   "tr_eff": {
+    "hp": 0.559,
+    "np": 0.561,
+    "hn": 0.503
+   },
+   "rr_eff": {
+    "hp": 0.515,
+    "np": 0.527,
+    "hn": 0.512
+   },
+   "c3_seek_contrast": {
+    "hp": 0.565,
+    "np": 0.514,
+    "hn": 0.552
+   },
+   "c3_rr": {
+    "hp": 0.573,
+    "np": 0.539,
+    "hn": 0.538
+   },
+   "c3_tr": {
+    "hp": 0.512,
+    "np": 0.525,
+    "hn": 0.514
+   }
+  },
+  "longitudinal": {
+   "auc": 0.903,
+   "fpr_healthy": 0.138,
+   "novice_flagged": 0.812
+  },
+  "lantern_slope": {
+   "hp": 0.742,
+   "np": 0.591,
+   "hn": 0.695
+  },
+  "lantern_intercept": {
+   "hp": 0.629,
+   "np": 0.577,
+   "hn": 0.562
+  }
+ }
+}

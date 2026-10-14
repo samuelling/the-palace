@@ -287,15 +287,62 @@
       intro: ['The trapdoor stair comes up through the floor of a gardener\'s office.', 'Beyond the glass, the conservatory has grown into a maze of black hedges.',
         'Locke\'s note is pinned to the plan: "Three cuttings for the cellar. Then the boiler. Mind the scarecrows."'],
       script: function (api) {
-        const S = { roses: 0 };
+        const S = { roses: 0, trials: 0 };
+        const OFFICE = [[2, 17], [2, 18], [2, 19], [3, 19], [4, 19]];
+        // lawn bounds in world units, keeping clear of the hedges and the fountain
+        const LX0 = LAWN[0] * 2, LZ0 = LAWN[1] * 2, LX1 = (LAWN[2] + 1) * 2, LZ1 = (LAWN[3] + 1) * 2, FX = 29, FZ = 19;
+        const inside = (x, z) => x > LX0 + .8 && x < LX1 - .8 && z > LZ0 + .8 && z < LZ1 - .8 && Math.hypot(x - FX, z - FZ) > 1.7;
+        function lanternPath() {
+          // outbound path for triangle completion: 2 or 3 legs, varied lengths and turn angles
+          for (let k = 0; k < 600; k++) {
+            let x = LX0 + 1 + api.rng() * (LX1 - LX0 - 2), z = LZ0 + 1 + api.rng() * (LZ1 - LZ0 - 2);
+            if (!inside(x, z)) continue;
+            const legs = api.rng() < .5 ? 2 : 3; let h = api.rng() * Math.PI * 2; const pts = [[x, z]], lens = [], turns = []; let good = true;
+            for (let i = 0; i < legs && good; i++) {
+              if (i > 0) { const t = [60, 90, 120, 150][Math.floor(api.rng() * 4)] * (api.rng() < .5 ? -1 : 1); h += t * Math.PI / 180; turns.push(t); }
+              const L = 2.5 + api.rng() * 6.5; lens.push(+L.toFixed(2));
+              for (let q = 1; q <= 12; q++) if (!inside(x + Math.sin(h) * L * q / 12, z - Math.cos(h) * L * q / 12)) { good = false; break; }
+              x += Math.sin(h) * L; z -= Math.cos(h) * L; pts.push([x, z]);
+            }
+            if (good) return { pts, lens, turns, legs, length: +lens.reduce((a, b) => a + b, 0).toFixed(2) };
+          }
+          return null;
+        }
+        function nextTrial() {
+          S.trials++;
+          const d = lanternPath();
+          if (!d || S.trials > 5) return finishBlackout();
+          api.lantern(d, res => {
+            api.say([res.err < 1.5 ? 'The match flares. You are almost exactly where the lantern first waited.' : res.err < 3.5 ? 'The match flares. Close, but not quite.' : 'The match flares on bare lawn. The lantern waited somewhere else entirely.',
+              S.trials < 5 ? 'Out in the steam, the little light kindles again, waiting.' : 'The lantern does not come back.'], '', nextTrial);
+          });
+        }
+        function finishBlackout() {
+          api.holdAll(false); api.flashlight(true); api.fog(.06);
+          api.say(['The steam thins. Your flashlight sputters back to life.', 'The hedges look different. Fresh growth, thick and dark, where there was none an hour ago.', 'Get back to the office.'], '',
+            () => api.leg('transition', OFFICE));
+        }
+        const keyStatue = roseAt[Math.floor(api.rng() * roseAt.length)];
         return {
           onStart() { api.goal(roseAt.flatMap(n => api.tilesAround(niches[n][0], niches[n][1]))); },
           onTake(it) {
-            if (it.kind !== 'rose') return;
-            S.roses++;
-            const left = roseAt.filter((n, i) => !api.has('rose' + i));
-            if (left.length) api.goal(left.flatMap(n => api.tilesAround(niches[n][0], niches[n][1])));
-            else { api.goal([[29, 8]]); api.say(['Three cuttings. Locke\'s note said the boiler next.']); }
+            if (it.kind === 'rose') {
+              S.roses++;
+              const left = roseAt.filter((n, i) => !api.has('rose' + i));
+              if (left.length) api.goal(left.flatMap(n => api.tilesAround(niches[n][0], niches[n][1])));
+              else { api.goal([[29, 8]]); api.say(['Three cuttings. Locke\'s note said the boiler next.']); }
+            }
+            if (it.id === 'hatchkey') api.leg('return', OFFICE);
+          },
+          onLegEnd(name) {
+            if (name === 'transition') {
+              // reward revaluation: the goal moves to a place already visited, while the maze stays exactly as it is now
+              const [nx, ny] = niches[keyStatue];
+              api.placeItem({ id: 'hatchkey', kind: 'key', x: nx, y: ny, on: 'statue', name: 'Hatch key', lines: ['A heavy iron key, warm from the steam.'] });
+              api.showProp('hatch');
+              api.say(['The cellar hatch in the corner is chained shut.', `A tag on the chain, in Locke's hand: "Key left with the ${keyStatue}. Where the cuttings were."`], '',
+                () => api.leg('reward', api.tilesAround(nx, ny)));
+            }
           },
           onProp(p) {
             if (p.id === 'boiler') {
@@ -306,27 +353,22 @@
               return true;
             }
             if (p.id === 'hatch') {
+              if (!api.has('hatchkey')) { api.say(['Chained shut. The tag says the key is with the ' + keyStatue + '.']); return true; }
               api.event('chapter-end');
-              api.say(['You lay the three cuttings on the hatch. It opens on its own.', 'Below, candlelight, and the sound of a waltz played on a music box, over and over.'], '', () => api.endChapter());
+              api.say(['The key turns. You lay the three cuttings on the hatch and it opens on its own.', 'Below, candlelight, and the sound of a waltz played on a music box, over and over.'], '', () => api.endChapter());
               return true;
             }
             return false;
           },
           onTile(x, y, room) {
-            if (S.valve && !S.entered && room === 'Lawn') { S.entered = true; S.gate = [x, y]; }
-            if (S.valve && S.entered && !S.blackout && Math.abs(x - 14) + Math.abs(y - 9) <= 2) {
-              S.blackout = true; api.event('blackout', { gate: S.gate });
-              api.flashlight(false); api.fog(.55);
+            if (S.valve && !S.blackout && Math.abs(x - 14) + Math.abs(y - 9) <= 2) {
+              S.blackout = true; api.event('blackout');
+              api.flashlight(false); api.fog(.55); api.holdAll(true); api.goal(null);
               close.forEach(([a, b]) => api.setPlug(K(a, b), false));
               [shortcut, extraOpen].filter(Boolean).forEach(([a, b]) => api.setPlug(K(a, b), true));
               api.say(['The steam rolls over the lawn and your flashlight gutters out. You can\'t see your own hand.',
-                'Walk back to the gap in the hedge you came through. When you think you\'re standing in it, strike a match.'], '',
-                () => api.homing(S.gate, 'Strike a match', res => {
-                  api.flashlight(true); api.fog(.06); api.showProp('hatch');
-                  api.say([res.err < 2.5 ? 'The match flares. The hedge gap is right beside you.' : 'The match flares. You are nowhere near the gap. The steam is thinning, at least.',
-                    'The hedges look different. Fresh growth, thick and dark, where there was none an hour ago.', 'Get back to the office.']);
-                  api.goal([[2, 18], [2, 17]]);
-                }));
+                'A small light bobs up out of the steam. A lantern, carried by no one you can see. It waits for you.',
+                'Follow it. When it goes out, walk back to where it first waited, and strike a match.'], '', nextTrial);
             }
           },
         };
@@ -408,7 +450,7 @@
       intro: ['A study at the bottom of the stair, warm and lamplit. A man sits at the desk with his back to you.', 'He does not turn around.',
         'On the wall, a plan of rooms arranged around a rotunda. Each doorway is labeled in a careful hand.'],
       script: function (api) {
-        const S = { perm: perm0.slice(), prev: null, placed: 0, carrying: null, trip: 0, shuffles: 0 };
+        const S = { perm: perm0.slice(), prev: null, placed: 0, carrying: null, trip: 0, shuffles: 0, condOffset: api.rng() < .5 ? 0 : 1, seek: null };
         const inv = p => { const o = []; p.forEach((room, v) => o[room] = v); return o; };
         function reshuffle() {
           S.prev = S.perm.slice();
@@ -426,6 +468,10 @@
               const i = +id.slice(3), room = roomDefs[S.perm[i]];
               const target = S.carrying ? roomDefs.findIndex(d => d.home === S.carrying) : null;
               api.event('veil', { veil: i, room: room.name, carrying: S.carrying, correct: target === null ? null : inv(S.perm)[target], stale: target === null || !S.prev ? null : inv(S.prev)[target], plan: target === null ? null : inv(perm0)[target], trip: S.trip });
+              if (!S.carrying && S.seek) {
+                const sk = S.seek; api.event('seek-veil', { cond: sk.cond, first: !sk.tried, veil: i, correct: inv(S.perm)[sk.room], stale: sk.cond === 'TR' ? inv(sk.prevPerm)[sk.room] : null, target: roomDefs[sk.room].name, reached: S.perm[i] === sk.room });
+                sk.tried = true; if (S.perm[i] === sk.room) S.seek = null;
+              }
               return { x: room.inside[0], y: room.inside[1], face: room.face, room: room.name };
             }
             const ri = roomDefs.findIndex(d => 'room' + d.name === id), vi = inv(S.perm)[ri], o = rotVeils[vi];
@@ -433,7 +479,7 @@
           },
           onTake(it) {
             if (!it.memory) return;
-            S.carrying = it.id; S.trip++;
+            S.carrying = it.id; S.trip++; S.seek = null;
             reshuffle(); api.say(['As your fingers close on it, the floor shivers. Somewhere, a doorway has changed its mind.']);
             const home = roomDefs.find(d => d.home === it.id);
             api.goal(api.tilesAround(...[Math.round((home.rect[0] + home.rect[2]) / 2), Math.round((home.rect[1] + home.rect[3]) / 2)]));
@@ -445,7 +491,21 @@
                 api.drop(S.carrying); api.showMemoryOn(p); S.carrying = null; S.placed++; api.event('placed', { home: p.home, n: S.placed });
                 if (S.placed === 3) S.blackPending = true;
                 api.goal(null);
-                if (S.placed < 6) { reshuffle(); api.say(['The memory settles onto the plinth as if it had never left.', 'Behind you, far off, stone grinds against stone. The palace has moved again.']); }
+                if (S.placed < 6) {
+                  const cond = (S.placed + S.condOffset) % 2 ? 'TR' : 'RR', prevPerm = S.perm.slice();
+                  // move one waiting memory to another room and let the player hear where it went
+                  const waiting = items.filter(m => m.memory && !api.isTaken(m.id));
+                  const m = waiting[Math.floor(api.rng() * waiting.length)];
+                  const cur = roomDefs.findIndex(d => { const [x0, y0, x1, y1] = d.rect; const it = api.itemPos(m.id); return it && it[0] >= x0 && it[0] <= x1 && it[1] >= y0 && it[1] <= y1; });
+                  const choices = roomDefs.map((d, i) => i).filter(i => i !== cur && roomDefs[i].home !== m.id);
+                  const to = choices[Math.floor(api.rng() * choices.length)], d = roomDefs[to];
+                  let x, y, guard = 0; do { x = d.rect[0] + 1 + Math.floor(api.rng() * (d.rect[2] - d.rect[0] - 1)); y = d.rect[1] + 1 + Math.floor(api.rng() * (d.rect[3] - d.rect[1] - 1)); } while (!api.free(x, y) && ++guard < 50);
+                  api.moveItem(m.id, x, y);
+                  if (cond === 'TR') reshuffle();
+                  S.seek = { cond, room: to, prevPerm, tried: false };
+                  api.event('revalue', { cond, item: m.id, room: d.name });
+                  api.say(['The memory settles onto the plinth as if it had never left.', `Somewhere far off, ${m.name.toLowerCase()} falls to the floor of the ${d.name.toLowerCase()}. You hear it as clearly as if it were beside you.`].concat(cond === 'TR' ? ['Then stone grinds against stone. The palace has moved again.'] : ['The palace stays quiet.']));
+                }
                 else { reshuffle(); api.say(['The last memory settles into place. For a moment the whole palace is perfectly still.', 'Somewhere above, in the study, a chair scrapes back.']); api.goal([[16, 23], [15, 24], [17, 24]]); }
               } else if (S.carrying) api.say(['An empty plinth. A brass plate reads: ' + p.home.toUpperCase() + '.', 'What you are carrying does not belong here.']);
               else api.say(['An empty plinth. A brass plate reads: ' + p.home.toUpperCase() + '.']);
