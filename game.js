@@ -132,7 +132,7 @@ function sph(r, m, x, y, z) { const o = new THREE.Mesh(new THREE.SphereGeometry(
 function clearWorld() {
   if (S.world) { scene.remove(S.world); S.world.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   S.world = new THREE.Group(); scene.add(S.world);
-  S.props = {}; S.propList = []; S.items = []; S.figures = []; S.enemies = []; S.targets = []; S.blocked = new Set(); S.doors = {}; S.doorAt = {}; S.veils = []; S.lights = []; S.plugs = {}; S.follower = null; S.homing = null; S.goal = null; S.lantern = null; S.leg = null;
+  S.props = {}; S.propList = []; S.items = []; S.figures = []; S.enemies = []; S.targets = []; S.blocked = new Set(); S.doors = {}; S.doorAt = {}; S.veils = []; S.lights = []; S.plugs = {}; S.follower = null; S.homing = null; S.goal = null; S.lantern = null; S.leg = null; S.closures = {};
 }
 
 function buildLevel(spec) {
@@ -526,8 +526,20 @@ function onTile(tx, ty, prev) {
     }
   }
   if (cell(tx, ty) === 'V' && now() > (S.veilLock || 0)) { const v = S.veils.find(v => v.x === tx && v.y === ty); if (v) return throughVeil(v); }
+  checkClosures(tx, ty);
   checkLeg(tx, ty);
   if (S.hooks.onTile) S.hooks.onTile(tx, ty, room);
+}
+/* closures the plan still shows as open: when they are first found, and when a player comes back to one already found */
+function checkClosures(tx, ty) {
+  S.closures = S.closures || {};
+  for (const [dx, dy] of N4) {
+    const x = tx + dx, y = ty + dy, k = KEY(x, y);
+    if (cell(x, y) !== 'P' || S.plugs[k] || !planPassable(x, y)) continue;
+    const c = S.closures[k], t = now();
+    if (!c) { S.closures[k] = { found: t, last: t, visits: 1 }; logEvent('closure-found', { tile: [x, y], leg: S.leg ? S.leg.name : null }); S.log.closureFinds = (S.log.closureFinds || 0) + 1; }
+    else { if (t - c.last > 8000) { c.visits++; logEvent('closure-revisit', { tile: [x, y], leg: S.leg ? S.leg.name : null, since: +((t - c.found) / 1000).toFixed(1) }); S.log.closureRevisits = (S.log.closureRevisits || 0) + 1; } c.last = t; }
+  }
 }
 function throughVeil(v) {
   const dest = S.hooks.onVeil && S.hooks.onVeil(v); if (!dest) return;
@@ -826,14 +838,17 @@ function summarize(c) {
   if (c.id === 'grounds') rows.unshift(['Warm-up', 'not scored', 'Calibrates movement and aim for this session, so the chapters measure decisions rather than controls.']);
   if (J.length) rows.push(['Route choices at junctions', `${pct(J.filter(j => j.optimal).length, J.length)} optimal of ${J.length}`, Jpost.length ? `After the change: ${pct(Jpost.filter(j => j.optimal).length, Jpost.length)} optimal. Where the plan and the house disagreed, you followed the old plan ${pct(Jconf.filter(j => j.planOptimal).length, Jconf.length)} of the time (${Jconf.length} choices).` : 'Choices are scored against the true layout and against the plan.']);
   if (c.staleBumps) rows.push(['Walked into moved doorways', String(c.staleBumps), 'Reaching for a doorway that used to be there.']);
+  if (c.closureFinds) rows.push(['Went back to a closure you had found', `${c.closureRevisits || 0} of ${c.closureFinds}`, 'Returning, later, to a passage you had already discovered was shut. Perseveration on the old map, separate from finding the change in the first place.']);
+  const IG = c.events.filter(e => e.name === 'integrate'), ig = k => IG.filter(e => e.kind === k);
+  if (IG.length) rows.push(['First choice after a glimpse', `swap ${pct(ig('swap').filter(e => e.cls === 'correct').length, ig('swap').length)} · rotation ${pct(ig('rotate').filter(e => e.cls === 'correct').length, ig('rotate').length)} · none ${pct(ig('none').filter(e => e.cls === 'correct').length, ig('none').length)}`,
+    `After stepping out of a room you see one new link. A swap means the target is behind the veil you came in by; a rotation means every veil moved by the same step. Choices back to where the room used to be: ${pct(IG.filter(e => e.cls === 'stale').length, IG.filter(e => e.kind !== 'none').length)}.`]);
   if (F.length) { const rts = F.filter(f => f.rt != null).map(f => f.rt); rows.push(['Figures in the dark', `${pct(F.filter(f => f.correct).length, F.length)} correct of ${F.length}`, `Shoot or walk past. Median time from first seeing a figure to deciding: ${rts.length ? median(rts).toFixed(1) + ' s' : '—'}.`]); }
   const HL = H.filter(h => h.kind === 'lantern'), HF = H.filter(h => h.kind !== 'lantern');
   if (HL.length) rows.push(['Following the lantern', `${median(HL.map(h => h.err)).toFixed(1)} m median error`, `${HL.length} return${HL.length === 1 ? '' : 's'} in the dark after outbound paths of ${HL.map(h => h.length.toFixed(0)).join(', ')} m. Across sessions, how error grows with path length separates accumulating noise from a fixed offset.`]);
   if (HF.length) rows.push(['Finding your way in the dark', `${HF[0].err.toFixed(1)} m off`, `You walked ${HF[0].walked.toFixed(0)} m to get there. A path-integration endpoint.`]);
   const LG = c.legs || [], lt = LG.find(l => l.leg === 'transition'), lr = LG.find(l => l.leg === 'reward');
   if (lt && lr && lt.efficiency && lr.efficiency) rows.push(['Map change vs goal change', `${lt.efficiency.toFixed(2)} vs ${lr.efficiency.toFixed(2)}`, 'Distance walked relative to the shortest route, after the hedges regrew (the map changed) and on the way to the key (only the goal changed). The gap between the two is the measure; controls affect both equally.']);
-  const SK = c.events.filter(e => e.name === 'seek-veil' && e.first), sTR = SK.filter(e => e.cond === 'TR'), sRR = SK.filter(e => e.cond === 'RR');
-  if (SK.length) rows.push(['First veil after a goal change', `${pct(sRR.filter(e => e.veil === e.correct).length, sRR.length)} vs ${pct(sTR.filter(e => e.veil === e.correct).length, sTR.length)}`, 'Right first time when only the memory moved, vs when the veils moved too.']);
+
   if (V.length) { const st = V.filter(v => v.stale != null); rows.push(['Veil choices while carrying a memory', `${pct(V.filter(v => v.veil === v.correct).length, V.length)} correct of ${V.length}`, `Chose where the room used to be ${pct(st.filter(v => v.veil === v.stale && v.stale !== v.correct).length, st.length)} of the time after a reshuffle. Chose the plan's veil ${pct(V.filter(v => v.veil === v.plan && v.plan !== v.correct).length, V.length)}.`]); }
   return rows;
 }

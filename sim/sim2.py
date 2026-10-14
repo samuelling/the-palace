@@ -189,6 +189,13 @@ class Nav:
 
     def move(self, nxt):
         self.pos = nxt; self.steps += 1; self.time += self.step_time()
+        if self.changed:
+            if not hasattr(self, 'closures'): self.closures, self.revisits = {}, 0
+            for n in self.w.nbrs(nxt):
+                if self.w.ch(*n) == 'P' and not self.w.truth(n) and self.w.plan(n):
+                    last = self.closures.get(n)
+                    if last is not None and self.steps - last > 6: self.revisits += 1
+                    self.closures[n] = self.steps
 
 
 def encounter(p, rng):
@@ -257,7 +264,7 @@ def chapter_conservatory(lay, p, rng):
     a.nav(office)
     tr_eff = (a.steps - s0) / max(1, tr_short) if tr_short else np.nan
     out = {}
-    if KNOBS['design'] == 'v4':
+    if KNOBS['design'] in ('v4', 'v5'):
         # lantern trials: outbound path, then return to the start in the dark
         trials = []
         for _ in range(KNOBS.get('lanterns', 3)):
@@ -284,6 +291,7 @@ def chapter_conservatory(lay, p, rng):
         tr_eff = float(np.nanmean(trs)); rr_eff = float(np.nanmean(rrs)) if rrs else np.nan
         out.update(tr_eff=tr_eff, rr_eff=rr_eff, trrr=np.log(tr_eff) - np.log(rr_eff) if tr_eff == tr_eff and rr_eff == rr_eff and tr_eff > 0 and rr_eff > 0 else np.nan)
     pj = [o for o, c in a.junctions if c]
+    out['c2_revisits'] = getattr(a, 'revisits', 0)
     return dict(**out, c2_time=a.time, c2_dist=a.steps * 2, c2_post_dist=(a.steps - s0) * 2, c2_bumps=a.bumps, homing_err=homing_err,
                 c2_jopt=np.mean([o for o, c in a.junctions]) if a.junctions else np.nan, c2_jopt_post=np.mean(pj) if pj else np.nan, c2_consults=a.consults)
 
@@ -333,7 +341,7 @@ def chapter_palace(lay, p, rng):
             k = int(rng.integers(1, 6)); perm = [prev[(i + k) % 6] for i in range(6)]
         shuffles += 1
 
-    v3 = KNOBS['design'] in ('v3', 'v4')
+    v3 = KNOBS['design'] in ('v3', 'v4', 'v5')
     seek = {'RR': [], 'TR': []}; cond_off = int(rng.integers(2)); done = set()
     order = list(rng.permutation(list(item_room.keys())))
     for m in order:
@@ -361,7 +369,7 @@ def chapter_palace(lay, p, rng):
         per_trip.append(n)
         placed += 1
         come_back(home[m])
-        if KNOBS['design'] == 'v4':
+        if KNOBS['design'] in ('v4', 'v5'):
             # announced goal change: one waiting memory moves to a new room; on TR events the veils move too
             waiting = [mm for mm in order if mm not in done and mm != m]
             if waiting:
@@ -380,8 +388,29 @@ def chapter_palace(lay, p, rng):
     if KNOBS['design'] == 'v3':
         L = rng.uniform(3, 7) * 2.0; sd = np.sqrt(p['pi_noise'] ** 2 * L + .5 ** 2)
         h2 = float(np.hypot(rng.normal(p['pi_bias'], sd), rng.normal(0, sd)))
+    if KNOBS['design'] == 'v5':
+        # 6 carry tests (pickup: swap/rotate alternating) + 5 placement tests (alternating none / swap / rotate)
+        res = {'swap': [], 'rotate': [], 'none': []}; stale_n = 0; changed_n = 0; kinds = ['swap', 'rotate']; ki = 0
+        conds = [('carry', None)] * 6 + [('seek', c) for c in (['RR', 'TR'] * 3)[int(rng.integers(2)):][:5]]
+        for phase, cond in conds:
+            if phase == 'seek' and cond == 'RR': kind = 'none'
+            else: kind = kinds[ki % 2]; ki += 1
+            if kind == 'none':
+                ok = rng.random() < (.35 + .6 * p['p_enc']); res['none'].append(ok); continue
+            changed_n += 1
+            if rng.random() < p['infer']: ok = True; st = False
+            elif rng.random() < p['alpha']:
+                # glimpse taken in, but no rule: exclusion can solve a swap if the other links are remembered
+                ok = (kind == 'swap' and rng.random() < p['p_enc']) or rng.random() < .25; st = False
+            else:
+                st = rng.random() < p['p_enc']; ok = (not st) and rng.random() < .2
+            res[kind].append(ok); stale_n += st
+        sw, ro, no = (float(np.mean(res[k])) if res[k] else np.nan for k in ('swap', 'rotate', 'none'))
+        integ = dict(c3_int_swap=sw, c3_int_rot=ro, c3_int_none=no, c3_int_stale=stale_n / max(1, changed_n), c3_rot_minus_none=ro - no)
+    else:
+        integ = {}
     rr = float(np.mean(seek['RR'])) if seek['RR'] else np.nan; trc = float(np.mean(seek['TR'])) if seek['TR'] else np.nan
-    return dict(c3_rr=rr, c3_tr=trc, c3_seek_contrast=rr - trc if rr == rr and trc == trc else np.nan, c3_homing=h2, c3_time=t, c3_veils=veils, c3_first_correct=float(np.mean(first_correct)), c3_stale=float(np.mean(stale)) if stale else np.nan,
+    return dict(**integ, c3_rr=rr, c3_tr=trc, c3_seek_contrast=rr - trc if rr == rr and trc == trc else np.nan, c3_homing=h2, c3_time=t, c3_veils=veils, c3_first_correct=float(np.mean(first_correct)), c3_stale=float(np.mean(stale)) if stale else np.nan,
                 c3_per_trip=float(np.mean(per_trip)))
 
 
@@ -392,7 +421,7 @@ def figures(lays, p, rng, scale=1.0):
     for lay, cap in zip(lays, caps):
         for f in lay['figures'][:cap]:
             sleeper = f['type'] == 'sleeper'
-            sway = min(.07, max(.005, f['sway'] * (scale if KNOBS['design'] in ('v3', 'v4') else 1)))
+            sway = min(.07, max(.005, f['sway'] * (scale if KNOBS['design'] in ('v3', 'v4', 'v5') else 1)))
             v = p['k'] * (sway / .03) * .22 if sleeper else -p['k'] * .14
             a, z, dt, s = p['a'], p['a'] / 2, .005, .1
             x, tt = z, 0.0
@@ -416,14 +445,14 @@ def ez(trials):
 
 # ---------------------------------------------------------------- populations
 GROUPS = {
-    'healthy': dict(pi_gain=(1.0, .08), pi_leak=(.004, .4), pi_rep=(.5, .2), p_enc=(.90, .55), alpha=(.60, .6), tau=(.25, .35), forget=(.0004, .5), pi_noise=(.30, .25), pi_bias=(.2, .3),
+    'healthy': dict(infer=(.6, .6), pi_gain=(1.0, .08), pi_leak=(.004, .4), pi_rep=(.5, .2), p_enc=(.90, .55), alpha=(.60, .6), tau=(.25, .35), forget=(.0004, .5), pi_noise=(.30, .25), pi_bias=(.2, .3),
                     k=(1.0, .2), a=(.12, .15), ter=(.50, .12), speed=(1.0, .15), scrape=(1.0, .3), aim=(.55, .5), p_glove=(.80, .6), iiv=.25),
-    'prodromal': dict(pi_gain=(.95, .08), pi_leak=(.012, .4), pi_rep=(.55, .2), p_enc=(.75, .55), alpha=(.38, .6), tau=(.40, .35), forget=(.0012, .5), pi_noise=(.55, .25), pi_bias=(.4, .3),
+    'prodromal': dict(infer=(.35, .6), pi_gain=(.95, .08), pi_leak=(.012, .4), pi_rep=(.55, .2), p_enc=(.75, .55), alpha=(.38, .6), tau=(.40, .35), forget=(.0012, .5), pi_noise=(.55, .25), pi_bias=(.4, .3),
                       k=(.75, .2), a=(.13, .15), ter=(.56, .12), speed=(.90, .15), scrape=(1.25, .3), aim=(.50, .5), p_glove=(.65, .6), iiv=.50),
-    'healthy_novice': dict(pi_gain=(.9, .08), pi_leak=(.005, .4), pi_rep=(.85, .2), p_enc=(.86, .55), alpha=(.57, .6), tau=(.32, .35), forget=(.0005, .5), pi_noise=(.38, .25), pi_bias=(.25, .3),
+    'healthy_novice': dict(infer=(.55, .6), pi_gain=(.9, .08), pi_leak=(.005, .4), pi_rep=(.85, .2), p_enc=(.86, .55), alpha=(.57, .6), tau=(.32, .35), forget=(.0005, .5), pi_noise=(.38, .25), pi_bias=(.25, .3),
                            k=(.95, .2), a=(.12, .15), ter=(.72, .12), speed=(.70, .15), scrape=(2.6, .3), aim=(.32, .5), p_glove=(.75, .6), iiv=.30),
 }
-PROB = {'p_enc', 'alpha', 'aim', 'p_glove'}
+PROB = {'p_enc', 'alpha', 'aim', 'p_glove', 'infer'}
 LOGN = {'tau', 'forget', 'pi_noise', 'k', 'a', 'ter', 'scrape', 'pi_leak', 'pi_rep'}
 BASE = {g: dict(v) for g, v in GROUPS.items()}
 KNOBS = dict(decline=1.0, effect=1.0, design='v2', profile='general')
@@ -459,11 +488,12 @@ def sample_person(g, rng):
 
 def session_params(person, g, s, rng):
     iiv = person['iiv']; q = {}
-    prac = 1 - .82 ** s; ctrl = 1 - .75 ** (s + (1 if KNOBS['design'] in ('v3', 'v4') else 0))
+    prac = 1 - .82 ** s; ctrl = 1 - .75 ** (s + (1 if KNOBS['design'] in ('v3', 'v4', 'v5') else 0))
     dec = s * KNOBS['decline'] if g == 'prodromal' else 0
     nov = g == 'healthy_novice'
     q['p_enc'] = sig(person['p_enc'] + .6 * prac * (.55 if g == 'prodromal' else 1) - .06 * dec + rng.normal(0, iiv))
     q['alpha'] = sig(person['alpha'] - .07 * dec + rng.normal(0, iiv))
+    q['infer'] = sig(person['infer'] + .4 * prac - .06 * dec + rng.normal(0, iiv))
     q['p_glove'] = sig(person['p_glove'] + .8 * prac + rng.normal(0, iiv * .5))
     q['aim'] = sig(person['aim'] + (1.0 if nov else .3) * ctrl + rng.normal(0, .15))
     q['tau'] = float(np.exp(person['tau'] + (np.log(.25) - person['tau']) * ctrl * .6 * nov + .04 * dec + rng.normal(0, iiv * .6)))

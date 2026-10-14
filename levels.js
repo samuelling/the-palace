@@ -212,7 +212,10 @@
     const openWall = (x, y) => isWallBetween(x, y) && G[y][x] === '.';
     const route = pathTo(G, [14, 12], officeDoor, blockedProps) || [];
     const close = [];
-    for (const [x, y] of shuffle(r, route.filter(([x, y]) => openWall(x, y)))) {
+    // prefer closures just past a turn, so they can't be seen from down a long straight and are found only after committing
+    const runBefore = i => { if (i < 2) return 99; const d = (a, b) => [b[0] - a[0], b[1] - a[1]].join(); const dir = d(route[i - 1], route[i]); let n = 0; for (let j = i - 1; j > 0 && d(route[j - 1], route[j]) === dir; j--) n++; return n; };
+    const ranked = shuffle(r, route.map((t, i) => [t, i]).filter(([[x, y]]) => openWall(x, y))).sort((p, q) => runBefore(p[1]) - runBefore(q[1])).map(([t]) => t);
+    for (const [x, y] of ranked) {
       if (close.length >= 2) break;
       const blk = new Set([...blockedProps, ...close.map(c => K(c[0], c[1])), K(x, y)]);
       const d = bfs(G, [officeDoor], blk);
@@ -450,16 +453,21 @@
       intro: ['A study at the bottom of the stair, warm and lamplit. A man sits at the desk with his back to you.', 'He does not turn around.',
         'On the wall, a plan of rooms arranged around a rotunda. Each doorway is labeled in a careful hand.'],
       script: function (api) {
-        const S = { perm: perm0.slice(), prev: null, placed: 0, carrying: null, trip: 0, shuffles: 0, condOffset: api.rng() < .5 ? 0 : 1, seek: null };
+        const S = { perm: perm0.slice(), prev: null, placed: 0, carrying: null, trip: 0, shuffles: 0, condOffset: api.rng() < .5 ? 0 : 1, test: null, inRoom: null, enteredBy: null };
         const inv = p => { const o = []; p.forEach((room, v) => o[room] = v); return o; };
-        function reshuffle() {
-          S.prev = S.perm.slice();
+        // Reshuffles are built so one local glimpse is enough to work out the answer:
+        // a swap exchanges the room you are in with the target room (the target is now behind the veil you came in by);
+        // a rotation shifts every veil by the same step (seeing where you come out tells you the step).
+        function reshuffle(cur, target) {
+          S.prev = S.perm.slice(); const iv = inv(S.perm);
           const kind = S.shuffles++ % 2 ? 'rotate' : 'swap';
-          if (kind === 'swap') { const [a, b] = shuffle(api.rng, [0, 1, 2, 3, 4, 5]).slice(0, 2); [S.perm[a], S.perm[b]] = [S.perm[b], S.perm[a]]; }
+          if (kind === 'swap') { const a = iv[cur], b = iv[target]; [S.perm[a], S.perm[b]] = [S.perm[b], S.perm[a]]; }
           else { const k = 1 + Math.floor(api.rng() * 5); S.perm = S.perm.map((_, i) => S.prev[(i + k) % 6]); }
-          api.event('reshuffle', { kind, perm: S.perm.slice(), prev: S.prev });
+          api.event('reshuffle', { kind, cur: roomDefs[cur].name, target: roomDefs[target].name, perm: S.perm.slice(), prev: S.prev });
           api.sfx('thud', .7);
+          return kind;
         }
+        function setTest(phase, cond, kind, target, prevPerm) { S.test = { phase, cond, kind, room: target, prev: prevPerm, armed: false, glimpse: null, enteredBy: S.enteredBy }; }
         return {
           onStart() { api.goal(null); },
           onVeil(v) {
@@ -468,20 +476,28 @@
               const i = +id.slice(3), room = roomDefs[S.perm[i]];
               const target = S.carrying ? roomDefs.findIndex(d => d.home === S.carrying) : null;
               api.event('veil', { veil: i, room: room.name, carrying: S.carrying, correct: target === null ? null : inv(S.perm)[target], stale: target === null || !S.prev ? null : inv(S.prev)[target], plan: target === null ? null : inv(perm0)[target], trip: S.trip });
-              if (!S.carrying && S.seek) {
-                const sk = S.seek; api.event('seek-veil', { cond: sk.cond, first: !sk.tried, veil: i, correct: inv(S.perm)[sk.room], stale: sk.cond === 'TR' ? inv(sk.prevPerm)[sk.room] : null, target: roomDefs[sk.room].name, reached: S.perm[i] === sk.room });
-                sk.tried = true; if (S.perm[i] === sk.room) S.seek = null;
+              const T_ = S.test;
+              if (T_ && T_.armed) {
+                // the first choice after the glimpse: did the player integrate it?
+                const correct = inv(S.perm)[T_.room], stale = inv(T_.prev)[T_.room];
+                const cls = i === correct ? 'correct' : i === stale ? 'stale' : i === T_.glimpse ? 'glimpse' : 'other';
+                api.event('integrate', { phase: T_.phase, cond: T_.cond, kind: T_.kind, veil: i, correct, stale, glimpse: T_.glimpse, cls, target: roomDefs[T_.room].name });
+                S.test = null;
               }
+              S.enteredBy = i; S.inRoom = S.perm[i];
               return { x: room.inside[0], y: room.inside[1], face: room.face, room: room.name };
             }
             const ri = roomDefs.findIndex(d => 'room' + d.name === id), vi = inv(S.perm)[ri], o = rotVeils[vi];
+            if (S.test && !S.test.armed) { S.test.armed = true; S.test.glimpse = vi; api.event('glimpse', { veil: vi, room: roomDefs[ri].name, cameIn: S.test.enteredBy }); }
             return { x: o.inside[0], y: o.inside[1], face: o.face, room: 'Rotunda' };
           },
           onTake(it) {
             if (!it.memory) return;
-            S.carrying = it.id; S.trip++; S.seek = null;
-            reshuffle(); api.say(['As your fingers close on it, the floor shivers. Somewhere, a doorway has changed its mind.']);
-            const home = roomDefs.find(d => d.home === it.id);
+            S.carrying = it.id; S.trip++;
+            const cur = S.inRoom, hi = roomDefs.findIndex(d => d.home === it.id), prevPerm = S.perm.slice();
+            const kind = reshuffle(cur, hi); setTest('carry', 'TR', kind, hi, prevPerm);
+            api.say(['As your fingers close on it, the floor shivers. Somewhere, a doorway has changed its mind.']);
+            const home = roomDefs[hi];
             api.goal(api.tilesAround(...[Math.round((home.rect[0] + home.rect[2]) / 2), Math.round((home.rect[1] + home.rect[3]) / 2)]));
           },
           canTake(it) { if (it.memory && S.carrying) { api.say(['Your hands are full. One memory at a time; they are heavier than they look.']); return false; } return true; },
@@ -497,16 +513,16 @@
                   const waiting = items.filter(m => m.memory && !api.isTaken(m.id));
                   const m = waiting[Math.floor(api.rng() * waiting.length)];
                   const cur = roomDefs.findIndex(d => { const [x0, y0, x1, y1] = d.rect; const it = api.itemPos(m.id); return it && it[0] >= x0 && it[0] <= x1 && it[1] >= y0 && it[1] <= y1; });
-                  const choices = roomDefs.map((d, i) => i).filter(i => i !== cur && roomDefs[i].home !== m.id);
+                  const choices = roomDefs.map((d, i) => i).filter(i => i !== cur && i !== S.inRoom && roomDefs[i].home !== m.id);
                   const to = choices[Math.floor(api.rng() * choices.length)], d = roomDefs[to];
                   let x, y, guard = 0; do { x = d.rect[0] + 1 + Math.floor(api.rng() * (d.rect[2] - d.rect[0] - 1)); y = d.rect[1] + 1 + Math.floor(api.rng() * (d.rect[3] - d.rect[1] - 1)); } while (!api.free(x, y) && ++guard < 50);
                   api.moveItem(m.id, x, y);
-                  if (cond === 'TR') reshuffle();
-                  S.seek = { cond, room: to, prevPerm, tried: false };
+                  const kind = cond === 'TR' ? reshuffle(S.inRoom, to) : 'none';
+                  setTest('seek', cond, kind, to, prevPerm);
                   api.event('revalue', { cond, item: m.id, room: d.name });
                   api.say(['The memory settles onto the plinth as if it had never left.', `Somewhere far off, ${m.name.toLowerCase()} falls to the floor of the ${d.name.toLowerCase()}. You hear it as clearly as if it were beside you.`].concat(cond === 'TR' ? ['Then stone grinds against stone. The palace has moved again.'] : ['The palace stays quiet.']));
                 }
-                else { reshuffle(); api.say(['The last memory settles into place. For a moment the whole palace is perfectly still.', 'Somewhere above, in the study, a chair scrapes back.']); api.goal([[16, 23], [15, 24], [17, 24]]); }
+                else { S.test = null; api.say(['The last memory settles into place. For a moment the whole palace is perfectly still.', 'Somewhere above, in the study, a chair scrapes back.']); api.goal([[16, 23], [15, 24], [17, 24]]); }
               } else if (S.carrying) api.say(['An empty plinth. A brass plate reads: ' + p.home.toUpperCase() + '.', 'What you are carrying does not belong here.']);
               else api.say(['An empty plinth. A brass plate reads: ' + p.home.toUpperCase() + '.']);
               return true;

@@ -77,3 +77,18 @@ Half-sized effects, no decline, 10 sessions. Two hypotheses about the prodromal 
 | same, transition-specific deficit | .94 · 69% |
 
 The lantern trials carry the gain: pooled across sessions, the slope of squared error on outbound length separates groups at AUC .83 to .86. It needs many trials over a wide range of lengths. The reward-vs-transition contrasts stay near chance even with three pairs per session, for two reasons the simulation exposes: hedge closures are visible as you approach, so they are corrected by sight rather than memory; and veil choices right after an unseen reshuffle are guesses for everyone. A transition probe needs a learning opportunity first (a local glimpse of the new link) and then a choice that requires integrating it.
+
+## Glimpse-then-integrate palace tests and closure perseveration (`analyze5.py`)
+
+Palace reshuffles are now built so a single local glimpse (where you come out of a room) is enough to work out the answer: swaps exchange the room you're in with the target room, rotations shift every veil by one step. The next choice is scored as correct, stale, back to the glimpsed veil, or other. Conservatory closures are placed just past turns, and returning to a closure already found is logged. Agents gain a structure-inference parameter (healthy .60, prodromal .35, novice .55; an assumption).
+
+Half-sized effects, no decline, five lantern trials per session:
+
+| | 1 session | 10 sessions |
+| --- | --- | --- |
+| step 1 (v4), general deficit | .77 · 77% | .89 · 76% |
+| glimpse tests (v5), general deficit | .80 · 72% | .92 · 71% |
+| step 1 (v4), transition-specific deficit | .79 · 74% | .85 · 61% |
+| glimpse tests (v5), transition-specific deficit | .82 · 66% | .97 · 66% |
+
+Over ten sessions the integration measures carry real signal and resist the novice confound: correct after a rotation, AUC .82 healthy vs prodromal and .59 healthy vs novice; the rotation-minus-no-change contrast .78 vs .54. Closure revisits stay weak (.55 to .59).
