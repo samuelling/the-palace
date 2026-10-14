@@ -51,3 +51,16 @@ Healthy vs prodromal AUC · share of healthy novices flagged at 80% sensitivity:
 | half effect, no decline | .56 · 97% | .67 · 72% | .68 · 79% | .89 · 78% |
 
 "Model measures" are route choices at junctions, walking into moved doorways, distance after each rearrangement, homing error, veil choices, and figure accuracy, plus EZ-diffusion parameters pooled across sessions. Regressing out motor covariates using healthy players did not help, because novices sit outside the healthy range of control skill; that adjustment needs a norming sample that includes novices.
+
+## Version 3: tuning for sensitivity (`analyze3.py`, `analyze3b.py`)
+
+Same simulated players, untuned (v2) vs tuned (v3) design. Tuning: a warm-up prologue each session (crows on posts, a straight avenue), adaptive figure difficulty per player, more figures (13 to 19 per session), palace reshuffles on pickup as well as placement, and a second homing trial in the rotunda. With adaptive difficulty the information moves from accuracy into each player's converged sway threshold, so v3 adds that as a feature.
+
+Healthy vs prodromal AUC · healthy novices flagged at 80% sensitivity:
+
+| Scenario | 1 session v2 | 1 session v3 | 10 sessions v2 | 10 sessions v3 | 10 sessions v3, gated on control plateau |
+| --- | --- | --- | --- | --- | --- |
+| no decline | .85 · 43% | .87 · 34% | .99 · 15% | >.99 · 16% | >.99 · 8% |
+| half effect, no decline | .69 · 74% | .71 · 70% | .87 · 89% | .92 · 73% | .89 · 73% |
+
+Gains are real but modest. Homing became the strongest single measure (AUC .77 with two trials). The palace's stale-choice rate stays near chance in the simulation, partly because the agents ignore what the arrival point after each veil reveals; the palace model is the crudest part of the simulation.

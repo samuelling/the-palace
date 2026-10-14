@@ -52,11 +52,13 @@
     };
   }
   const YAW = { n: 0, s: Math.PI, e: -Math.PI / 2, w: Math.PI / 2 };
+  // sway of a ghoul holding still; scaled per player so decisions sit near threshold
+  const swayOf = (r, opts) => Math.max(.005, Math.min(.07, pick(r, [.012, .02, .03, .045]) * ((opts && opts.swayScale) || 1)));
 
   /* =====================================================================
      Chapter 1: the East Wing
      ===================================================================== */
-  function eastWing(seed) {
+  function eastWing(seed, opts) {
     const r = rng32(seed * 7 + 1), W = 26, H = 18, G = grid(W, H);
     carve(G, 1, 1, 7, 5); carve(G, 16, 1, 22, 5); carve(G, 2, 7, 21, 7); carve(G, 8, 9, 14, 15); carve(G, 1, 9, 6, 15);
     carve(G, 23, 3, 24, 3); carve(G, 24, 3, 24, 10); carve(G, 18, 10, 24, 10); carve(G, 18, 10, 18, 13); carve(G, 16, 13, 18, 13);
@@ -102,9 +104,10 @@
       { x: 6.5, y: 2.5, h: 1.6, color: 0xffa850, i: .9, d: 9 }, { x: 22.5, y: 4.5, h: .7, color: 0xff6a2a, i: 1.2, d: 11, flicker: 'fire' }];
 
     // standing figures: dress forms or ghouls holding still
-    const figSpots = shuffle(r, [[3, 12, 'gallery'], [5, 9, 'gallery'], [3, 2, 'library'], [20, 3, 'study'], [1, 4, 'library']])
-      .filter(s => !items.some(it => it.x === s[0] && it.y === s[1])).slice(0, 4);
-    const figures = figSpots.map((s, i) => ({ id: 'fig' + i, type: r() < .5 ? 'mannequin' : 'sleeper', look: 'dressform', x: s[0], y: s[1], sway: pick(r, [.012, .02, .03, .045]), yaw: r() * 6.28 }));
+    const blockedNow = new Set(props.filter(p => p.block).map(p => K(p.x, p.y)));
+    const figSpots = shuffle(r, [[3, 12], [5, 9], [3, 2], [20, 3], [1, 4], [5, 1], [18, 4], [2, 9]])
+      .filter(s => !items.some(it => it.x === s[0] && it.y === s[1]) && !blockedNow.has(K(s[0], s[1]))).slice(0, 6);
+    const figures = figSpots.map((s, i) => ({ id: 'fig' + i, type: r() < .5 ? 'mannequin' : 'sleeper', look: 'dressform', x: s[0], y: s[1], sway: swayOf(r, opts), yaw: r() * 6.28 }));
     const enemies = [{ id: 'hall', type: 'ghoul', x: 17, y: 7, state: 'patrol', patrol: [[8, 7], [20, 7]] },
       { id: 'corr', type: 'ghoul', x: 24, y: 8, state: 'dormant', speed: 1.3 }];
 
@@ -172,7 +175,7 @@
   /* =====================================================================
      Chapter 2: the Conservatory (a hedge maze under glass, regrown each session)
      ===================================================================== */
-  function conservatory(seed) {
+  function conservatory(seed, opts) {
     const r = rng32(seed * 13 + 2), W = 32, H = 24, G = grid(W, H);
     const CI = 13, CJ = 8, cx = i => 2 + 2 * i, cy = j => 2 + 2 * j;
     const LAWN = [10, 6, 18, 12];
@@ -265,8 +268,8 @@
     supplies.forEach(([x, y], i) => { if (i === 0) props.push({ type: 'planter', x, y }); });
     const openCells = []; for (let j = 0; j < CJ; j++) for (let i = 0; i < CI; i++) { const x = cx(i), y = cy(j); if (!inRect(x, y, LAWN) && G[y][x] === '.' && Math.abs(x - 2) + Math.abs(y - 17) > 5) openCells.push([x, y]); }
     const used = new Set([...supplies, ...route].map(([x, y]) => K(x, y)));
-    const figSpots = shuffle(r, de.slice(3).concat(shuffle(r, openCells).slice(0, 6))).filter(([x, y]) => !used.has(K(x, y))).slice(0, 5);
-    const figures = figSpots.map(([x, y], i) => ({ id: 'scare' + i, type: r() < .5 ? 'mannequin' : 'sleeper', look: 'scarecrow', x, y, sway: pick(r, [.012, .02, .03, .045]), yaw: r() * 6.28 }));
+    const figSpots = shuffle(r, de.slice(3).concat(shuffle(r, openCells).slice(0, 6))).filter(([x, y]) => !used.has(K(x, y))).slice(0, 7);
+    const figures = figSpots.map(([x, y], i) => ({ id: 'scare' + i, type: r() < .5 ? 'mannequin' : 'sleeper', look: 'scarecrow', x, y, sway: swayOf(r, opts), yaw: r() * 6.28 }));
     const pa = pick(r, openCells), pb = pick(r, openCells), pc = pick(r, openCells), pd = pick(r, openCells);
     const enemies = [{ id: 'g1', type: 'ghoul', look: 'gardener', x: pa[0], y: pa[1], state: 'patrol', patrol: [pa, pb] },
       { id: 'g2', type: 'ghoul', look: 'gardener', x: pc[0], y: pc[1], state: 'patrol', patrol: [pc, pd] }];
@@ -335,7 +338,7 @@
      A rotunda of six veils. Which veil opens onto which memory room is
      reshuffled by the Architect every time a memory is put back.
      ===================================================================== */
-  function palace(seed) {
+  function palace(seed, opts) {
     const r = rng32(seed * 31 + 3), W = 34, H = 29, G = grid(W, H);
     const ROT = [14, 12, 20, 18];
     carve(G, ROT[0], ROT[1], ROT[2], ROT[3]);
@@ -386,10 +389,10 @@
       props.push({ type: d.prop, x: d.rect[0] + 1, y: d.rect[1] + (d.face === 'n' ? 0 : 1), block: d.prop !== 'books' });
     });
     const figures = [];
-    shuffle(r, roomDefs).slice(0, 4).forEach((d, i) => {
+    shuffle(r, roomDefs).forEach((d, i) => {
       const [x0, y0, x1, y1] = d.rect; let x, y;
       do { x = RI(r, x0, x1); y = RI(r, y0, y1); } while (items.some(it => it.x === x && it.y === y) || (x === d.inside[0] && y === d.inside[1]) || props.some(p => p.x === x && p.y === y));
-      figures.push({ id: 'form' + i, type: r() < .5 ? 'mannequin' : 'sleeper', look: 'dressform', x, y, sway: pick(r, [.012, .02, .03, .045]), yaw: r() * 6.28 });
+      figures.push({ id: 'form' + i, type: r() < .5 ? 'mannequin' : 'sleeper', look: 'dressform', x, y, sway: swayOf(r, opts), yaw: r() * 6.28 });
     });
     const enemies = [{ id: 'guardian', type: 'guardian', x: 17, y: 12, state: 'patrol', patrol: [[14, 12], [20, 12], [20, 18], [14, 18]], speed: .9 }];
     const lights = [{ x: 17, y: 15, h: 3.0, color: 0xffc27a, i: 1.2, d: 14, flicker: 'candle' }, { x: 17, y: 24, h: 2.4, color: 0xffa860, i: 1.1, d: 10, flicker: 'candle' }];
@@ -405,11 +408,11 @@
       intro: ['A study at the bottom of the stair, warm and lamplit. A man sits at the desk with his back to you.', 'He does not turn around.',
         'On the wall, a plan of rooms arranged around a rotunda. Each doorway is labeled in a careful hand.'],
       script: function (api) {
-        const S = { perm: perm0.slice(), prev: null, placed: 0, carrying: null, trip: 0 };
+        const S = { perm: perm0.slice(), prev: null, placed: 0, carrying: null, trip: 0, shuffles: 0 };
         const inv = p => { const o = []; p.forEach((room, v) => o[room] = v); return o; };
         function reshuffle() {
           S.prev = S.perm.slice();
-          const kind = S.placed % 2 ? 'rotate' : 'swap';
+          const kind = S.shuffles++ % 2 ? 'rotate' : 'swap';
           if (kind === 'swap') { const [a, b] = shuffle(api.rng, [0, 1, 2, 3, 4, 5]).slice(0, 2); [S.perm[a], S.perm[b]] = [S.perm[b], S.perm[a]]; }
           else { const k = 1 + Math.floor(api.rng() * 5); S.perm = S.perm.map((_, i) => S.prev[(i + k) % 6]); }
           api.event('reshuffle', { kind, perm: S.perm.slice(), prev: S.prev });
@@ -431,6 +434,7 @@
           onTake(it) {
             if (!it.memory) return;
             S.carrying = it.id; S.trip++;
+            reshuffle(); api.say(['As your fingers close on it, the floor shivers. Somewhere, a doorway has changed its mind.']);
             const home = roomDefs.find(d => d.home === it.id);
             api.goal(api.tilesAround(...[Math.round((home.rect[0] + home.rect[2]) / 2), Math.round((home.rect[1] + home.rect[3]) / 2)]));
           },
@@ -439,6 +443,7 @@
             if (p.type === 'plinth') {
               if (S.carrying === p.home) {
                 api.drop(S.carrying); api.showMemoryOn(p); S.carrying = null; S.placed++; api.event('placed', { home: p.home, n: S.placed });
+                if (S.placed === 3) S.blackPending = true;
                 api.goal(null);
                 if (S.placed < 6) { reshuffle(); api.say(['The memory settles onto the plinth as if it had never left.', 'Behind you, far off, stone grinds against stone. The palace has moved again.']); }
                 else { reshuffle(); api.say(['The last memory settles into place. For a moment the whole palace is perfectly still.', 'Somewhere above, in the study, a chair scrapes back.']); api.goal([[16, 23], [15, 24], [17, 24]]); }
@@ -457,6 +462,15 @@
             return false;
           },
           onTile(x, y, room) {
+            if (S.blackPending && room === 'Rotunda' && !S.follow) {
+              S.blackPending = false; api.event('rotunda-blackout'); api.flashlight(false); api.hold('guardian', true);
+              api.say(['Overhead, chain grinds against stone. The chandelier comes down in a roar of glass and every candle in the rotunda goes out.',
+                'Your flashlight dies with them. Find the mouth of the corridor to Locke\'s study, and strike a match when you think you\'re standing in it.'], '',
+                () => api.homing([17, 18], 'Strike a match', res => {
+                  api.flashlight(true); api.hold('guardian', false);
+                  api.say([res.err < 2.5 ? 'The match flares on the corridor arch, right beside you.' : 'The match flares. The corridor is somewhere else entirely. Your flashlight coughs back to life.']);
+                }));
+            }
             if (S.follow && room === 'Stair Landing' && !S.done) { S.done = true; api.event('chapter-end'); api.say(['You climb with Locke\'s hand on your shoulder. Below, the palace settles, room by room, into its places.', '"Thank you," he says. "I think I can remember her now without holding on so tightly."'], 'Locke', () => api.endChapter()); }
           },
           veilLabel() { return 'Step through the veil'; },
@@ -468,8 +482,55 @@
     };
   }
 
+  /* =====================================================================
+     Prologue: the grounds. A short walk up the drive every session.
+     It scores nothing; it lets controls settle and measures them cleanly:
+     a long straight avenue (walking speed), a crypt loop (turning, scrapes),
+     and crows on fence posts at varied distances (aim).
+     ===================================================================== */
+  function grounds(seed, opts) {
+    const r = rng32(seed * 17 + 9), W = 22, H = 30, G = grid(W, H);
+    carve(G, 9, 3, 11, 27);                                    // the avenue
+    carve(G, 13, 11, 18, 19); carve(G, 15, 14, 16, 16, '#');   // crypt garden loop around the crypt
+    G[13][12] = '.'; G[17][12] = '.';
+    carve(G, 3, 6, 7, 10); G[8][8] = '.';                      // orchard
+    const rooms = [{ name: 'Front Steps', rect: [9, 3, 11, 4], theme: 'stone' }, { name: 'The Drive', rect: [9, 5, 11, 27], theme: 'drive' },
+      { name: 'Crypt Garden', rect: [12, 11, 18, 19], theme: 'lawn' }, { name: 'Orchard', rect: [3, 6, 8, 10], theme: 'lawn' }];
+    const roomAt = makeRoomAt(rooms);
+    const themes = {}; rooms.forEach(rm => themes[rm.name] = rm.theme);
+    // posts in niches along the drive and in the garden; six get crows
+    const niches = [[8, 7], [12, 9], [8, 13], [8, 18], [12, 22], [8, 24], [18, 11], [13, 19], [3, 6], [7, 10]];
+    niches.forEach(([x, y]) => { if (G[y][x] === '#') G[y][x] = '.'; });
+    const crowAt = shuffle(r, niches).slice(0, 6);
+    const props = niches.map(([x, y]) => ({ type: 'post', x, y, block: true }));
+    props.push({ type: 'housedoor', id: 'door', x: 10, y: 3, wall: 'n', interact: true, label: 'Knock' },
+      { type: 'statue', variant: 'clara', x: 15, y: 13, block: true, name: 'An angel', lines: ['A stone angel on the crypt roof, wings folded. Someone has hung a fresh lily on its hand.'] });
+    const targets = crowAt.map(([x, y], i) => ({ id: 'crow' + i, x, y, h: 1.55 }));
+    const lights = [{ x: 10.5, y: 25, h: 2.6, color: 0xffc070, i: .9, d: 12, flicker: 'candle' }, { x: 10.5, y: 15, h: 2.6, color: 0xffc070, i: .9, d: 12, flicker: 'candle' },
+      { x: 10.5, y: 5, h: 2.6, color: 0xffc070, i: 1.1, d: 12, flicker: 'candle' }];
+    const planG = G.map(row => row.slice());
+    return {
+      id: 'grounds', index: -1, title: 'The Grounds', sub: 'Locke Hall', seed, W, H, G, planG, rooms, roomAt, themes, plugs: {}, doors: [], items: [], props, lights, figures: [], enemies: [], targets,
+      spawn: [10, 26, 'n'], safe: ['Front Steps'], fog: .045, ambient: [0x3a4458, .5], planLabels: [], planTitle: 'The Grounds',
+      intro: ['Your car died at the bottom of the drive. Lanterns are lit all the way up to the house.', 'Crows sit on the fence posts along the way, watching you.',
+        'A note is tied to the gate in Locke\'s hand: "Scatter the crows before you knock. The house will not open while they watch."'],
+      script: function (api) {
+        const S = { crows: 0 };
+        return {
+          onStart() { api.goal([[10, 4]]); },
+          onTarget() { S.crows++; if (S.crows === 6) api.toast('The last crow lifts away over the roof.'); },
+          onProp(p) {
+            if (p.id !== 'door') return false;
+            if (S.crows < 6) { api.say([`${6 - S.crows === 1 ? 'One crow still watches' : (6 - S.crows) + ' crows still watch'} from the posts.`, 'The knocker will not lift.']); return true; }
+            api.event('chapter-end'); api.say(['The knocker lifts easily now. The door swings open before you touch it.'], '', () => api.endChapter()); return true;
+          },
+        };
+      },
+    };
+  }
+
   const GENERATORS = [eastWing, conservatory, palace];
-  const api = { rng32, GENERATORS, generate: (i, seed) => GENERATORS[i](seed), K, bfs };
+  const api = { rng32, GENERATORS, generate: (i, seed, opts) => GENERATORS[i](seed, opts || {}), prologue: (seed, opts) => grounds(seed, opts || {}), K, bfs };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.PALACE_LEVELS = api;
 })(typeof window !== 'undefined' ? window : globalThis);

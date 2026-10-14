@@ -287,6 +287,18 @@ def chapter_palace(lay, p, rng):
         rest = [v for v in range(6) if v not in tried] or list(range(6))
         return rest[rng.integers(len(rest))]
 
+    shuffles = 0
+
+    def reshuffle():
+        nonlocal perm, prev, shuffles
+        prev = perm[:]
+        if shuffles % 2 == 0:
+            a_, b_ = rng.choice(6, 2, replace=False); perm[a_], perm[b_] = perm[b_], perm[a_]
+        else:
+            k = int(rng.integers(1, 6)); perm = [prev[(i + k) % 6] for i in range(6)]
+        shuffles += 1
+
+    v3 = KNOBS['design'] == 'v3'
     order = list(rng.permutation(list(item_room.keys())))
     for m in order:
         # find the memory
@@ -296,6 +308,7 @@ def chapter_palace(lay, p, rng):
             else: v = choose(-1, tried)
             tried.add(v); r = cross(v)
             if r == item_room[m]: break
+        if v3: reshuffle()                           # the palace moves as you pick a memory up
         # carry it home
         tried = set(); n = 0
         for _ in range(12):
@@ -309,24 +322,26 @@ def chapter_palace(lay, p, rng):
             if r == home[m]: break
         per_trip.append(n)
         placed += 1
-        prev = perm[:]
-        if placed % 2:  # swap
-            a_, b_ = rng.choice(6, 2, replace=False); perm[a_], perm[b_] = perm[b_], perm[a_]
-        else:
-            k = int(rng.integers(1, 6)); perm = [prev[(i + k) % 6] for i in range(6)]
+        reshuffle()
         for mm in list(where):
             if rng.random() < p['forget'] * 400: where.pop(mm)
-    return dict(c3_time=t, c3_veils=veils, c3_first_correct=float(np.mean(first_correct)), c3_stale=float(np.mean(stale)) if stale else np.nan,
+    h2 = np.nan
+    if v3:
+        L = rng.uniform(3, 7) * 2.0; sd = np.sqrt(p['pi_noise'] ** 2 * L + .5 ** 2)
+        h2 = float(np.hypot(rng.normal(p['pi_bias'], sd), rng.normal(0, sd)))
+    return dict(c3_homing=h2, c3_time=t, c3_veils=veils, c3_first_correct=float(np.mean(first_correct)), c3_stale=float(np.mean(stale)) if stale else np.nan,
                 c3_per_trip=float(np.mean(per_trip)))
 
 
 # ---------------------------------------------------------------- standing figures: a diffusion decision
-def figures(lays, p, rng):
+def figures(lays, p, rng, scale=1.0):
     out = []
-    for lay in lays:
-        for f in lay['figures']:
+    caps = [4, 5, 4] if KNOBS['design'] == 'v2' else [99, 99, 99]
+    for lay, cap in zip(lays, caps):
+        for f in lay['figures'][:cap]:
             sleeper = f['type'] == 'sleeper'
-            v = p['k'] * (f['sway'] / .03) * .22 if sleeper else -p['k'] * .14
+            sway = min(.07, max(.005, f['sway'] * (scale if KNOBS['design'] == 'v3' else 1)))
+            v = p['k'] * (sway / .03) * .22 if sleeper else -p['k'] * .14
             a, z, dt, s = p['a'], p['a'] / 2, .005, .1
             x, tt = z, 0.0
             while 0 < x < a and tt < 6:
@@ -359,11 +374,11 @@ GROUPS = {
 PROB = {'p_enc', 'alpha', 'aim', 'p_glove'}
 LOGN = {'tau', 'forget', 'pi_noise', 'k', 'a', 'ter', 'scrape'}
 BASE = {g: dict(v) for g, v in GROUPS.items()}
-KNOBS = dict(decline=1.0, effect=1.0)
+KNOBS = dict(decline=1.0, effect=1.0, design='v2')
 
 
-def set_knobs(decline=1.0, effect=1.0):
-    KNOBS.update(decline=decline, effect=effect)
+def set_knobs(decline=1.0, effect=1.0, design='v2'):
+    KNOBS.update(decline=decline, effect=effect, design=design)
     h = BASE['healthy']
     for k, v in BASE['prodromal'].items():
         if k == 'iiv': GROUPS['prodromal'][k] = h[k] + effect * (v - h[k])
@@ -384,7 +399,7 @@ def sample_person(g, rng):
 
 def session_params(person, g, s, rng):
     iiv = person['iiv']; q = {}
-    prac = 1 - .82 ** s; ctrl = 1 - .75 ** s
+    prac = 1 - .82 ** s; ctrl = 1 - .75 ** (s + (1 if KNOBS['design'] == 'v3' else 0))
     dec = s * KNOBS['decline'] if g == 'prodromal' else 0
     nov = g == 'healthy_novice'
     q['p_enc'] = sig(person['p_enc'] + .6 * prac * (.55 if g == 'prodromal' else 1) - .06 * dec + rng.normal(0, iiv))
@@ -403,26 +418,28 @@ def session_params(person, g, s, rng):
     return q
 
 
-def play_session(q, rng):
+def play_session(q, rng, scale=1.0):
     i = rng.integers(len(LAY['east']))
     lays = [LAY['east'][i], LAY['conservatory'][rng.integers(80)], LAY['palace'][rng.integers(80)]]
     r = {}
     r.update(chapter_east(lays[0], q, rng)); r.update(chapter_conservatory(lays[1], q, rng)); r.update(chapter_palace(lays[2], q, rng))
-    f = figures(lays, q, rng)
+    f = figures(lays, q, rng, scale)
     r['fig_acc'] = float(np.mean([c for c, _ in f])); r['fig_rt'] = float(np.median([t for _, t in f])); r['_fig'] = f
     r['total_time'] = r['c1_time'] + r['c2_time'] + r['c3_time']; r['total_dist'] = r['c1_dist'] + r['c2_dist']
     r['speed'] = q['speed'] * 2.5 * rng.normal(1, .03); r['scrape_rate'] = q['scrape'] * rng.normal(1, .15)
     r['aim'] = r['hits'] / max(1, r['shots'])
+    r['homing_mean'] = float(np.nanmean([r['homing_err'], r['c3_homing']]))
     return r
 
 
 def one(args):
     g, i, n_sess, seed, knobs = args
     set_knobs(**knobs); rng = np.random.default_rng(seed)
-    person = sample_person(g, rng); rows = []
+    person = sample_person(g, rng); rows = []; scale = 1.0
     for s in range(n_sess):
         q = session_params(person, g, s, rng)
-        r = play_session(q, rng); r.update(group=g, pid=i, session=s); rows.append(r)
+        r = play_session(q, rng, scale); r.update(group=g, pid=i, session=s, scale=scale); rows.append(r)
+        acc = r['fig_acc']; scale = max(.4, min(2.5, scale * (.8 if acc > .85 else 1.25 if acc < .65 else 1)))
     return rows
 
 

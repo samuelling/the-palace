@@ -63,6 +63,7 @@ const THEMES = {
   ballroom: { wall: 'ballroom', floor: 'parquet', ceil: 'vault' }, chapel: { wall: 'chapel', floor: 'stone', ceil: 'vault' },
   garden: { wall: 'mural', floor: 'grass', ceil: 'sky' }, music: { wall: 'velvet', floor: 'parquet', ceil: 'plaster' },
   nursery: { wall: 'wallpaperNursery', floor: 'carpetBlue', ceil: 'plaster' }, letters: { wall: 'letters', floor: 'wood', ceil: 'plaster' },
+  drive: { wall: 'hedge', floor: 'gravel', ceil: 'sky', open: true },
 };
 const MAT = {};
 const mat = (k, opts) => MAT[k] || (MAT[k] = new THREE.MeshPhongMaterial(Object.assign({ map: tex(k), shininess: 6, specular: 0x111111 }, opts || {})));
@@ -82,6 +83,7 @@ function sfx(type, vol = 1) {
   else if (type === 'roar') { osc('sawtooth', 70, 40, 1.4, .3, ['lowpass', 300]); }
   else if (type === 'veil') { osc('sine', 300, 900, .6, .15); }
   else if (type === 'match') { nz(.25, .4, 3000); }
+  else if (type === 'caw') { osc('sawtooth', 900, 500, .18, .12, ['bandpass', 1200, 3]); }
   else if (type === 'moan') { const o = AC.createOscillator(), f = AC.createBiquadFilter(); o.type = 'sawtooth'; o.frequency.setValueAtTime(R(85, 110), t); o.frequency.linearRampToValueAtTime(R(60, 75), t + 1.1); f.type = 'lowpass'; f.frequency.value = 420; o.connect(f).connect(g); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16 * vol, t + .25); g.gain.linearRampToValueAtTime(0, t + 1.2); o.start(t); o.stop(t + 1.25); }
   else if (type === 'pickup') { [660, 880].forEach((fq, i) => { const o = AC.createOscillator(), gg = AC.createGain(); o.type = 'triangle'; o.frequency.value = fq; o.connect(gg).connect(AC.destination); gg.gain.setValueAtTime(.12, t + i * .09); gg.gain.exponentialRampToValueAtTime(.001, t + i * .09 + .3); o.start(t + i * .09); o.stop(t + i * .09 + .32); }); }
 }
@@ -102,7 +104,7 @@ const flash = new THREE.SpotLight(0xfff1d6, 2.4, 22, .48, .55, 1.6); flash.posit
 const muzzle = new THREE.PointLight(0xffc070, 0, 8, 2); camera.add(muzzle); muzzle.position.set(.2, -.2, -.6);
 /* ---------- game state ---------- */
 const S = { spec: null, hooks: {}, world: null, running: false, paused: true, hp: 3, ammo: 12, inv: {}, flags: {}, plugs: {}, doors: {}, veils: [], props: {}, propList: [],
-  items: [], figures: [], enemies: [], blocked: new Set(), goal: null, homing: null, follower: null, lights: [], log: null, session: null, chapter: 0, room: null };
+  items: [], figures: [], enemies: [], targets: [], blocked: new Set(), goal: null, homing: null, follower: null, lights: [], log: null, session: null, chapter: 0, room: null };
 const tileOf = (px, pz) => [Math.floor(px / T), Math.floor(pz / T)];
 const ctr = (x, y) => new THREE.Vector3(x * T + T / 2, 0, y * T + T / 2);
 const FACE = { n: 0, s: Math.PI, e: -Math.PI / 2, w: Math.PI / 2 };   // yaw that looks toward that compass direction
@@ -130,7 +132,7 @@ function sph(r, m, x, y, z) { const o = new THREE.Mesh(new THREE.SphereGeometry(
 function clearWorld() {
   if (S.world) { scene.remove(S.world); S.world.traverse(o => { if (o.geometry) o.geometry.dispose(); }); }
   S.world = new THREE.Group(); scene.add(S.world);
-  S.props = {}; S.propList = []; S.items = []; S.figures = []; S.enemies = []; S.blocked = new Set(); S.doors = {}; S.doorAt = {}; S.veils = []; S.lights = []; S.plugs = {}; S.follower = null; S.homing = null; S.goal = null;
+  S.props = {}; S.propList = []; S.items = []; S.figures = []; S.enemies = []; S.targets = []; S.blocked = new Set(); S.doors = {}; S.doorAt = {}; S.veils = []; S.lights = []; S.plugs = {}; S.follower = null; S.homing = null; S.goal = null;
 }
 
 function buildLevel(spec) {
@@ -178,6 +180,7 @@ function buildLevel(spec) {
   spec.lights.forEach(l => { const p = new THREE.PointLight(l.color, l.i, l.d, 1.6); p.position.set(l.x * T, l.h, l.y * T); add(p); S.lights.push({ light: p, base: l.i, flicker: l.flicker }); });
   spec.items.forEach(it => addItem(it));
   spec.figures.forEach(f => addFigure(f));
+  (spec.targets || []).forEach(t => addTarget(t));
   spec.enemies.forEach(e => spawnEnemy(e));
   scene.fog.density = spec.fog; S.fogBase = spec.fog; ambient.color.setHex(spec.ambient[0]); ambient.intensity = spec.ambient[1];
 }
@@ -241,6 +244,8 @@ function propMesh(p) {
     case 'harp': g.add(box(.08, 1.6, .08, M.brass, 0, .8, 0)); g.add(box(.08, .08, .8, M.brass, 0, 1.55, .38)); { const a = box(.06, 1.7, .06, M.brass, 0, .8, .4); a.rotation.x = .45; g.add(a); } break;
     case 'crib': g.add(box(1.2, .08, .7, M.wood, 0, .5, 0)); for (let i = -5; i <= 5; i++) { g.add(box(.03, .5, .03, M.wood, i * .11, .75, .34)); g.add(box(.03, .5, .03, M.wood, i * .11, .75, -.34)); } break;
     case 'books': for (let i = 0; i < 4; i++) g.add(box(.5 - i * .05, .12, .35, flat(0x6a5a40 + i * 0x050403), R(-.05, .05), .06 + i * .12, 0)); break;
+    case 'post': g.add(cyl(.07, .09, 1.45, M.wood, 0, .72, 0)); g.add(box(.22, .06, .22, M.wood, 0, 1.47, 0)); break;
+    case 'housedoor': g.add(box(1.7, 2.7, .12, mat('door'), 0, 1.35, .06)); g.add(box(2.1, .2, .3, M.stone, 0, 2.8, .1)); g.add(sph(.08, M.brass, 0, 1.5, .16)); break;
     case 'figure-locke': g.add(box(.5, .5, .5, M.wood, 0, .25, 0)); g.add(cyl(.2, .26, .8, flat(0x1d1d24), 0, .9, 0)); g.add(sph(.15, flat(0xbfa58a), 0, 1.45, 0)); break;
   }
   return g;
@@ -352,7 +357,8 @@ function ghPass(o, x, y) {
   if (o.allowed) { const r = S.spec.roomAt(x, y); if (r && !o.allowed.has(r)) return false; }
   return true;
 }
-function los(ax, az, bx, bz) { const d = Math.hypot(bx - ax, bz - az), n = Math.ceil(d / .25); for (let i = 1; i < n; i++) { const t = i / n, [tx, tz] = tileOf(ax + (bx - ax) * t, az + (bz - az) * t); if (!passable(tx, tz) && cell(tx, tz) !== 'V') return false; } return true; }
+function opaque(x, y) { const ch = cell(x, y); if (!ch || ch === '#') return true; if (ch === 'P') return !S.plugs[KEY(x, y)]; if (ch === 'D') { const d = S.doorAt[KEY(x, y)]; return !(d && d.open); } return false; }
+function los(ax, az, bx, bz) { const d = Math.hypot(bx - ax, bz - az), n = Math.ceil(d / .25); for (let i = 1; i < n; i++) { const t = i / n, [tx, tz] = tileOf(ax + (bx - ax) * t, az + (bz - az) * t); if (opaque(tx, tz)) return false; } return true; }
 function bfsNext(o, sx, sy, tx, ty) {
   if (sx === tx && sy === ty) return null; const prev = new Map([[KEY(sx, sy), null]]), q = [[sx, sy]];
   while (q.length) { const [x, y] = q.shift(); if (x === tx && y === ty) break; for (const [dx, dy] of N4) { const nx = x + dx, ny = y + dy, k = KEY(nx, ny); if (prev.has(k) || !(ghPass(o, nx, ny) || (nx === tx && ny === ty && passable(nx, ny)))) continue; prev.set(k, [x, y]); q.push([nx, ny]); } if (prev.size > 900) break; }
@@ -410,6 +416,24 @@ function updateFollower(dt) {
   if (Math.hypot(PL.x - f.x, PL.z - f.z) > 9) { f.x = PL.x; f.z = PL.z; f.trail = []; }
   f.g.position.set(f.x, 0, f.z);
 }
+/* ---------- crows (prologue targets) ---------- */
+function addTarget(t) {
+  const g = new THREE.Group(), c = ctr(t.x, t.y), blk = flat(0x0d0d10);
+  const body = sph(.13, blk, 0, 0, 0); body.scale.set(1, .85, 1.5); g.add(body); g.add(sph(.08, blk, 0, .1, -.16));
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.025, .09, 6), flat(0x3a3020)); beak.rotation.x = -Math.PI / 2; beak.position.set(0, .09, -.27); g.add(beak);
+  g.position.set(c.x, t.h, c.z); g.rotation.y = R(0, 6.28); add(g);
+  S.targets.push(Object.assign({}, t, { mesh: g, wx: c.x, wz: c.z, alive: true, vy: 0, t: R(0, 6) }));
+}
+function updateTargets(dt) {
+  S.targets.forEach(t => {
+    t.t += dt;
+    if (t.alive) { t.mesh.position.y = t.h + Math.abs(Math.sin(t.t * 1.7)) * .02; if (Math.random() < dt * .3) t.mesh.rotation.y += R(-.6, .6); return; }
+    if (!t.mesh.visible) return; t.vy += dt * 3; t.mesh.position.y += t.vy * dt * 2; t.mesh.position.x += t.dx * dt * 4; t.mesh.position.z += t.dz * dt * 4;
+    if (t.mesh.position.y > WH + 4) t.mesh.visible = false;
+  });
+}
+function holdEnemy(id, on) { const o = S.enemies.find(e => e.id === id); if (!o) return; if (on) { o.held = o.state; o.state = 'dormant'; } else if (o.held) { o.state = o.held; o.held = null; } }
+
 /* ---------- player ---------- */
 const PL = { x: 0, z: 0, yaw: 0, pitch: 0, bob: 0, stepAcc: 0, lastTile: '' };
 const RAD = .28;
@@ -527,22 +551,24 @@ function die() {
 }
 function aimTarget(o, dir) {
   let best = null;
-  const cand = S.enemies.filter(e => e.state !== 'dead' && e.state !== 'dormant').map(e => [e.x, e.z]).concat(S.figures.filter(f => !f.decided).map(f => [f.wx, f.wz]));
-  cand.forEach(([x, z]) => { const v = new THREE.Vector3(x - o.x, 1.2 - o.y, z - o.z), d = v.length(); if (d > 15 || !los(o.x, o.z, x, z)) return; const ang = Math.acos(Math.max(-1, Math.min(1, v.dot(dir) / d))) * 180 / Math.PI; if (!best || ang < best) best = ang; });
+  const cand = S.enemies.filter(e => e.state !== 'dead' && e.state !== 'dormant').map(e => [e.x, e.z]).concat(S.figures.filter(f => !f.decided).map(f => [f.wx, f.wz])).concat(S.targets.filter(t => t.alive).map(t => [t.wx, t.wz, t.h]));
+  cand.forEach(([x, z, h]) => { const v = new THREE.Vector3(x - o.x, (h || 1.2) - o.y, z - o.z), d = v.length(); if (d > 15 || !los(o.x, o.z, x, z)) return; const ang = Math.acos(Math.max(-1, Math.min(1, v.dot(dir) / d))) * 180 / Math.PI; if (!best || ang < best) best = ang; });
   return best;
 }
 function fire() {
   if (S.ammo <= 0) { toast('Out of ammunition.'); return; }
   S.ammo--; S.log.shotsN++; sfx('shot'); muzzle.intensity = 4; setTimeout(() => muzzle.intensity = 0, 70); hud();
   const o = camera.position.clone(), dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-  let wall = 30; for (let s = .2; s < 30; s += .15) { const p = o.clone().addScaledVector(dir, s), [tx, tz] = tileOf(p.x, p.z); if (!standable(tx, tz) || p.y < 0 || p.y > WH) { wall = s; break; } }
+  let wall = 30; for (let s = .2; s < 30; s += .15) { const p = o.clone().addScaledVector(dir, s), [tx, tz] = tileOf(p.x, p.z); if (opaque(tx, tz) || p.y < 0 || p.y > WH) { wall = s; break; } }
   let best = null;
   const test = (cx, cy, cz, r, hit) => { const c = new THREE.Vector3(cx, cy, cz), oc = c.clone().sub(o), tc = oc.dot(dir); if (tc < 0 || tc > wall) return; if (oc.lengthSq() - tc * tc < r * r && (!best || tc < best.t)) best = Object.assign({ t: tc }, hit); };
   S.enemies.forEach(g => { if (g.state === 'dead' || g.state === 'dormant') return; const sc = g.type === 'guardian' ? 1.4 : 1; test(g.x, 1.58 * sc, g.z, .2 * sc, { g, dmg: 2 }); test(g.x, 1.0 * sc, g.z, .36 * sc, { g, dmg: 1 }); });
   S.figures.forEach(f => { if (f.decided && f.type === 'sleeper') return; if (f.toppled >= 1) return; test(f.wx, 1.2, f.wz, .42, { f }); });
+  S.targets.forEach(tg => { if (tg.alive) test(tg.wx, tg.h, tg.wz, .24, { tg }); });
   const err = aimTarget(o, dir);
-  S.log.shots.push({ t: +((now() - S.t0) / 1000).toFixed(2), hit: !!best, aimErr: err == null ? null : +err.toFixed(1), target: best ? (best.f ? 'figure:' + best.f.type : best.g.type) : null });
+  S.log.shots.push({ t: +((now() - S.t0) / 1000).toFixed(2), hit: !!best, aimErr: err == null ? null : +err.toFixed(1), target: best ? (best.tg ? 'crow' : best.f ? 'figure:' + best.f.type : best.g.type) : null });
   if (!best) return;
+  if (best.tg) { const tg = best.tg; tg.alive = false; tg.vy = 1; const a = R(0, 6.28); tg.dx = Math.cos(a); tg.dz = Math.sin(a); sfx('caw'); S.log.hits++; logEvent('crow', { id: tg.id }); if (S.hooks.onTarget) S.hooks.onTarget(tg); return; }
   if (best.f) { const f = best.f; if (!f.decided) decideFigure(f, 'shoot', now()); if (f.type === 'mannequin') { f.mesh.rotation.z = .15; setTimeout(() => f.mesh.rotation.z = 0, 160); toast(f.look === 'scarecrow' ? 'Only a scarecrow.' : 'Only a dress form under a sheet.'); } return; }
   const g = best.g; S.log.hits++;
   if (g.type === 'guardian') { g.stagger = 2.5; g.state = 'chase'; return; }
@@ -661,6 +687,7 @@ const api = {
   homing, flag: (k, v) => { S.flags[k] = v; }, follower: startFollower,
   showMemoryOn: p => { const c = ctr(p.x, p.y), m = itemMesh('memory'); m.position.set(c.x, 1.12, c.z); add(m); },
   endChapter: () => endChapter(),
+  hold: holdEnemy,
 };
 /* ---------- chapters ---------- */
 const CH_NAMES = ['Chapter One', 'Chapter Two', 'Chapter Three'];
@@ -672,19 +699,33 @@ function newLog(spec) {
 function placeAtSpawn() { const sp = S.spec.spawn, c = ctr(sp[0], sp[1]); PL.x = c.x; PL.z = c.z; PL.yaw = FACE[sp[2]]; PL.pitch = 0; PL.lastTile = ''; camera.position.set(PL.x, 1.6, PL.z); camera.rotation.set(0, PL.yaw, 0); }
 function showScreen(id, html, mount) { if (id === 'end') { $('#endCard').innerHTML = html; $('#end').hidden = false; } if (mount) mount(); }
 function ensureSession() { if (!S.session) S.session = { version: 2, startedAt: Date.now(), seedBase: Math.floor(Math.random() * 1e6), chapters: [] }; }
+const TITLE = { grounds: 'The Grounds', east: 'The East Wing', conservatory: 'The Conservatory', palace: 'The Palace' };
+function calib() { return store.get('palace.calib', { swayScale: 1, history: [] }); }
 function startChapter(i) {
-  ensureSession(); S.chapter = i;
-  const spec = L.generate(i, S.session.seedBase * 10 + i);
+  ensureSession();
+  // a short warm-up on the grounds opens every session, so controls settle before anything counts
+  if (!S.session.prologueDone) { S.pendingChapter = i; return startPrologue(); }
+  S.chapter = i;
+  const sc = calib().swayScale, spec = L.generate(i, S.session.seedBase * 10 + i, { swayScale: sc });
+  loadSpec(spec, i === 0 ? 12 : Math.max(S.ammo, 10)); S.log.swayScale = sc;
+  showScreen('end', `<div class="sub">${CH_NAMES[i]}</div><h1>${spec.title}</h1><p style="color:var(--muted)">${spec.sub}</p><button class="btn" id="begin">Begin</button>`, () => $('#begin').onclick = () => beginPlay(spec));
+}
+function loadSpec(spec, ammo) {
   buildLevel(spec); S.hooks = spec.script(api) || {};
-  S.inv = {}; S.invNames = {}; S.flags = {}; S.visited = {}; S.room = null; S.dark = false; S.changedOnce = false; S.hp = 3; S.ammo = i === 0 ? 12 : Math.max(S.ammo, 10);
+  S.inv = {}; S.invNames = {}; S.flags = {}; S.visited = {}; S.room = null; S.dark = false; S.changedOnce = false; S.hp = 3; S.ammo = ammo;
   S.log = newLog(spec); S.session.chapters.push(S.log); S.t0 = now();
   placeAtSpawn(); hud(); $('#title').hidden = true; $('#end').hidden = true;
-  showScreen('end', `<div class="sub">${CH_NAMES[i]}</div><h1>${spec.title}</h1><p style="color:var(--muted)">${spec.sub}</p><button class="btn" id="begin">Begin</button>`, () => $('#begin').onclick = () => {
-    $('#end').hidden = true; audio(); startDrone(); S.running = true; S.paused = false; S.t0 = now(); resize();
-    if (!TOUCH) { try { const p = cvEl.requestPointerLock && cvEl.requestPointerLock(); if (p && p.catch) p.catch(() => { }); } catch (e) { } }
-    if (S.hooks.onStart) S.hooks.onStart();
-    say(spec.intro);
-  });
+}
+function beginPlay(spec) {
+  $('#end').hidden = true; audio(); startDrone(); S.running = true; S.paused = false; S.t0 = now(); resize();
+  if (!TOUCH) { try { const p = cvEl.requestPointerLock && cvEl.requestPointerLock(); if (p && p.catch) p.catch(() => { }); } catch (e) { } }
+  if (S.hooks.onStart) S.hooks.onStart();
+  say(spec.intro);
+}
+function startPrologue() {
+  S.chapter = -1; const spec = L.prologue(S.session.seedBase);
+  loadSpec(spec, 12);
+  showScreen('end', `<div class="sub">Prologue</div><h1>${spec.title}</h1><p style="color:var(--muted)">A short walk up to the house</p><button class="btn" id="begin">Begin</button>`, () => $('#begin').onclick = () => beginPlay(spec));
 }
 function saveSession() {
   const all = store.get('palace.sessions', []).filter(s => s.startedAt !== S.session.startedAt); all.push(S.session);
@@ -692,7 +733,14 @@ function saveSession() {
 }
 function endChapter() {
   S.paused = true; if (document.exitPointerLock) document.exitPointerLock();
-  S.log.duration = +((now() - S.t0) / 1000).toFixed(1); S.log.done = true; saveSession();
+  S.log.duration = +((now() - S.t0) / 1000).toFixed(1); S.log.done = true;
+  if (S.spec.id === 'grounds') { S.session.prologueDone = true; saveSession(); return startChapter(S.pendingChapter || 0); }
+  // keep the standing-figure decisions near threshold for this player: about 75% correct is where drift is best estimated
+  const F = S.log.figures;
+  if (F.length >= 3) { const acc = F.filter(f => f.correct).length / F.length, c = calib();
+    c.swayScale = Math.max(.4, Math.min(2.5, c.swayScale * (acc > .85 ? .8 : acc < .65 ? 1.25 : 1)));
+    c.history.push({ t: Date.now(), chapter: S.spec.id, acc: +acc.toFixed(2), n: F.length, scale: +c.swayScale.toFixed(3) }); c.history = c.history.slice(-60); store.set('palace.calib', c); }
+  saveSession();
   const prog = store.get('palace.progress', { unlocked: 1 }); prog.unlocked = Math.max(prog.unlocked, Math.min(3, S.chapter + 2)); store.set('palace.progress', prog);
   showChapterCard();
 }
@@ -718,6 +766,7 @@ function summarize(c) {
     ['Aim', aims.length ? `${median(aims).toFixed(1)}° median error · ${c.hits}/${c.shotsN} hits` : '—', 'Aiming skill, also a covariate.'],
     ['Plan readings', `${c.mapViews.length} · ${Math.round(c.mapViews.reduce((s, v) => s + v.dur, 0))} s`, `${c.mapViews.filter(v => v.changed).length} after the house changed, when the plan no longer matched.`],
   ];
+  if (c.id === 'grounds') rows.unshift(['Warm-up', 'not scored', 'Calibrates movement and aim for this session, so the chapters measure decisions rather than controls.']);
   if (J.length) rows.push(['Route choices at junctions', `${pct(J.filter(j => j.optimal).length, J.length)} optimal of ${J.length}`, Jpost.length ? `After the change: ${pct(Jpost.filter(j => j.optimal).length, Jpost.length)} optimal. Where the plan and the house disagreed, you followed the old plan ${pct(Jconf.filter(j => j.planOptimal).length, Jconf.length)} of the time (${Jconf.length} choices).` : 'Choices are scored against the true layout and against the plan.']);
   if (c.staleBumps) rows.push(['Walked into moved doorways', String(c.staleBumps), 'Reaching for a doorway that used to be there.']);
   if (F.length) { const rts = F.filter(f => f.rt != null).map(f => f.rt); rows.push(['Figures in the dark', `${pct(F.filter(f => f.correct).length, F.length)} correct of ${F.length}`, `Shoot or walk past. Median time from first seeing a figure to deciding: ${rts.length ? median(rts).toFixed(1) + ' s' : '—'}.`]); }
@@ -728,7 +777,7 @@ function summarize(c) {
 function notes() {
   saveSession();
   const ch = S.session.chapters.filter(c => c.duration != null || c === S.log);
-  const html = ch.map((c, i) => `<h2 style="font-family:var(--display);font-weight:400;color:var(--brass);margin:18px 0 4px">${L.generate(['east', 'conservatory', 'palace'].indexOf(c.id), 1).title}</h2>` +
+  const html = ch.map((c, i) => `<h2 style="font-family:var(--display);font-weight:400;color:var(--brass);margin:18px 0 4px">${TITLE[c.id] || c.id}</h2>` +
     summarize(c).map(([k, v, m]) => `<div class="row"><span class="k">${k}</span><span class="v">${v}</span><span class="m">${m}</span></div>`).join('')).join('');
   showScreen('end', `<div id="notes"><h1 style="font-size:2rem;text-align:center">Session notes</h1>
     <p style="font-size:.85rem;color:var(--muted);text-align:center">Recorded silently while you played. Single sessions are noisy; change across sessions is the point.</p>${html}
@@ -745,7 +794,7 @@ let last = now();
 function loop() {
   requestAnimationFrame(loop); const t = now(), dt = Math.min(.05, (t - last) / 1000); last = t;
   if (S.spec) {
-    if (S.running && !S.paused) { updatePlayer(dt, t); updateEnemies(dt); updateFigures(dt, t); updateFollower(dt); }
+    if (S.running && !S.paused) { updatePlayer(dt, t); updateEnemies(dt); updateFigures(dt, t); updateFollower(dt); updateTargets(dt); }
     else { if (!S.running) PL.yaw += dt * .05; camera.position.set(PL.x, 1.6, PL.z); camera.rotation.set(PL.pitch, PL.yaw, 0); }
     Object.values(S.doors).forEach(d => { const tg = d.open ? -1.75 : 0; d.ang += (tg - d.ang) * Math.min(1, dt * 3); d.piv.rotation.y = d.ang; });
     S.veils.forEach((v, i) => v.mesh.material.opacity = .7 + .15 * Math.sin(t / 400 + i));
