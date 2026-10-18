@@ -38,12 +38,28 @@ The score never reacts to anything a measure depends on. Standing figures are no
 
 Press L (or the Lab button on a phone, or open the page with `#lab`) for a live view of the adaptive layer: the marginal posterior of every parameter, filled for now and outlined for where it started this session, with the mean and 80% interval; the uncertainty left in each model, in bits, trial by trial; the next lantern path or palace reshuffle the design chose and its expected information gain (or that it is a fixed anchor); and the behavioral measures that don't go through a model. It is off by default so players are not steered by watching their own estimates.
 
+### The 16-bit version
+
+`sixteen/` is the same game redrawn as a top-down, flip-screen 16-bit adventure: same story and chapters, same adaptive layer, same score, all pixel art drawn in code. Play it at [samuelling.github.io/the-palace/sixteen](https://samuelling.github.io/the-palace/sixteen/). It keeps its own saved estimates (`palace16.*` in the browser), because some measures change meaning with the camera.
+
+How each test carries over:
+
+- **Map updating (East Wing).** Twelve single-screen rooms joined by doors, generated each session. Locke's plan is on the lectern. After the locket, the Architect bricks up two doorways (one is the bolt door you opened) and opens two new ones, then hides a memento behind the change. Route choices out of rooms with three or more doors are scored against the true house and against the plan; walking into a bricked doorway the plan still shows is a stale bump.
+- **Hedge maze (Conservatory).** Two-wide gravel paths in a braided maze, an open lawn in the middle. Junctions are scored cell by cell against the planted plan and the regrown maze; closures sit just past turns; returning to one is logged.
+- **Glimpse-then-integrate (Palace).** A rotunda with three veils on the north wall and three on the south. Where you step out after leaving a room is the glimpse. Identical logic to the 3D version.
+- **Path integration.** During the blackout the camera locks onto the hero, so the edge of the screen can never act as a landmark; the darkness is fully opaque, and only a small disc of featureless grass is lit (optic flow without landmarks). The grass texture is reseeded when the lantern goes out, so no patch can be recognised on the way back. The cost: with the view fixed north-up, heading is given for free, so this measures translational integration; the turning-bias parameter should collapse toward zero.
+- **Standing figures become sentinels.** Suits of armour (scarecrows in the maze). The live ones' visor glow pulses; the staircase adjusts the luminance contrast of that pulse (a temporal contrast-detection decision), targeting about 75% correct. Strike or walk past; time from first sight to decision feeds the diffusion model as before.
+- **Motor covariates.** Walking speed on straight runs, wall bumps, sword hits and the perpendicular offset of the nearest target from each swing.
+
+Eight-direction movement is far easier for novices than mouse-look, so the novice confound found in the simulations should shrink; that is a prediction to check, not a result.
+
 ### Files
 
 - `levels.js`: seeded chapter generators (pure; also loadable from node for simulation)
 - `game.js`: engine, telemetry, chapter flow, model-estimates overlay
 - `ado.js`: adaptive design optimization
 - `audio.js`: generative score and sound effects
+- `sixteen/`: the 16-bit version (`art.js` pixel art, `world.js` seeded chapters, loadable from node, `game.js` engine and telemetry)
 - `shell.html`: page body; `python3 build.py` wraps it into `index.html`
 - `sim/`: Monte Carlo players
 

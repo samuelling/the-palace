@@ -265,6 +265,17 @@
         noiseHit(filt('lowpass', 500), .1, .5, .2, .5, t + .12);
         break;
       }
+      case 'slash': { const n = nsrc(t, .2), bp = filt('bandpass', 1800, 1.2), g = g0(0); bp.frequency.setValueAtTime(900, t); bp.frequency.exponentialRampToValueAtTime(3800, t + .12); env(g.gain, t, .02, .45, .02, .1); n.connect(bp).connect(g).connect(dest); break; }
+      case 'clang': {
+        [[1, .5], [2.71, .25], [5.1, .12]].forEach(([m, a]) => { const oo = osc('square', 620 * m * R(.98, 1.02), t, .6), gg = g0(0); env(gg.gain, t, .001, a * .35, 0, .5 / m); oo.connect(filt('bandpass', 620 * m, 6)).connect(gg).connect(dest); });
+        noiseHit(filt('highpass', 2500), .001, .5, 0, .05); dest.connect(vsend(.5)); break;
+      }
+      case 'hit': sweep('sine', 180, 60, .12, .7, t, .002); noiseHit(filt('bandpass', 900, 1), .002, .5, .01, .08); break;
+      case 'crumble': for (let i = 0; i < 9; i++) noiseHit(filt('bandpass', R(300, 1600), 2), .002, R(.2, .5), 0, R(.06, .18), t + i * R(.03, .07)); sweep('sine', 90, 35, .5, .5, t, .01); break;
+      case 'unlock': [0, .09].forEach((dt, i) => { const oo = osc('square', i ? 1400 : 900, t + dt, .05), gg = g0(0); env(gg.gain, t + dt, .001, .12, 0, .04); oo.connect(filt('bandpass', 2000, 2)).connect(gg).connect(dest); }); creak(.5, 0, dest); break;
+      case 'blip': { const oo = osc('square', R(520, 560), t, .03), gg = g0(0); env(gg.gain, t, .001, .03, 0, .025); oo.connect(filt('lowpass', 1800)).connect(gg).connect(dest); break; }
+      case 'whoosh': { const n = nsrc(t, .5), bp = filt('bandpass', 400, 1), g = g0(0); bp.frequency.exponentialRampToValueAtTime(1600, t + .35); env(g.gain, t, .15, .25, .05, .25); n.connect(bp).connect(g).connect(dest); break; }
+      case 'flap': for (let i = 0; i < 5; i++) noiseHit(filt('bandpass', 700, 1.5), .005, .3, 0, .05, t + i * .07); break;
       case 'pickup': {
         const sc = st.sc || SCENES.east; dest.connect(vsend(.6));
         [[0, 0], [sc.scale[4], .12]].forEach(([k, dt]) => bell(mtof(sc.root + 48 + k), t + dt, .6, dest));

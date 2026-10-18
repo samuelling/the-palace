@@ -1,0 +1,109 @@
+<title>The Palace, 16-bit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jacquard+24&family=Pixelify+Sans:wght@400;600&display=swap">
+<style>
+/* A single-screen game seen through a CRT-dark frame; every overlay sits on the stage and scales with it. */
+:root{
+  --ink:#07060c; --panel:#0e0a16; --panel2:#171024; --gold:#e0b04a; --gold-dim:#7a5e2c; --parch:#e8dcc0; --muted:#9a8fa8; --blood:#d0403a; --frost:#9ab4e8;
+  --display:"Jacquard 24","IM Fell English SC",Georgia,serif;
+  --ui:"Pixelify Sans",ui-monospace,"Courier New",monospace;
+  --px:3;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--ink);color:var(--parch);font-family:var(--ui);overflow:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0;
+  display:flex;align-items:center;justify-content:center;touch-action:none;-webkit-user-select:none;user-select:none}
+body.touch{padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
+#stage{position:relative;width:768px;height:672px;max-width:100%;background:#000;box-shadow:0 0 0 2px #1a1424,0 0 60px rgba(90,60,140,.18)}
+#screen{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.ov{position:absolute;pointer-events:none}
+#hudName{right:3.5%;top:4.2%;font-family:var(--display);font-size:clamp(14px,calc(var(--px)*6.5px),28px);color:var(--muted);white-space:nowrap}
+#banner{left:50%;top:calc(14.3% + 10px);transform:translateX(-50%);font-family:var(--display);font-size:clamp(20px,calc(var(--px)*9px),40px);color:var(--gold);text-shadow:0 2px 0 #000,0 0 12px rgba(0,0,0,.8);opacity:0;transition:opacity .4s;white-space:nowrap}
+#banner.on{opacity:1}
+#prompt{left:50%;bottom:4%;transform:translateX(-50%);font-size:clamp(11px,calc(var(--px)*4.2px),17px);background:rgba(14,10,22,.88);border:1px solid var(--gold-dim);padding:3px 10px;opacity:0;transition:opacity .15s;white-space:nowrap}
+#prompt.on{opacity:1}
+#toast{left:50%;top:24%;transform:translateX(-50%);font-size:clamp(12px,calc(var(--px)*4.4px),18px);background:rgba(14,10,22,.9);border:1px solid var(--gold-dim);padding:4px 12px;opacity:0;transition:opacity .25s;max-width:90%;text-align:center}
+#toast.on{opacity:1}
+#dialog{left:3.5%;right:3.5%;bottom:3.5%;min-height:24%;pointer-events:auto;cursor:pointer;background:var(--panel);border:3px solid #2e2440;outline:2px solid var(--gold-dim);outline-offset:-6px;padding:clamp(10px,calc(var(--px)*4.5px),20px) clamp(12px,calc(var(--px)*6px),26px);
+  font-size:clamp(14px,calc(var(--px)*5.6px),23px);line-height:1.45;box-shadow:0 4px 0 #000}
+#dWho{display:block;color:var(--gold);font-weight:600;margin-bottom:2px}
+#dText{white-space:pre-wrap}
+#mapView{inset:0;pointer-events:auto;background:rgba(5,4,10,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:3%}
+#mapTitle{font-family:var(--display);font-size:clamp(20px,calc(var(--px)*9px),40px);color:var(--gold)}
+#mapCv{width:min(100%,640px);height:auto;max-height:72%;object-fit:contain;border:2px solid #5a4424;box-shadow:0 6px 0 #000}
+#mapNote{font-size:clamp(11px,calc(var(--px)*4px),16px);color:var(--muted);text-align:center}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:auto;background:linear-gradient(to bottom,rgba(5,4,10,.25),rgba(5,4,10,.88) 70%)}
+.card{text-align:center;max-width:min(92%,560px);max-height:92%;overflow:auto;padding:12px}
+.card h1{font-family:var(--display);font-weight:400;font-size:clamp(44px,calc(var(--px)*24px),104px);line-height:.9;margin:0 0 6px;color:var(--gold);text-shadow:0 4px 0 #2a1a08,0 0 30px rgba(224,176,74,.25);text-wrap:balance}
+.card h1.dead{color:var(--blood);text-shadow:0 4px 0 #2a0808}
+.card .sub{font-size:clamp(12px,calc(var(--px)*4.4px),18px);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.card p{font-size:clamp(14px,calc(var(--px)*5px),20px);line-height:1.5;margin:8px auto;max-width:34em}
+.muted{color:var(--muted)}
+.btn{font-family:var(--ui);font-size:clamp(14px,calc(var(--px)*5px),20px);background:var(--panel2);color:var(--parch);border:2px solid var(--gold-dim);box-shadow:0 3px 0 #000;padding:8px 18px;margin:6px 4px;cursor:pointer}
+.btn:hover:not(:disabled),.btn:focus-visible{border-color:var(--gold);color:#fff;outline:none}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.small{font-size:clamp(12px,calc(var(--px)*4px),16px);padding:5px 12px}
+#chapters{margin-top:6px}
+.keys{margin-top:10px;font-size:clamp(11px,calc(var(--px)*3.8px),15px);color:var(--muted);line-height:1.6}
+#notes{text-align:left}
+#notes h1{font-size:clamp(34px,calc(var(--px)*14px),60px);text-align:center}
+#notes h2{font-family:var(--display);font-weight:400;font-size:clamp(22px,calc(var(--px)*9px),36px);color:var(--gold);margin:16px 0 4px}
+#notes .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:6px 0;border-bottom:1px solid #2a2236;font-size:clamp(12px,calc(var(--px)*4.2px),16px)}
+#notes .row .k{color:var(--parch)}#notes .row .v{color:var(--gold);text-align:right;font-variant-numeric:tabular-nums}
+#notes .row .m{grid-column:1/-1;color:var(--muted);font-size:.9em}
+.notes-actions{text-align:center;margin-top:14px}
+#dataBox{width:100%;height:120px;margin-top:10px;background:#120f18;color:var(--parch);font-family:var(--ui);font-size:12px}
+#lab{position:fixed;top:calc(16px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));width:min(320px,calc(100% - 32px));max-height:calc(100% - 40px);overflow:auto;
+  background:rgba(10,8,16,.9);border:1px solid var(--gold-dim);padding:10px 12px 12px;font-size:12px;color:var(--parch);pointer-events:auto;z-index:5}
+#lab .lab-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+#lab .lab-head b{font-family:var(--display);font-weight:400;font-size:22px;color:var(--gold)}
+#lab .lab-meta{color:var(--muted);font-size:11px;text-align:right}
+#labCv{display:block;width:100%;height:auto}
+#lab .live{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;margin-top:8px;border-top:1px solid #3a3044;padding-top:6px;font-variant-numeric:tabular-nums}
+#lab .live .k{color:var(--muted)}#lab .live .v{text-align:right}
+#lab .next{margin-top:6px;color:var(--gold);line-height:1.45}
+@media (min-width:1100px) and (min-height:560px){#lab{width:600px}#lab .lab-body{display:grid;grid-template-columns:296px minmax(0,1fr);gap:16px;align-items:start}#lab .lab-side .live{margin-top:0}#lab .lab-side .next{margin:0 0 8px}}
+#labBtn{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));font-family:var(--ui);font-size:12px;background:rgba(14,10,22,.8);color:var(--muted);border:1px solid #3a3044;padding:4px 10px;z-index:5}
+#touch{position:fixed;left:0;right:0;bottom:0;height:150px;pointer-events:none;z-index:4;padding-bottom:env(safe-area-inset-bottom,0px)}
+#joy{position:absolute;left:max(22px,env(safe-area-inset-left,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));width:112px;height:112px;border-radius:50%;background:rgba(30,22,44,.55);border:2px solid #3a2e50;pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:36px;top:36px;width:40px;height:40px;border-radius:50%;background:rgba(224,176,74,.5);border:2px solid var(--gold-dim)}
+.tbtn{position:absolute;width:68px;height:68px;border-radius:50%;background:rgba(30,22,44,.65);border:2px solid var(--gold-dim);color:var(--gold);font-family:var(--ui);font-size:14px;pointer-events:auto;touch-action:none}
+#tA{right:max(26px,env(safe-area-inset-right,0px));bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+#tB{right:max(108px,calc(env(safe-area-inset-right,0px) + 82px));bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:reduce){#banner,#prompt,#toast{transition:none}}
+</style>
+
+<div id="stage">
+  <canvas id="screen" width="256" height="224" aria-label="The Palace game screen"></canvas>
+  <div class="ov" id="hudName"></div>
+  <div class="ov" id="banner"></div>
+  <div class="ov" id="toast"></div>
+  <div class="ov" id="prompt"></div>
+  <div class="ov" id="dialog" hidden><span id="dWho" hidden></span><span id="dText"></span></div>
+  <div class="ov" id="mapView" hidden><div id="mapTitle"></div><canvas id="mapCv" width="640" height="460"></canvas><div id="mapNote"></div><button class="btn small" id="mapClose">Close</button></div>
+  <div class="screen" id="title"><div class="card">
+    <div class="sub">Locke Hall, 1893</div>
+    <h1>The Palace</h1>
+    <p>Elias Locke has turned his house into a memory palace, and something keeps rearranging the rooms.</p>
+    <button class="btn" id="start">Enter Locke Hall</button>
+    <div id="chapters"></div>
+    <button class="btn small" id="musicBtn">Music: on</button>
+    <div class="keys" id="keyhelp">Arrows or WASD move · Space strikes · E uses · Shift runs · L model estimates · N music</div>
+  </div></div>
+  <div class="screen" id="end" hidden><div class="card" id="endCard"></div></div>
+</div>
+<div id="lab" hidden role="region" aria-label="Model estimates">
+  <div class="lab-head"><b>Model estimates</b><span class="lab-meta" id="labMeta"></span></div>
+  <div class="lab-body"><canvas id="labCv" width="296" height="420"></canvas><div class="lab-side"><div class="next" id="labNext"></div><div class="live" id="labLive"></div></div></div>
+</div>
+<button id="labBtn" hidden>Lab</button>
+<div id="touch" hidden><div id="joy"><div id="knob"></div></div><button class="tbtn" id="tA">Strike</button><button class="tbtn" id="tB">Use</button></div>
+
+<script src="ado.js"></script>
+<script src="audio.js"></script>
+<script src="art.js"></script>
+<script src="world.js"></script>
+<script src="game.js"></script>
