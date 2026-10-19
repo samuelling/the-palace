@@ -36,6 +36,9 @@ BASE_DESIGN = dict(
     sentinels=12,          # top-down sentinel decisions per session
     rt_timing='sight',     # sentinel RT from first sight ('sight', as built) or from entering the decision zone ('zone')
     ado=True,
+    pi_model='v1',         # lantern model: 'v1' (as built: accumulating isotropic noise, side bias) or 'v2' (calibrated on
+                           # Howett/Castegnaro triangle completion: gain, leak, angular gain on turns, distance and direction noise)
+    pi_source='assumed',   # v2 only: 'assumed' keeps sim2-style group shifts, 'data' draws healthy and prodromal from pi_calib.json
 )
 DESIGN = dict(BASE_DESIGN)
 
@@ -60,7 +63,50 @@ class Grid:
 
 
 LAX = dict(acc=[.1, .2, .3, .4, .55, .7, .9, 1.2], rep=[.2, .35, .5, .7, .9, 1.2, 1.6], gain=[.75, .85, .95, 1.05, 1.15], leak=[0, .006, .012, .02, .03], bias=[-24, -12, 0, 12, 24])
+LAX2 = dict(gain=[.4, .55, .7, .85, 1.0, 1.15], leak=[-.03, 0, .02, .05, .08], g2=[.3, .5, .7, .85, 1.0, 1.15, 1.35], sigma=[.4, .7, 1.1, 1.7, 2.6], nu=list(np.radians([8, 15, 25, 40, 60, 90])))   # matches ado.js
 PAX = dict(rho=[.05, .2, .35, .5, .65, .8, .95], alpha=[.05, .2, .35, .5, .65, .8, .95], m=[.2, .35, .5, .65, .8, .9, .97])
+
+
+def path_geom(lens, turns, g2):
+    """Mental homing for a path walked as legs `lens` with turns `turns` (degrees, clockwise positive, as in the game) when every
+    turn is registered times g2. Returns (direction error of the mental homing response, radians clockwise positive, measured
+    against the true homing direction; mental home distance). g2 may be an array."""
+    g2 = np.atleast_1d(np.asarray(g2, float)); tr = np.radians(np.asarray(turns, float))
+    def walk(k):
+        h = np.zeros_like(g2); x = np.zeros_like(g2); y = np.zeros_like(g2)
+        for i, ln in enumerate(lens):
+            if i: h = h + k * tr[i - 1]
+            x = x + ln * np.sin(h); y = y + ln * np.cos(h)
+        return x, y, h
+    xt, yt, ht = walk(np.ones_like(g2)); xm, ym, hm = walk(g2)
+    turn_true = np.arctan2(-xt, -yt) - ht; turn_m = np.arctan2(-xm, -ym) - hm
+    err = (turn_m - turn_true + np.pi) % (2 * np.pi) - np.pi
+    return err, np.hypot(xm, ym)
+
+
+def v2_pred(C, geom):
+    L, c, lens, turns = geom
+    rot, cm = path_geom(lens, turns, C['g2']); R = C['gain'] * np.exp(-C['leak'] * L) * cm
+    return R, rot
+
+
+def lantern_ll2(G, geom, er, et):
+    """Return distance ~ N(R, sigma), direction error ~ N(rot, nu); observations in the true-home frame (er radial, et clockwise)."""
+    C = G.cols; L, c = geom[0], geom[1]; R, rot = v2_pred(C, geom)
+    er = np.atleast_1d(er)[:, None]; et = np.atleast_1d(et)[:, None]
+    r = np.hypot(c + er, et); th = np.arctan2(et, c + er); d = (th - rot + np.pi) % (2 * np.pi) - np.pi
+    return -np.log(2 * np.pi * C['sigma'] * C['nu']) - (r - R) ** 2 / (2 * C['sigma'] ** 2) - d ** 2 / (2 * C['nu'] ** 2)
+
+
+def lantern_eig2(G, geom, rng, S=20):
+    w = G.w(); H0 = -(w[w > 1e-300] * np.log(w[w > 1e-300])).sum()
+    u = (rng.random() + np.arange(S)) / S; idx = np.minimum(np.searchsorted(np.cumsum(w), u), G.N - 1)
+    C = {k: v[idx] for k, v in G.cols.items()}; R, rot = v2_pred(C, geom); c = geom[1]
+    r = np.maximum(.05, R + C['sigma'] * rng.normal(size=S)); th = rot + C['nu'] * rng.normal(size=S)
+    er, et = r * np.cos(th) - c, r * np.sin(th)
+    post = G.logp[None, :] + lantern_ll2(G, geom, er, et); post -= post.max(1, keepdims=True); p = np.exp(post); p /= p.sum(1, keepdims=True)
+    Hs = -(np.where(p > 1e-300, p * np.log(np.maximum(p, 1e-300)), 0)).sum(1).mean()
+    return H0 - Hs
 
 
 def lantern_ll(G, L, c, er, et):
@@ -98,12 +144,35 @@ def palace_eig(G, kind):
 def new_person(g, rng):
     p = sim2.sample_person(g, rng)
     p['bias_deg'] = rng.normal(0, 12)            # a constant turning bias, any group
+    p.update(v2_person(g, rng))
     return p
+
+
+_CAL = json.load(open(os.path.join(HERE, 'pi_calib.json'))) if os.path.exists(os.path.join(HERE, 'pi_calib.json')) else None
+
+
+def v2_person(g, rng):
+    """Lantern v2 parameters. 'data': healthy and healthy-novice players from healthy elderly, prodromal from biomarker-positive
+    MCI moved by the effect knob (sim2.KNOBS['effect']). 'assumed': the old assumption (deficits in noise and leak), on the new axes."""
+    eff = sim2.KNOBS['effect']; out = {}
+    if DESIGN.get('pi_source') == 'data' and _CAL:
+        for k in ('gain', 'leak', 'g2', 'sigma', 'nu'):
+            h, pr = _CAL['healthy'][k], _CAL['prodromal'][k]
+            loc = h['loc'] + (eff * (pr['loc'] - h['loc']) if g == 'prodromal' else 0); sc = h['scale'] + (eff * (pr['scale'] - h['scale']) if g == 'prodromal' else 0)
+            v = rng.normal(loc, max(sc, 1e-3)); out['v2_' + k] = float(np.exp(v)) if h['log'] else float(v)
+    else:
+        bad = eff if g == 'prodromal' else 0
+        out = dict(v2_gain=float(np.exp(rng.normal(np.log(.95), .1))), v2_leak=float(max(0, rng.normal(.01 + .01 * bad, .006))), v2_g2=float(rng.normal(1.0, .08)),
+                   v2_sigma=float(np.exp(rng.normal(np.log(.8 * (1 + .35 * bad)), .3))), v2_nu=float(np.exp(rng.normal(np.log(np.radians(18) * (1 + .35 * bad)), .3))))
+    out['v2_g2'] = float(np.clip(out['v2_g2'], .2, 1.6)); out['v2_leak'] = float(np.clip(out['v2_leak'], -.02, .15))
+    return out
 
 
 def session(person, g, s, rng):
     q = sim2.session_params(person, g, s, rng)
     q['bias_deg'] = person['bias_deg']
+    for k in person:
+        if k.startswith('v2_'): q[k] = person[k]
     nov = g == 'healthy_novice'
     # steering at eye level with turn-and-walk controls: extra scatter for people new to it, learned over sessions
     # a first-person warm-up (a short steering corridor in the prologue) counts as an extra session of practice, plus practice within this one
@@ -468,15 +537,15 @@ def lantern_path(box, rng):
     for _ in range(800):
         x, y = rng.uniform(x0 + 2, x1 - 2), rng.uniform(y0 + 2, y1 - 2)
         if not inside(x, y): continue
-        legs = 2 if rng.random() < .5 else 3; h = rng.integers(8) * np.pi / 4; pts = [(x, y)]; L = 0; good = True
+        legs = 2 if rng.random() < .5 else 3; h = rng.integers(8) * np.pi / 4; pts = [(x, y)]; L = 0; good = True; lens, turns = [], []
         for i in range(legs):
-            if i: h += np.radians(rng.choice([45, 90, 135]) * rng.choice([-1, 1]))
-            ln = rng.uniform(2.5, legmax)
+            if i: t = int(rng.choice([45, 90, 135]) * rng.choice([-1, 1])); h += np.radians(t); turns.append(t)
+            ln = rng.uniform(2.5, legmax); lens.append(round(float(ln), 3))
             for k in range(1, 13):
                 if not inside(x + np.sin(h) * ln * k / 12, y - np.cos(h) * ln * k / 12): good = False; break
             if not good: break
             x += np.sin(h) * ln; y -= np.cos(h) * ln; L += ln; pts.append((x, y))
-        if good: return L, float(np.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1]))
+        if good: return L, float(np.hypot(pts[-1][0] - pts[0][0], pts[-1][1] - pts[0][1])), tuple(lens), tuple(turns)
     return None
 
 
@@ -490,7 +559,14 @@ def pi_params(q, g):
     return acc, rep, q['pi_gain'], q['pi_leak'], bias
 
 
-def lantern_trial(q, g, L, c, rng):
+def lantern_trial(q, g, L, c, rng, lens=None, turns=()):
+    if DESIGN['pi_model'] == 'v2':
+        lens = lens or (L,); rot, cm = path_geom(lens, turns, q['v2_g2']); R = q['v2_gain'] * np.exp(-q['v2_leak'] * L) * cm[0]
+        sig, nu = q['v2_sigma'], q['v2_nu']
+        if DESIGN['pi_view'] == 'top': nu = nu * .6; rot = rot * 0
+        else: sig = np.sqrt(sig ** 2 + q['fp_ctrl'] ** 2); nu = np.sqrt(nu ** 2 + (q['fp_ctrl'] / max(c, 1.0)) ** 2)
+        r = max(.05, R + sig * rng.normal()); th = rot[0] + nu * rng.normal()   # fitted direction noise already contains any side bias
+        return r * np.cos(th) - c, r * np.sin(th)
     acc, rep, gain, leak, bias = pi_params(q, g)
     R = gain * np.exp(-leak * L) * c; b = np.radians(bias); sd = np.sqrt(acc ** 2 * L + rep ** 2)
     return R * np.cos(b) - c + sd * rng.normal(), R * np.sin(b) + sd * rng.normal()
@@ -499,7 +575,7 @@ def lantern_trial(q, g, L, c, rng):
 POOL = {}
 _PF = os.path.join(HERE, 'paths16.json')
 if os.path.exists(_PF):
-    POOL = {(int(k.split(':')[0]), k.split(':')[1]): [tuple(p) for p in v] for k, v in json.load(open(_PF)).items()}
+    POOL = {(int(k.split(':')[0]), k.split(':')[1]): [(p[0], p[1], tuple(p[2]), tuple(p[3])) if len(p) > 2 else (p[0], p[1], (p[0],), ()) for p in v] for k, v in json.load(open(_PF)).items()}
 
 
 def path_pool(lay):
@@ -515,13 +591,15 @@ def lanterns(lay, q, g, G, rng):
     for t in range(DESIGN['lantern_trials']):
         cands = [pool[i] for i in rng.integers(len(pool), size=10)] if pool else []
         if not cands: break
+        v2 = DESIGN['pi_model'] == 'v2'
         if DESIGN['ado'] and t > 0:
-            eig = [lantern_eig(G, L, c, rng) for L, c in cands[:6]]; L, c = cands[int(np.argmax(eig))]
+            eig = [lantern_eig2(G, p, rng) if v2 else lantern_eig(G, p[0], p[1], rng) for p in cands[:6]]; pick = cands[int(np.argmax(eig))]
         elif DESIGN['ado']:
-            L, c = min(cands, key=lambda p: abs(p[0] - 12))
-        else: L, c = cands[0]
-        er, et = lantern_trial(q, g, L, c, rng)
-        G.logp += lantern_ll(G, L, c, er, et)[0]
+            pick = min(cands, key=lambda p: abs(p[0] - 12))
+        else: pick = cands[0]
+        L, c, lens, turns = pick
+        er, et = lantern_trial(q, g, L, c, rng, lens, turns)
+        G.logp += (lantern_ll2(G, pick, er, et) if v2 else lantern_ll(G, L, c, er, et))[0]
         errs.append((L, float(np.hypot(er, et)))); T += L / 2.5 + c / (4.75 * q['speed']) + 6
     return errs, T
 
@@ -594,7 +672,7 @@ def play(person, g, s, rng, state):
     f = sentinels(q, g, state['scale'], rng); r['_fig'] = f
     r['f_acc'] = float(np.mean([a for a, _ in f])); r['f_rt'] = float(np.median([t for _, t in f]))
     acc = r['f_acc']; state['scale'] = max(.4, min(2.5, state['scale'] * (.8 if acc > .85 else 1.25 if acc < .65 else 1)))
-    for n in LAX: r['L_' + n] = G.mean(n)
+    for n in G.names: r['L_' + n] = G.mean(n)
     for n in PAX: r['P_' + n] = P.mean(n)
     r['speed'] = q['speed'] * 4.75 * rng.normal(1, .03); r['scrape'] = q['scrape'] * rng.normal(1, .15); r['swing'] = q['aim']
     r['minutes'] = (r['e_time'] + r['m_time'] + lt + r['p_time'] + DESIGN['sentinels'] * 4 + 60) / 60
@@ -606,7 +684,7 @@ def one(args):
     g, i, n_sess, seed, design, knobs = args
     DESIGN.clear(); DESIGN.update(design); sim2.set_knobs(**knobs)
     rng = np.random.default_rng(seed); person = new_person(g, rng)
-    state = dict(G=Grid(LAX), P=Grid(PAX), scale=1.0); rows = []
+    state = dict(G=Grid(LAX2 if DESIGN['pi_model'] == 'v2' else LAX), P=Grid(PAX), scale=1.0); rows = []
     for s in range(n_sess):
         r = play(person, g, s, rng, state); r.update(group=g, pid=i, session=s); rows.append(r)
     return rows

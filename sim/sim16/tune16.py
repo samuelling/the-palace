@@ -22,6 +22,9 @@ RAW = ['e_post_opt', 'e_conf_plan', 'e_bumps', 'e_err_eff', 'e_ret_eff', 'm_post
        'l_err', 'free_err', 'p_swap', 'p_rot', 'p_none', 'p_stale', 'f_acc', 'f_rt']
 MODEL = ['L_acc', 'L_rep', 'L_gain', 'L_leak', 'L_bias', 'P_rho', 'P_alpha', 'P_m']
 MOTOR = ['speed', 'scrape', 'swing']
+
+
+def model_keys(r): return sorted(k for k in r if k[:2] in ('L_', 'P_'))
 POS = {'e_bumps', 'e_err_eff', 'e_ret_eff', 'm_bumps', 'm_revisits', 'm_trans_eff', 'm_reward_eff', 'l_err', 'free_err', 'f_rt'}
 GROUPS = ['healthy', 'prodromal', 'healthy_novice']
 
@@ -48,7 +51,7 @@ def person_features(rows, motor=False):
     for k in RAW:
         v = tf(k, [r[k] for r in rows]); f[k] = np.nanmean(v) if np.isfinite(v).any() else np.nan
         if len(rows) > 2: f[k + ':iiv'] = np.nanstd(v) if np.isfinite(v).sum() > 2 else np.nan
-    for k in MODEL: f[k] = rows[-1][k]
+    for k in model_keys(rows[-1]): f[k] = rows[-1][k]
     v, a, ter = ez([t for r in rows for t in r['_fig']]); f.update(ez_v=v, ez_a=a, ez_ter=ter)
     f['scale'] = np.log(rows[-1]['scale'])
     f['lslope'], f['lint'] = lantern_fit(rows)

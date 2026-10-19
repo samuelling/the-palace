@@ -1,66 +1,98 @@
 {
- "confirm_base": {
+ "cal_v1": {
   "single": {
-   "auc": 0.78,
-   "healthy_flagged": 0.37,
-   "novice_flagged": 0.937,
-   "novice_auc": 0.337
+   "auc": 0.84,
+   "healthy_flagged": 0.25,
+   "novice_flagged": 0.957,
+   "novice_auc": 0.287
   },
   "single_pure": {
-   "auc": 0.77,
-   "healthy_flagged": 0.393,
-   "novice_flagged": 0.863,
-   "novice_auc": 0.447
+   "auc": 0.801,
+   "healthy_flagged": 0.367,
+   "novice_flagged": 0.807,
+   "novice_auc": 0.522
   },
   "all": {
-   "auc": 0.915,
-   "healthy_flagged": 0.135,
-   "novice_flagged": 0.63,
-   "novice_auc": 0.639
+   "auc": 0.958,
+   "healthy_flagged": 0.05,
+   "novice_flagged": 0.745,
+   "novice_auc": 0.592
   },
   "plateau": {
-   "auc": 0.892,
-   "healthy_flagged": 0.185,
-   "novice_flagged": 0.58,
-   "novice_auc": 0.696
+   "auc": 0.962,
+   "healthy_flagged": 0.045,
+   "novice_flagged": 0.625,
+   "novice_auc": 0.648
   },
   "pure": {
-   "auc": 0.873,
-   "healthy_flagged": 0.2,
-   "novice_flagged": 0.565,
-   "novice_auc": 0.7
+   "auc": 0.944,
+   "healthy_flagged": 0.07,
+   "novice_flagged": 0.405,
+   "novice_auc": 0.774
   }
  },
- "confirm_tuned": {
+ "cal_v2data": {
   "single": {
-   "auc": 0.82,
-   "healthy_flagged": 0.283,
-   "novice_flagged": 0.93,
-   "novice_auc": 0.274
+   "auc": 0.845,
+   "healthy_flagged": 0.243,
+   "novice_flagged": 0.69,
+   "novice_auc": 0.582
   },
   "single_pure": {
-   "auc": 0.792,
-   "healthy_flagged": 0.317,
-   "novice_flagged": 0.753,
-   "novice_auc": 0.487
+   "auc": 0.828,
+   "healthy_flagged": 0.297,
+   "novice_flagged": 0.353,
+   "novice_auc": 0.795
   },
   "all": {
-   "auc": 0.955,
-   "healthy_flagged": 0.065,
-   "novice_flagged": 0.785,
-   "novice_auc": 0.513
+   "auc": 0.954,
+   "healthy_flagged": 0.07,
+   "novice_flagged": 0.455,
+   "novice_auc": 0.756
   },
   "plateau": {
    "auc": 0.946,
-   "healthy_flagged": 0.075,
-   "novice_flagged": 0.705,
-   "novice_auc": 0.581
+   "healthy_flagged": 0.07,
+   "novice_flagged": 0.46,
+   "novice_auc": 0.754
   },
   "pure": {
-   "auc": 0.909,
+   "auc": 0.925,
+   "healthy_flagged": 0.1,
+   "novice_flagged": 0.235,
+   "novice_auc": 0.88
+  }
+ },
+ "cal_v2assumed": {
+  "single": {
+   "auc": 0.76,
+   "healthy_flagged": 0.43,
+   "novice_flagged": 0.943,
+   "novice_auc": 0.337
+  },
+  "single_pure": {
+   "auc": 0.704,
+   "healthy_flagged": 0.563,
+   "novice_flagged": 0.62,
+   "novice_auc": 0.663
+  },
+  "all": {
+   "auc": 0.915,
+   "healthy_flagged": 0.14,
+   "novice_flagged": 0.71,
+   "novice_auc": 0.625
+  },
+  "plateau": {
+   "auc": 0.914,
    "healthy_flagged": 0.125,
-   "novice_flagged": 0.455,
-   "novice_auc": 0.725
+   "novice_flagged": 0.625,
+   "novice_auc": 0.64
+  },
+  "pure": {
+   "auc": 0.884,
+   "healthy_flagged": 0.195,
+   "novice_flagged": 0.37,
+   "novice_auc": 0.801
   }
  }
 }

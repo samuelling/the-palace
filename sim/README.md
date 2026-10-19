@@ -138,3 +138,26 @@ With a misspecification not in the model (a constant turning bias of about 15° 
 The tuned design's gain replicates with all features (+.041, 95% CI .015 to .066), but cleaner decision times also make the classifier lean on speed, which flags novices more. Under the cognitive-only score the gain is +.036 (CI -.001 to .074), and the novice improvement seen on the tuning seed (+.12) did not replicate (+.02, CI -.03 to .07). Time cost: about 25 s per session.
 
 Limits: the novice population carries lasting cognitive-looking differences by assumption (from `sim2.py`), which no design change can remove; map-updating measures stay weak (AUC .53 to .62) because following a stale plan requires both remembering the plan and failing to update it, which partly cancel.
+
+## Calibrated on real triangle completion (`calib/`, `sim16` with `pi_model='v2'`)
+
+The lantern model and the simulated players' path integration are now fitted to real data: Howett et al. 2019 and Castegnaro et al. 2023, 98 people doing triangle completion with real walking, including biomarker-typed MCI. Details are in `calib/README.md`.
+
+In short, the model as built (isotropic accumulating noise) fit real returns worst of all models tested. A same-sized model with separate direction and distance noise plus an angular gain on turns (A5) fit best on BIC, beating the published 7-parameter GLAMPI. Direction noise is the marker: d 2.6 for biomarker-positive MCI vs healthy elderly, AUC .77 against biomarker-negative MCI, split-half reliability .78.
+
+Simulation, tuned design, seed 3, 200 per group, prodromal at half the MCI+ effect:
+
+| Lantern model and prodromal assumption | 1 session AUC | 10 sessions AUC | Novices flagged (10 s) | Novice AUC (10 s) |
+|---|---|---|---|---|
+| As built, assumed deficits (accumulating noise, leak) | .840 | .958 | 74% | .59 |
+| Calibrated model, old assumed deficits moved onto its axes | .760 | .915 | 71% | .63 |
+| Calibrated model, deficits from the MCI+ data | .845 | .954 | 46% | .76 |
+| ... cognitive parameters only | .828 | .925 | 23% | .88 |
+
+Paired bootstrap, calibrated vs as built:
+- **All features:** the AUC difference is −.003 (CI −.023 to .015), but separation from novices improves by +.16 (CI .12 to .21) at 10 sessions and +.30 after one session.
+- **Lantern parameters alone:** AUC .80 to .86 either way, but novices flagged fall from 71–89% to 25–36%.
+
+Overall detection is unchanged. The gain is specificity: the measured signal (scattered, over-turned returns) is cognitive, and new players do not mimic it the way they mimicked the assumed noise and leak deficits.
+
+The other chapters' deficits (maze, East Wing, palace, sentinels) remain assumptions, and the independence of deficits across domains still inflates the absolute AUCs.

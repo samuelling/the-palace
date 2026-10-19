@@ -1,0 +1,123 @@
+{
+ "_note": "Turn the A5 fits into population distributions for the simulator (sim16/pi_calib.json).\n\nHealthy = healthy elderly; prodromal (full effect) = biomarker-positive MCI, i.e. prodromal AD in the IWG sense.\nEach parameter is summarised on a scale where it is roughly normal (log for gain, sigma, nu), with robust location\n(median) and spread (MAD x 1.4826). Spread is shrunk by the square root of split-half reliability where that is at least .5 (direction and distance noise),\nbecause fitted values carry estimation noise that true person parameters do not; gain, leak and turn gain are not reliably\nmeasured per person in this task (split-half below .25), so their fitted spread is kept, which errs towards less separation. Scale to the game: legs there are longer, so distance noise is\nscaled up and leak per metre down to keep their effect at typical path lengths (an assumption).",
+ "reliability": {
+  "gain": 0.13303559353522268,
+  "leak": 0.24618713963581013,
+  "g2": -0.6184546369086558,
+  "sigma": 0.6323612918445475,
+  "nu": 0.7825817200679867
+ },
+ "healthy": {
+  "n": 33,
+  "gain": {
+   "loc": -0.5776,
+   "scale": 0.5454,
+   "log": true
+  },
+  "leak": {
+   "loc": -0.0412,
+   "scale": 0.0457,
+   "log": false
+  },
+  "g2": {
+   "loc": 0.9981,
+   "scale": 0.3754,
+   "log": false
+  },
+  "sigma": {
+   "loc": -0.3211,
+   "scale": 0.3097,
+   "log": true
+  },
+  "nu": {
+   "loc": -0.7915,
+   "scale": 0.2861,
+   "log": true
+  }
+ },
+ "prodromal": {
+  "n": 11,
+  "gain": {
+   "loc": -0.9981,
+   "scale": 0.6209,
+   "log": true
+  },
+  "leak": {
+   "loc": 0.0045,
+   "scale": 0.1135,
+   "log": false
+  },
+  "g2": {
+   "loc": 0.4627,
+   "scale": 0.3754,
+   "log": false
+  },
+  "sigma": {
+   "loc": -0.0391,
+   "scale": 0.3393,
+   "log": true
+  },
+  "nu": {
+   "loc": -0.0368,
+   "scale": 0.1399,
+   "log": true
+  }
+ },
+ "mci_neg": {
+  "n": 14,
+  "gain": {
+   "loc": -0.4537,
+   "scale": 0.7332,
+   "log": true
+  },
+  "leak": {
+   "loc": -0.0063,
+   "scale": 0.0648,
+   "log": false
+  },
+  "g2": {
+   "loc": 0.8259,
+   "scale": 0.3039,
+   "log": false
+  },
+  "sigma": {
+   "loc": -0.232,
+   "scale": 0.3124,
+   "log": true
+  },
+  "nu": {
+   "loc": -0.5487,
+   "scale": 0.4016,
+   "log": true
+  }
+ },
+ "young": {
+  "n": 24,
+  "gain": {
+   "loc": -0.4458,
+   "scale": 0.3337,
+   "log": true
+  },
+  "leak": {
+   "loc": -0.0462,
+   "scale": 0.0383,
+   "log": false
+  },
+  "g2": {
+   "loc": 0.9621,
+   "scale": 0.0613,
+   "log": false
+  },
+  "sigma": {
+   "loc": -0.419,
+   "scale": 0.1722,
+   "log": true
+  },
+  "nu": {
+   "loc": -0.6832,
+   "scale": 0.192,
+   "log": true
+  }
+ },
+ "g2_note": "turn-gain spread set from the model-free over-turning effect, d = 1.43"
+}

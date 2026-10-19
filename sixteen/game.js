@@ -575,7 +575,7 @@
     endChapter: () => endChapter(),
     ado: {
       chooseLantern: (cands, anchor) => { const ch = ADO.chooseLantern(adoState(), cands, Math.random, anchor); S.adoLast.lanternNext = { L: ch.pick.length, c: ch.pick.homeDist, eig: ch.eig, anchor: ch.anchor }; labRender(true); return ch; },
-      lanternUpdate: (d, res) => { const o = ADO.lanternObs(res); ADO.lanternUpdate(adoState().lantern, { L: d.length, c: o.c }, o.er, o.et); S.adoLast.lanternObs = { L: d.length, err: res.err }; S.adoLast.lanternNext = null; adoSave(); adoTrack('lantern'); },
+      lanternUpdate: (d, res) => { const o = ADO.lanternObs(res); ADO.lanternUpdate(adoState().lantern, { L: d.length, c: o.c, lens: d.lens, turns: d.turns }, o.er, o.et); S.adoLast.lanternObs = { L: d.length, err: res.err }; S.adoLast.lanternNext = null; adoSave(); adoTrack('lantern'); },
       choosePalace: (kinds, anchor) => { const ch = ADO.choosePalace(adoState(), kinds, anchor); S.adoLast.palaceNext = ch; labRender(true); return ch; },
       palaceUpdate: (kind, cls) => { ADO.palaceUpdate(adoState().palace, kind, cls); S.adoLast.palaceObs = { kind, cls }; S.adoLast.palaceNext = null; adoSave(); adoTrack('palace'); },
     },
@@ -1101,7 +1101,7 @@
 
   /* ---------- the model-estimates overlay ---------- */
   const LAB_ROWS = {
-    lantern: [['acc', 'Accum. noise', v => v.toFixed(2)], ['rep', 'Report noise', v => v.toFixed(2)], ['gain', 'Gain', v => v.toFixed(2)], ['leak', 'Leak /m', v => v.toFixed(3)], ['bias', 'Turn bias °', v => v.toFixed(0)]],
+    lantern: [['nu', 'Direction noise °', v => v.toFixed(0)], ['g2', 'Turn gain', v => v.toFixed(2)], ['gain', 'Distance gain', v => v.toFixed(2)], ['leak', 'Leak /m', v => v.toFixed(3)], ['sigma', 'Distance noise', v => v.toFixed(2)]],
     palace: [['rho', 'Rule inference', v => v.toFixed(2)], ['alpha', 'Local update', v => v.toFixed(2)], ['m', 'Link memory', v => v.toFixed(2)]],
   };
   let labOn = null, labLast = 0;
@@ -1186,7 +1186,7 @@
     ];
     if (c.ado && (c.id === 'conservatory' || c.id === 'palace')) {
       const f = (o, d) => `${o.mean.toFixed(d)} (${o.lo}–${o.hi})`;
-      if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `noise ${f(l.acc, 2)}`, `Accumulating noise per √m, with an 80% interval. Reporting noise ${f(l.rep, 2)}, gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)}, turning bias ${f(l.bias, 0)}°. With the view fixed north-up, turning bias should sit near zero.`]); }
+      if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `direction noise ${f(l.nu, 0)}°`, `Spread of the homing direction, with an 80% interval: in real triangle completion the clearest marker of biomarker-positive MCI. Turn gain ${f(l.g2, 2)} (below 1: turns registered as smaller, so the return over-turns), distance gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)} per m, distance noise ${f(l.sigma, 2)} (also carries steering scatter).`]); }
       if (c.id === 'palace') { const q = c.ado.palace; rows.push(['Model: integrating a glimpse', `inference ${f(q.rho, 2)}`, `Probability of working out the whole rearrangement from one glimpse. Local updating ${f(q.alpha, 2)}, memory for unchanged links ${f(q.m, 2)}.`]); }
     }
     if (c.id === 'grounds') rows.unshift(['Warm-up', 'not scored', 'Calibrates movement and the sword for this session, so the chapters measure decisions rather than controls.']);

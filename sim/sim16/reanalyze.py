@@ -21,14 +21,14 @@ def feats_plateau(rows):
         f[k] = np.nanmean(v[late]) if (ok & late).any() else np.nan
         f[k + ':slope'] = np.polyfit(s[ok], v[ok], 1)[0] if ok.sum() > 3 else np.nan
         f[k + ':iiv'] = np.nanstd(v[late]) if (ok & late).sum() > 2 else np.nan
-    for k in T.MODEL: f[k] = rows[-1][k]
+    for k in T.model_keys(rows[-1]): f[k] = rows[-1][k]
     v, a, ter = T.ez([t for r in rows if r['session'] >= 5 for t in r['_fig']]); f.update(ez_v=v, ez_a=a, ez_ter=ter)
     f['scale'] = np.log(rows[-1]['scale']); f['lslope'], f['lint'] = T.lantern_fit(rows)
     return f
 
 
 # parameters that are motor or execution by construction: covariates, never part of the risk score
-MOTORISH = ('f_rt', 'ez_ter', 'L_rep', 'free_err', 'l_err', 'lint')
+MOTORISH = ('f_rt', 'ez_ter', 'L_rep', 'L_sigma', 'free_err', 'l_err', 'lint')   # L_sigma: v2 distance noise, carries control scatter
 
 
 def pure(f):

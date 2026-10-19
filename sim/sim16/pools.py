@@ -8,6 +8,6 @@ def build(args):
 if __name__ == '__main__':
     jobs = [(l, lw) for l in sim16.LAY['conservatory'] for lw in ('base', 'large')]
     with Pool() as pool: out = dict(pool.map(build, jobs))
-    json.dump({k: [[round(a, 3), round(b, 3)] for a, b in v] for k, v in out.items()}, open('paths16.json', 'w'))
-    L = [a for k, v in out.items() if k.endswith('base') for a, _ in v]; L2 = [a for k, v in out.items() if k.endswith('large') for a, _ in v]
+    json.dump({k: [[round(a, 3), round(b, 3), list(ln), list(tu)] for a, b, ln, tu in v] for k, v in out.items()}, open('paths16.json', 'w'))
+    L = [p[0] for k, v in out.items() if k.endswith('base') for p in v]; L2 = [p[0] for k, v in out.items() if k.endswith('large') for p in v]
     print('pools', len(out), 'base L', np.percentile(L, [5, 50, 95]).round(1), 'large L', np.percentile(L2, [5, 50, 95]).round(1))
