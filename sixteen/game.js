@@ -305,6 +305,8 @@
       if (f.gone || f.decided) { if (f.wob > 0) f.wob -= dt; continue; }
       if (!f.seen && (isFP() ? fpVisible(a, f) : figureVisible(a, f))) { f.seen = t; f.seenDist = +(Math.hypot(H.x - (f.x * T + 8), H.y - (f.y * T + 8)) / T).toFixed(2); f.seenView = isFP() ? 'fp' : 'top'; logEvent('figure-seen', { id: f.id, view: f.seenView }); }
       const d = Math.hypot(H.x - (f.x * T + 8), H.y - (f.y * T + 10)) / T;
+      if (d < 2.5 && !f.zoneT) f.zoneT = t;
+      if (f.zoneT && (f.minD == null || d < f.minD)) { f.minD = d; f.minT = t; }
       if (d < 1.7) f.near = true;
       if (f.near && d > 2.6) decideFigure(f, 'pass', t);
     }
@@ -312,7 +314,9 @@
   function decideFigure(f, how, t) {
     f.decided = how;
     const correct = (how === 'strike') === (f.type === 'sleeper');
-    const rec = { id: f.id, type: f.type, look: f.look, contrast: f.contrast, how, correct, rt: f.seen ? +((t - f.seen) / 1000).toFixed(2) : null, t: +((t - S.t0) / 1000).toFixed(2), area: f.area, view: isFP() ? 'fp' : 'top', seenDist: f.seenDist == null ? null : f.seenDist };
+    // the decision clock runs from entering the 2.5 m zone (approach walking stays out of it); a walk-past is committed at the closest approach
+    const tDec = how === 'pass' && f.minT ? f.minT : t, rtZone = f.zoneT ? +((tDec - f.zoneT) / 1000).toFixed(2) : null;
+    const rec = { id: f.id, type: f.type, look: f.look, contrast: f.contrast, how, correct, rt: rtZone, rtSight: f.seen ? +((t - f.seen) / 1000).toFixed(2) : null, t: +((t - S.t0) / 1000).toFixed(2), area: f.area, view: isFP() ? 'fp' : 'top', seenDist: f.seenDist == null ? null : f.seenDist };
     S.log.figures.push(rec); logEvent('figure', rec);
     const a = S.areas[f.area];
     if (f.type === 'sleeper') {
@@ -1193,7 +1197,7 @@
     if (IG.length) rows.push(['First choice after a glimpse', `swap ${pct(ig('swap').filter(e => e.cls === 'correct').length, ig('swap').length)} · rotation ${pct(ig('rotate').filter(e => e.cls === 'correct').length, ig('rotate').length)} · none ${pct(ig('none').filter(e => e.cls === 'correct').length, ig('none').length)}`,
       `After stepping out of a room you see one new link. Choices back to where the room used to be: ${pct(IG.filter(e => e.cls === 'stale').length, IG.filter(e => e.kind !== 'none').length)}.`]);
     const Ft = F.filter(f => f.view !== 'fp'), Ff = F.filter(f => f.view === 'fp');
-    if (Ft.length) { const rts = Ft.filter(f => f.rt != null).map(f => f.rt); rows.push(['Sentinels', `${pct(Ft.filter(f => f.correct).length, Ft.length)} correct of ${Ft.length}`, `Strike or walk past. Median time from first seeing one to deciding: ${rts.length ? median(rts).toFixed(1) + ' s' : '—'}. These set the eye-pulse contrast for next time.`]); }
+    if (Ft.length) { const rts = Ft.filter(f => f.rt != null).map(f => f.rt); rows.push(['Sentinels', `${pct(Ft.filter(f => f.correct).length, Ft.length)} correct of ${Ft.length}`, `Strike or walk past. Median decision time, from stepping within arm's reach (2.5 m) to committing: ${rts.length ? median(rts).toFixed(2) + ' s' : '—'}. Decision time is treated as a motor covariate, not a score; accuracy at the staircased contrast is the measure. These set the eye-pulse contrast for next time.`]); }
     if (Ff.length) rows.push(['Scarecrows at eye level', `${pct(Ff.filter(f => f.correct).length, Ff.length)} correct of ${Ff.length}`, 'Kept out of the contrast staircase: in first person the eyes grow as you approach, so these decisions mix contrast with distance. Distance at first sight is logged.']);
     const HL = Hm.filter(h => h.kind === 'lantern'), HF = Hm.filter(h => h.kind !== 'lantern');
     if (HL.length) rows.push(['Following the lantern', `${median(HL.map(h => h.err)).toFixed(1)} m median error`, `${HL.length} return${HL.length === 1 ? '' : 's'} in the dark after outbound paths of ${HL.map(h => h.length.toFixed(0)).join(', ')} m.`]);

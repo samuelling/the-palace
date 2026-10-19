@@ -1,0 +1,66 @@
+{
+ "confirm_base": {
+  "single": {
+   "auc": 0.78,
+   "healthy_flagged": 0.37,
+   "novice_flagged": 0.937,
+   "novice_auc": 0.337
+  },
+  "single_pure": {
+   "auc": 0.77,
+   "healthy_flagged": 0.393,
+   "novice_flagged": 0.863,
+   "novice_auc": 0.447
+  },
+  "all": {
+   "auc": 0.915,
+   "healthy_flagged": 0.135,
+   "novice_flagged": 0.63,
+   "novice_auc": 0.639
+  },
+  "plateau": {
+   "auc": 0.892,
+   "healthy_flagged": 0.185,
+   "novice_flagged": 0.58,
+   "novice_auc": 0.696
+  },
+  "pure": {
+   "auc": 0.873,
+   "healthy_flagged": 0.2,
+   "novice_flagged": 0.565,
+   "novice_auc": 0.7
+  }
+ },
+ "confirm_tuned": {
+  "single": {
+   "auc": 0.82,
+   "healthy_flagged": 0.283,
+   "novice_flagged": 0.93,
+   "novice_auc": 0.274
+  },
+  "single_pure": {
+   "auc": 0.792,
+   "healthy_flagged": 0.317,
+   "novice_flagged": 0.753,
+   "novice_auc": 0.487
+  },
+  "all": {
+   "auc": 0.955,
+   "healthy_flagged": 0.065,
+   "novice_flagged": 0.785,
+   "novice_auc": 0.513
+  },
+  "plateau": {
+   "auc": 0.946,
+   "healthy_flagged": 0.075,
+   "novice_flagged": 0.705,
+   "novice_auc": 0.581
+  },
+  "pure": {
+   "auc": 0.909,
+   "healthy_flagged": 0.125,
+   "novice_flagged": 0.455,
+   "novice_auc": 0.725
+  }
+ }
+}

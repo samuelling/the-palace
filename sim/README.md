@@ -105,3 +105,36 @@ Over ten sessions the integration measures carry real signal and resist the novi
 | Recovery r (noise, inference) | .89, .86 | .91, .91 |
 
 With a misspecification not in the model (a constant turning bias of about 15° per player), recovery of accumulating noise fell to .50 with fixed designs and .32 with adaptive ones: adaptive designs lean harder on the model. Adding a turning-bias parameter to the lantern model restored it to .83 under both, with the adaptive design still ahead (.926 vs .906 AUC; 64% vs 75% of novices flagged). In the palace, the adaptive policy runs mostly rotations and no-change tests and almost no swaps.
+
+## The 16-bit version (`sim16/`)
+
+`sim16/` simulates the mixed-view 16-bit game on layouts exported from its own generator (`node export16.js 200 > layouts16.json`, then `python3 pools.py` for the lantern path pools). The East Wing is a graph of rooms with real intra-room walking distances, the maze a graph of cells seen at eye level (straight down open corridors) or from above (the whole screen), the lantern trials use the real lawn geometry, and both adaptive models run the same grid-posterior design choice as `ado.js`, ported to numpy. Populations and session dynamics are reused from `sim2.py` (half-sized prodromal effects, no decline; healthy novices who learn the controls). Additional assumptions: a person-level turning bias (SD 12°), extra steering scatter at eye level for people new to turn-and-walk controls, and, for a top-down blackout, a halved heading-related deficit.
+
+`tune16.py` evaluates a design (`python3 tune16.py run <name> '<json design>' <seed> <n per group> <n single>`); `reanalyze.py` re-scores saved runs, including paired bootstrap comparisons over the same simulated players.
+
+**Tuning.** One-at-a-time sweep on a tuning seed (120 per group, 10 sessions; seed-to-seed noise about ±.02 AUC), then combinations at 200 per group with paired bootstrap, then confirmation on fresh seeds.
+
+| Change | Effect on 10-session AUC (single runs) |
+|---|---|
+| Sentinel decisions timed from entering the 2.5 m zone, walk-past at closest approach | +.03 to .04, the largest single gain |
+| 8 lantern trials instead of 5 | +.02 to .03 |
+| Two more doors in the East Wing (within a lock zone) | about +.02 |
+| Larger lawn, more palace tests, minimum swap share, more sentinels, a second Architect change, more regrown hedges | no gain |
+| Top-down blackouts | -.03 (keeps first person) |
+| Top-down maze | no gain over first person |
+| First-person warm-up lane | no measurable effect (+.001, CI spans 0); kept for teaching the controls |
+
+**Scoring rule.** Sentinel decision time, non-decision time, lantern reporting noise and raw homing error are motor or execution by construction. Scoring only the cognitive parameters (accumulating noise, leak, gain, turning bias, glimpse inference and memory, map-updating measures, diffusion drift, contrast threshold) costs some AUC but cuts novice false alarms sharply.
+
+**Confirmation on fresh seeds** (200 per group):
+
+| | 1 session AUC | 10 sessions AUC | Novices flagged at 80% sensitivity |
+|---|---|---|---|
+| As built, all features | .780 | .915 | 63% |
+| Tuned, all features | .820 | .955 | 79% |
+| As built, cognitive parameters only | .770 | .873 | 56% |
+| Tuned, cognitive parameters only | .792 | .909 | 46% |
+
+The tuned design's gain replicates with all features (+.041, 95% CI .015 to .066), but cleaner decision times also make the classifier lean on speed, which flags novices more. Under the cognitive-only score the gain is +.036 (CI -.001 to .074), and the novice improvement seen on the tuning seed (+.12) did not replicate (+.02, CI -.03 to .07). Time cost: about 25 s per session.
+
+Limits: the novice population carries lasting cognitive-looking differences by assumption (from `sim2.py`), which no design change can remove; map-updating measures stay weak (AUC .53 to .62) because following a stale plan requires both remembering the plan and failing to update it, which partly cancel.

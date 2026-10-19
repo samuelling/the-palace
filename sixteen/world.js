@@ -9,6 +9,7 @@
   const pick = (r, a) => a[Math.floor(r() * a.length)];
   function shuffle(r, a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
   // eye-pulse contrast of a sentinel that is only pretending to be armour; scaled per player so decisions sit near threshold
+  const LANTERN_TRIALS = 8;   // returns per blackout (tuned in sim16: more trials over a wide range of lengths separate accumulating from reporting noise)
   const contrastOf = (r, opts) => Math.max(.004, Math.min(.12, pick(r, [.012, .02, .03, .045]) * ((opts && opts.contrastScale) || 1)));
 
   /* ---------- building blocks ---------- */
@@ -118,9 +119,13 @@
           const entryB = z01.has(CK(p)) ? q : p;
           const pass = shuffle(r, z2).map(c => ({ c, n: shuffle(r, nb(c)).find(n => z0.has(CK(n)) && !open.has(ek(c, n))) })).find(o => o.n);
           if (!pass) continue;
-          const z2d = bfs(new Set([...open]), entryB).d;
+          // two more doors inside a zone: more rooms with three or more ways on, without bypassing a lock (tuned in sim16)
+          const zoneOf = c => z2.some(z => CK(z) === CK(c)) ? 2 : z1.some(z => CK(z) === CK(c)) ? 1 : 0;
+          const open2 = new Set(open);
+          shuffle(r, all.filter(k => !open.has(k) && k !== ek(pass.c, pass.n))).filter(k => { const [u, v] = parse(k); return zoneOf(u) === zoneOf(v); }).slice(0, 2).forEach(k => open2.add(k));
+          const z2d = bfs(new Set([...open2]), entryB).d;
           const study = z2.filter(c => CK(c) !== CK(pass.c)).sort((a, b) => (z2d.get(CK(b)) || 0) - (z2d.get(CK(a)) || 0))[0];
-          const eE = ek(pass.c, pass.n), G1 = new Set([...open, eE]);
+          const eE = ek(pass.c, pass.n), G1 = new Set([...open2, eE]);
           const route = pathEdges(G1, pass.c, FOY); if (!route) continue;
           const d1 = bfs(G1, FOY).d;
           for (let k = 0; k < 60; k++) {
@@ -140,7 +145,7 @@
               .filter(c => (d2.get(CK(c)) || 0) >= 2);
             if (!cand.length) continue;
             const errC = shuffle(r, cand).sort((a, b) => d2.get(CK(b)) - d2.get(CK(a)))[0];
-            P = { open, eA, eB, eE, z0: cells.filter(c => z0.has(CK(c))), z1, z2, pass: pass.c, study, seal, opens, errC };
+            P = { open: open2, eA, eB, eE, z0: cells.filter(c => z0.has(CK(c))), z1, z2, pass: pass.c, study, seal, opens, errC };
             break outer;
           }
         }
@@ -362,7 +367,7 @@
         }
         function nextTrial() {
           S.trials++;
-          if (S.trials > 5) return finishBlackout();
+          if (S.trials > LANTERN_TRIALS) return finishBlackout();
           const cands = []; for (let k = 0; k < 10; k++) { const c = lanternPath(); if (c) { const a = c.pts[0], b = c.pts[c.pts.length - 1]; c.homeDist = Math.hypot(b[0] - a[0], b[1] - a[1]); cands.push(c); } }
           if (!cands.length) return finishBlackout();
           const ch = api.ado.chooseLantern(cands, S.trials === 1), d = ch.pick;
@@ -370,7 +375,7 @@
           api.lantern(d, res => {
             api.ado.lanternUpdate(d, res);
             api.say([res.err < 1.5 ? 'The match flares. You are almost exactly where the lantern first waited.' : res.err < 3.5 ? 'The match flares. Close, but not quite.' : 'The match flares on bare lawn. The lantern waited somewhere else entirely.',
-              S.trials < 5 ? 'Out in the steam, the little light kindles again, waiting.' : 'The lantern does not come back.'], '', nextTrial);
+              S.trials < LANTERN_TRIALS ? 'Out in the steam, the little light kindles again, waiting.' : 'The lantern does not come back.'], '', nextTrial);
           });
         }
         function finishBlackout() {
@@ -601,9 +606,16 @@
     const treeSpots = []; for (let y = 6; y < H - 3; y += 3) for (const x of [3, 5, 18, 20]) if (r() < .6) treeSpots.push([x + (r() < .5 ? 0 : 1), y + (r() < .5 ? 0 : 1)]);
     treeSpots.forEach(([x, y]) => { if (!posts.some(p => Math.abs(p[0] - x) + Math.abs(p[1] - y) < 2)) prop(a, 'tree', x, y); });
     prop(a, 'gate', 10, H - 1, { fw: 4, decal: true, block: false, dy: -8 });
+    // the lane: a winding hedged path walked at eye level, so turn-and-walk steering is learned before the maze
+    const lane = makeArea('lane', 'The Lane', 12, 30, { fillCh: 'H', floor: 'gravel', wall: 'hedgeWall', amb: .45, tint: '#0c1430', hedge: true, view: 'fp' });
+    const carveR = (x0, y0, x1, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) lane.grid[y][x] = '.'; };
+    carveR(2, 20, 3, 27); carveR(2, 20, 8, 21); carveR(7, 11, 8, 21); carveR(3, 11, 8, 12); carveR(3, 3, 4, 12); carveR(3, 3, 6, 4); carveR(5, 1, 6, 4);
+    [[3, 24], [5, 21], [8, 16], [5, 12], [4, 7], [6, 3]].forEach(([x, y]) => light(lane, x + .5, y + .5, 40, '#ffc070', 'candle'));
+    const lN = exit(lane, 'N', 'lane:N', { tiles: [[5, 0], [6, 0]] });
+    const gS = exit(a, 'S', 'grounds:S', { tiles: [[11, H - 1], [12, H - 1]] }); link(lN, gS);
     return {
-      id: 'grounds', index: -1, title: 'The Grounds', sub: 'Locke Hall', seed, areas: { grounds: a }, start: { area: 'grounds', x: 12, y: H - 3, face: 'up' }, safe: [], plan: null,
-      intro: ['Your car died at the bottom of the drive. Lanterns are lit all the way up to the house.', 'Crows sit on the fence posts along the way, watching you.', 'A note is tied to the gate in Locke\'s hand: "Scatter the crows before you knock. The house will not open while they watch."'],
+      id: 'grounds', index: -1, title: 'The Grounds', sub: 'Locke Hall', seed, areas: { grounds: a, lane }, start: { area: 'lane', x: 3, y: 26.5, face: 'up' }, safe: [], plan: null,
+      intro: ['Your car died at the bottom of the hill. A hedged lane winds up toward the gates of Locke Hall.', 'Lanterns are lit all the way up to the house. Crows sit on the fence posts along the drive, watching.', 'A note is tied to the gate in Locke\'s hand: "Scatter the crows before you knock. The house will not open while they watch."'],
       script(api) {
         const S = { crows: 0 };
         return {

@@ -4,3 +4,9 @@ sim/*.log
 sim/ado_*.json
 sim/big_*.json
 sim/bias_*.json
+sim/sim16/layouts16.json
+sim/sim16/paths16.json
+sim/sim16/results/*.pkl.gz
+sim/sim16/logs_*.txt
+sim/sim16/__pycache__/
+sim/sim16/p.out

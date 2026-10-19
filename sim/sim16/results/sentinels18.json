@@ -1,0 +1,252 @@
+{
+ "design": {
+  "sentinels": 18
+ },
+ "seed": 1,
+ "n_long": 120,
+ "n_single": 300,
+ "single": {
+  "auc": 0.786,
+  "healthy_flagged": 0.41,
+  "novice_flagged": 0.937,
+  "novice_auc": 0.337
+ },
+ "single_motor": {
+  "auc": 0.801,
+  "healthy_flagged": 0.363,
+  "novice_flagged": 0.997,
+  "novice_auc": 0.1
+ },
+ "long": {
+  "auc": 0.895,
+  "healthy_flagged": 0.167,
+  "novice_flagged": 0.75,
+  "novice_auc": 0.573
+ },
+ "long_motor": {
+  "auc": 0.907,
+  "healthy_flagged": 0.167,
+  "novice_flagged": 0.967,
+  "novice_auc": 0.352
+ },
+ "per_measure": {
+  "L_acc": {
+   "hp": 0.831,
+   "np": 0.671
+  },
+  "L_bias": {
+   "hp": 0.586,
+   "np": 0.587
+  },
+  "L_gain": {
+   "hp": 0.605,
+   "np": 0.674
+  },
+  "L_leak": {
+   "hp": 0.75,
+   "np": 0.513
+  },
+  "L_rep": {
+   "hp": 0.764,
+   "np": 0.53
+  },
+  "P_alpha": {
+   "hp": 0.588,
+   "np": 0.546
+  },
+  "P_m": {
+   "hp": 0.64,
+   "np": 0.558
+  },
+  "P_rho": {
+   "hp": 0.634,
+   "np": 0.514
+  },
+  "e_bumps": {
+   "hp": 0.607,
+   "np": 0.605
+  },
+  "e_bumps:iiv": {
+   "hp": 0.615,
+   "np": 0.596
+  },
+  "e_conf_plan": {
+   "hp": 0.554,
+   "np": 0.551
+  },
+  "e_conf_plan:iiv": {
+   "hp": 0.533,
+   "np": 0.504
+  },
+  "e_err_eff": {
+   "hp": 0.684,
+   "np": 0.623
+  },
+  "e_err_eff:iiv": {
+   "hp": 0.669,
+   "np": 0.593
+  },
+  "e_post_opt": {
+   "hp": 0.637,
+   "np": 0.605
+  },
+  "e_post_opt:iiv": {
+   "hp": 0.506,
+   "np": 0.527
+  },
+  "e_ret_eff": {
+   "hp": 0.615,
+   "np": 0.608
+  },
+  "e_ret_eff:iiv": {
+   "hp": 0.606,
+   "np": 0.607
+  },
+  "ez_a": {
+   "hp": 0.632,
+   "np": 0.615
+  },
+  "ez_ter": {
+   "hp": 0.669,
+   "np": 0.709
+  },
+  "ez_v": {
+   "hp": 0.637,
+   "np": 0.561
+  },
+  "f_acc": {
+   "hp": 0.551,
+   "np": 0.507
+  },
+  "f_acc:iiv": {
+   "hp": 0.552,
+   "np": 0.569
+  },
+  "f_rt": {
+   "hp": 0.675,
+   "np": 0.69
+  },
+  "f_rt:iiv": {
+   "hp": 0.596,
+   "np": 0.604
+  },
+  "free_err": {
+   "hp": 0.626,
+   "np": 0.548
+  },
+  "free_err:iiv": {
+   "hp": 0.65,
+   "np": 0.554
+  },
+  "l_err": {
+   "hp": 0.702,
+   "np": 0.509
+  },
+  "l_err:iiv": {
+   "hp": 0.658,
+   "np": 0.522
+  },
+  "lint": {
+   "hp": 0.571,
+   "np": 0.582
+  },
+  "lslope": {
+   "hp": 0.681,
+   "np": 0.56
+  },
+  "m_bumps": {
+   "hp": 0.618,
+   "np": 0.563
+  },
+  "m_bumps:iiv": {
+   "hp": 0.651,
+   "np": 0.561
+  },
+  "m_conf_plan": {
+   "hp": 0.508,
+   "np": 0.542
+  },
+  "m_conf_plan:iiv": {
+   "hp": 0.537,
+   "np": 0.517
+  },
+  "m_contrast": {
+   "hp": 0.525,
+   "np": 0.541
+  },
+  "m_contrast:iiv": {
+   "hp": 0.584,
+   "np": 0.57
+  },
+  "m_post_opt": {
+   "hp": 0.598,
+   "np": 0.567
+  },
+  "m_post_opt:iiv": {
+   "hp": 0.563,
+   "np": 0.558
+  },
+  "m_revisits": {
+   "hp": 0.502,
+   "np": 0.536
+  },
+  "m_revisits:iiv": {
+   "hp": 0.52,
+   "np": 0.524
+  },
+  "m_reward_eff": {
+   "hp": 0.622,
+   "np": 0.613
+  },
+  "m_reward_eff:iiv": {
+   "hp": 0.596,
+   "np": 0.59
+  },
+  "m_trans_eff": {
+   "hp": 0.553,
+   "np": 0.57
+  },
+  "m_trans_eff:iiv": {
+   "hp": 0.574,
+   "np": 0.57
+  },
+  "p_none": {
+   "hp": 0.637,
+   "np": 0.577
+  },
+  "p_none:iiv": {
+   "hp": 0.652,
+   "np": 0.587
+  },
+  "p_rot": {
+   "hp": 0.697,
+   "np": 0.58
+  },
+  "p_rot:iiv": {
+   "hp": 0.645,
+   "np": 0.558
+  },
+  "p_stale": {
+   "hp": 0.705,
+   "np": 0.599
+  },
+  "p_stale:iiv": {
+   "hp": 0.677,
+   "np": 0.652
+  },
+  "p_swap": {
+   "hp": 0.639,
+   "np": 0.57
+  },
+  "p_swap:iiv": {
+   "hp": 0.562,
+   "np": 0.52
+  },
+  "scale": {
+   "hp": 0.572,
+   "np": 0.536
+  }
+ },
+ "minutes": 15.49,
+ "secs": 227
+}
