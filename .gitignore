@@ -16,3 +16,4 @@ sim/calib/fits_*.json
 sim/calib/*.log
 sim/calib/peek*.py
 sim/sim16/logs_calib.txt
+__pycache__/
