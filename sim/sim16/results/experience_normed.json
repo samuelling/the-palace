@@ -1,0 +1,30 @@
+{
+ "cal_h5cap_exp": {
+  "single_pure": {
+   "auc": 0.821,
+   "healthy_flagged": 0.3,
+   "novice_flagged": 0.34,
+   "novice_auc": 0.811
+  },
+  "pure": {
+   "auc": 0.935,
+   "healthy_flagged": 0.085,
+   "novice_flagged": 0.1,
+   "novice_auc": 0.915
+  }
+ },
+ "cal_h5cap_risk_exp": {
+  "single_pure": {
+   "auc": 0.597,
+   "healthy_flagged": 0.67,
+   "novice_flagged": 0.68,
+   "novice_auc": 0.603
+  },
+  "pure": {
+   "auc": 0.705,
+   "healthy_flagged": 0.54,
+   "novice_flagged": 0.59,
+   "novice_auc": 0.669
+  }
+ }
+}

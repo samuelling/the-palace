@@ -7,6 +7,8 @@
   "auc_1": 0.801,
   "auc_10": 0.944,
   "auc_10_all": 0.958,
+  "healthy_flagged_10": 0.07,
+  "excess_flagged_10": 0.335,
   "novices_flagged_10": 0.405,
   "novices_flagged_1": 0.807,
   "novice_auc_10": 0.774
@@ -19,6 +21,8 @@
   "auc_1": 0.834,
   "auc_10": 0.934,
   "auc_10_all": 0.949,
+  "healthy_flagged_10": 0.085,
+  "excess_flagged_10": 0.095,
   "novices_flagged_10": 0.18,
   "novices_flagged_1": 0.383,
   "novice_auc_10": 0.883
@@ -31,6 +35,8 @@
   "auc_1": 0.821,
   "auc_10": 0.935,
   "auc_10_all": 0.927,
+  "healthy_flagged_10": 0.085,
+  "excess_flagged_10": 0.055,
   "novices_flagged_10": 0.14,
   "novices_flagged_1": 0.377,
   "novice_auc_10": 0.881
@@ -43,6 +49,8 @@
   "auc_1": 0.604,
   "auc_10": 0.737,
   "auc_10_all": 0.79,
+  "healthy_flagged_10": 0.51,
+  "excess_flagged_10": 0.285,
   "novices_flagged_10": 0.795,
   "novices_flagged_1": 0.953,
   "novice_auc_10": 0.52
@@ -55,8 +63,66 @@
   "auc_1": 0.597,
   "auc_10": 0.705,
   "auc_10_all": 0.719,
+  "healthy_flagged_10": 0.54,
+  "excess_flagged_10": 0.17,
   "novices_flagged_10": 0.71,
   "novices_flagged_1": 0.757,
   "novice_auc_10": 0.578
+ },
+ {
+  "id": "cal_h5cap_nc",
+  "model": "New players differ only in controls",
+  "stage": "Prodromal",
+  "note": "Counterfactual: players new to games differ only in control fluency, which they learn",
+  "auc_1": 0.821,
+  "auc_10": 0.935,
+  "auc_10_all": 0.927,
+  "healthy_flagged_10": 0.085,
+  "excess_flagged_10": 0.02,
+  "novices_flagged_10": 0.105,
+  "novices_flagged_1": 0.313,
+  "novice_auc_10": 0.913
+ },
+ {
+  "id": "cal_h5cap_nc_risk",
+  "model": "New players differ only in controls",
+  "stage": "At risk",
+  "note": "Counterfactual: players new to games differ only in control fluency, which they learn",
+  "auc_1": 0.597,
+  "auc_10": 0.705,
+  "auc_10_all": 0.719,
+  "healthy_flagged_10": 0.54,
+  "excess_flagged_10": 0.07,
+  "novices_flagged_10": 0.61,
+  "novices_flagged_1": 0.713,
+  "novice_auc_10": 0.65
+ },
+ {
+  "id": "cal_h5cap_exp",
+  "model": "Scored against gaming-experience norms",
+  "stage": "Prodromal",
+  "note": "New players scored against the new-player norm (one question about gaming experience)",
+  "auc_1": 0.821,
+  "auc_10": 0.935,
+  "auc_10_all": null,
+  "healthy_flagged_10": 0.085,
+  "excess_flagged_10": 0.015,
+  "novices_flagged_10": 0.1,
+  "novices_flagged_1": 0.34,
+  "novice_auc_10": 0.915
+ },
+ {
+  "id": "cal_h5cap_risk_exp",
+  "model": "Scored against gaming-experience norms",
+  "stage": "At risk",
+  "note": "New players scored against the new-player norm (one question about gaming experience)",
+  "auc_1": 0.597,
+  "auc_10": 0.705,
+  "auc_10_all": null,
+  "healthy_flagged_10": 0.54,
+  "excess_flagged_10": 0.05,
+  "novices_flagged_10": 0.59,
+  "novices_flagged_1": 0.68,
+  "novice_auc_10": 0.669
  }
 ]

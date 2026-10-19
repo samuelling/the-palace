@@ -177,3 +177,20 @@ The other chapters' deficits (maze, East Wing, palace, sentinels) remain assumpt
 **Results:**
 - **Prodromal stage:** about .93 after ten sessions, novices flagged 14% (cognitive-only score).
 - **At-risk stage:** about .72 after ten sessions, with novices flagged 71%.
+
+## Control learning and the new-player confound
+
+Tuned design, H5 lantern from data, sentinel cap, cognitive-only score, 10 sessions. False alarms are at the cutoff that catches 80% of impaired players.
+
+| | Prodromal AUC | Healthy flagged | New players flagged | At-risk AUC | Healthy flagged | New players flagged |
+|---|---|---|---|---|---|---|
+| As scored | .935 | 9% | 14% | .705 | 54% | 71% |
+| + control-fluency correction | .927 | 9% | 18% | .694 | 56% | 70% |
+| New players differ only in controls (counterfactual) | .935 | 9% | 11% | .705 | 54% | 61% |
+| New players scored against new-player norms | .935 | 9% | 10% | .705 | 54% | 59% |
+
+**Control-fluency correction** (`reanalyze.py`, `adj_*` kinds). Each session, the cognitive measures are regressed on a fluency index (walking speed, wall scrapes, sword aim with measurement noise). The regression is fitted on healthy players only, half the sample each way. It changes nothing. Learning the controls is already absorbed by two things: the cognitive-only score leaves out motor parameters, and the late-session (plateau) features skip the learning phase. When new players differ only in controls, they are flagged at almost the healthy rate.
+
+**What remains is the assumption** that people new to games also differ cognitively (from `sim2.py`: lower rule inference, map encoding and updating). That may well be real, since gaming experience predicts navigation performance. The remedy is a norm, not a correction. With one question about gaming experience, new players are scored against new-player norms. That removes most of the gap: 14% → 10% flagged at the prodromal stage (healthy rate 9%), and 71% → 59% at the at-risk stage (healthy rate 54%).
+
+**At the at-risk stage, the limit is signal size.** New players are not the main problem there: catching 80% of at-risk players means flagging over half of all healthy players. Gains there need larger effects (longer follow-up, decline slopes) rather than better handling of the controls. The simulator has no prodromal players who are also new to games, so experience norms are tested here only for false alarms.

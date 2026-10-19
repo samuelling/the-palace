@@ -1,0 +1,259 @@
+{
+ "design": {
+  "rt_timing": "zone",
+  "lantern_trials": 8,
+  "east_loops": 4,
+  "fp_warmup": true,
+  "pi_model": "v3",
+  "pi_source": "data",
+  "sentinel_cap": true,
+  "novice_cog": false
+ },
+ "seed": 3,
+ "n_long": 200,
+ "n_single": 300,
+ "single": {
+  "auc": 0.82,
+  "healthy_flagged": 0.317,
+  "novice_flagged": 0.53,
+  "novice_auc": 0.712
+ },
+ "single_motor": {
+  "auc": 0.835,
+  "healthy_flagged": 0.26,
+  "novice_flagged": 0.947,
+  "novice_auc": 0.273
+ },
+ "long": {
+  "auc": 0.927,
+  "healthy_flagged": 0.1,
+  "novice_flagged": 0.26,
+  "novice_auc": 0.844
+ },
+ "long_motor": {
+  "auc": 0.933,
+  "healthy_flagged": 0.1,
+  "novice_flagged": 0.655,
+  "novice_auc": 0.626
+ },
+ "per_measure": {
+  "L_a": {
+   "hp": 0.518,
+   "np": 0.51
+  },
+  "L_g2": {
+   "hp": 0.632,
+   "np": 0.644
+  },
+  "L_gain": {
+   "hp": 0.681,
+   "np": 0.655
+  },
+  "L_leak": {
+   "hp": 0.7,
+   "np": 0.656
+  },
+  "L_nu0": {
+   "hp": 0.794,
+   "np": 0.776
+  },
+  "P_alpha": {
+   "hp": 0.597,
+   "np": 0.644
+  },
+  "P_m": {
+   "hp": 0.733,
+   "np": 0.77
+  },
+  "P_rho": {
+   "hp": 0.691,
+   "np": 0.635
+  },
+  "e_bumps": {
+   "hp": 0.631,
+   "np": 0.592
+  },
+  "e_bumps:iiv": {
+   "hp": 0.64,
+   "np": 0.613
+  },
+  "e_conf_plan": {
+   "hp": 0.56,
+   "np": 0.533
+  },
+  "e_conf_plan:iiv": {
+   "hp": 0.514,
+   "np": 0.515
+  },
+  "e_err_eff": {
+   "hp": 0.648,
+   "np": 0.616
+  },
+  "e_err_eff:iiv": {
+   "hp": 0.627,
+   "np": 0.598
+  },
+  "e_post_opt": {
+   "hp": 0.693,
+   "np": 0.661
+  },
+  "e_post_opt:iiv": {
+   "hp": 0.614,
+   "np": 0.562
+  },
+  "e_ret_eff": {
+   "hp": 0.649,
+   "np": 0.621
+  },
+  "e_ret_eff:iiv": {
+   "hp": 0.649,
+   "np": 0.615
+  },
+  "ez_a": {
+   "hp": 0.63,
+   "np": 0.546
+  },
+  "ez_ter": {
+   "hp": 0.613,
+   "np": 0.912
+  },
+  "ez_v": {
+   "hp": 0.618,
+   "np": 0.569
+  },
+  "f_acc": {
+   "hp": 0.507,
+   "np": 0.524
+  },
+  "f_acc:iiv": {
+   "hp": 0.552,
+   "np": 0.527
+  },
+  "f_rt": {
+   "hp": 0.712,
+   "np": 0.878
+  },
+  "f_rt:iiv": {
+   "hp": 0.626,
+   "np": 0.549
+  },
+  "free_err": {
+   "hp": 0.707,
+   "np": 0.729
+  },
+  "free_err:iiv": {
+   "hp": 0.543,
+   "np": 0.537
+  },
+  "l_err": {
+   "hp": 0.62,
+   "np": 0.624
+  },
+  "l_err:iiv": {
+   "hp": 0.507,
+   "np": 0.501
+  },
+  "lint": {
+   "hp": 0.519,
+   "np": 0.539
+  },
+  "lslope": {
+   "hp": 0.57,
+   "np": 0.587
+  },
+  "m_bumps": {
+   "hp": 0.66,
+   "np": 0.632
+  },
+  "m_bumps:iiv": {
+   "hp": 0.671,
+   "np": 0.656
+  },
+  "m_conf_plan": {
+   "hp": 0.504,
+   "np": 0.505
+  },
+  "m_conf_plan:iiv": {
+   "hp": 0.51,
+   "np": 0.531
+  },
+  "m_contrast": {
+   "hp": 0.527,
+   "np": 0.539
+  },
+  "m_contrast:iiv": {
+   "hp": 0.561,
+   "np": 0.554
+  },
+  "m_post_opt": {
+   "hp": 0.613,
+   "np": 0.564
+  },
+  "m_post_opt:iiv": {
+   "hp": 0.578,
+   "np": 0.539
+  },
+  "m_revisits": {
+   "hp": 0.542,
+   "np": 0.578
+  },
+  "m_revisits:iiv": {
+   "hp": 0.517,
+   "np": 0.502
+  },
+  "m_reward_eff": {
+   "hp": 0.541,
+   "np": 0.57
+  },
+  "m_reward_eff:iiv": {
+   "hp": 0.534,
+   "np": 0.549
+  },
+  "m_trans_eff": {
+   "hp": 0.544,
+   "np": 0.552
+  },
+  "m_trans_eff:iiv": {
+   "hp": 0.555,
+   "np": 0.552
+  },
+  "p_none": {
+   "hp": 0.712,
+   "np": 0.758
+  },
+  "p_none:iiv": {
+   "hp": 0.717,
+   "np": 0.755
+  },
+  "p_rot": {
+   "hp": 0.697,
+   "np": 0.674
+  },
+  "p_rot:iiv": {
+   "hp": 0.641,
+   "np": 0.613
+  },
+  "p_stale": {
+   "hp": 0.711,
+   "np": 0.691
+  },
+  "p_stale:iiv": {
+   "hp": 0.694,
+   "np": 0.644
+  },
+  "p_swap": {
+   "hp": 0.73,
+   "np": 0.714
+  },
+  "p_swap:iiv": {
+   "hp": 0.674,
+   "np": 0.656
+  },
+  "scale": {
+   "hp": 0.509,
+   "np": 0.51
+  }
+ },
+ "minutes": 15.37,
+ "secs": 1616
+}

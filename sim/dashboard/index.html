@@ -52,14 +52,14 @@
       <span class="sub">Deficits at a fifth of MCI+, the size seen in midlife APOE4 carriers</span>
     </div>
     <div class="pv-tile">
-      <span class="lab">New players flagged, prodromal stage</span>
-      <span class="num dash-skeleton" id="t-novp" data-source="sim_scenarios" data-field="novices_flagged_10" data-where="id=cal_h5cap">—</span>
-      <span class="sub">Healthy people new to games, at the cutoff that catches 80% of cases</span>
+      <span class="lab">False alarms at the at-risk stage</span>
+      <span class="num dash-skeleton" id="t-novp" data-source="sim_scenarios" data-field="healthy_flagged_10" data-where="id=cal_h5cap_risk">—</span>
+      <span class="sub">Healthy players flagged at the cutoff that catches 80% of at-risk players</span>
     </div>
     <div class="pv-tile">
-      <span class="lab">New players flagged, at-risk stage</span>
-      <span class="num dash-skeleton" id="t-novr" data-source="sim_scenarios" data-field="novices_flagged_10" data-where="id=cal_h5cap_risk">—</span>
-      <span class="sub">Same cutoff rule; the confound is largest where early detection matters</span>
+      <span class="lab">Extra false alarms for new players</span>
+      <span class="num dash-skeleton" id="t-novr" data-source="sim_scenarios" data-field="excess_flagged_10" data-where="id=cal_h5cap_risk_exp">—</span>
+      <span class="sub">Percentage points above the healthy rate, at-risk stage, with new players scored against new-player norms</span>
     </div>
   </section>
 
@@ -73,8 +73,8 @@
         <div class="pv-chart dash-skeleton" id="c-auc" data-source="sim_scenarios"></div>
       </div>
       <div class="pv-card">
-        <h3 id="h-nov">Healthy new players flagged</h3>
-        <p class="note">Share of healthy people new to games who score as impaired, at the cutoff that catches 80% of impaired players. Lower is better.</p>
+        <h3 id="h-nov">False alarms, experienced vs new players</h3>
+        <p class="note">At the cutoff that catches 80% of impaired players. Faint bar: healthy experienced players. Solid bar: healthy players new to games. The gap is the new-player confound.</p>
         <div class="pv-chart dash-skeleton" id="c-nov" data-source="sim_scenarios"></div>
       </div>
     </div>
@@ -85,7 +85,7 @@
           <thead><tr>
             <th data-field="id" class="hide-narrow">Run</th><th data-field="stage">Stage</th><th data-field="model">Model</th>
             <th data-field="auc_1" class="n">AUC, 1 session</th><th data-field="auc_10" class="n">AUC, 10 sessions</th>
-            <th data-field="novices_flagged_10" class="n">New players flagged</th><th data-field="note" class="hide-narrow">What changes</th>
+            <th data-field="healthy_flagged_10" class="n">Healthy flagged</th><th data-field="novices_flagged_10" class="n">New players flagged</th><th data-field="note" class="hide-narrow">What changes</th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -180,11 +180,11 @@
     const get = (id) => rows.find((r) => r.id === id) || {};
     const set = (elId, v, fmt) => { const el = document.getElementById(elId); el.textContent = ok && v != null ? fmt(+v) : '—'; };
     set('t-prod', get('cal_h5cap').auc_10, f3); set('t-risk', get('cal_h5cap_risk').auc_10, f3);
-    set('t-novp', get('cal_h5cap').novices_flagged_10, pct); set('t-novr', get('cal_h5cap_risk').novices_flagged_10, pct);
+    set('t-novp', get('cal_h5cap_risk').healthy_flagged_10, pct); set('t-novr', get('cal_h5cap_risk_exp').excess_flagged_10, (v) => d3.format('+.0f')(v * 100) + ' pts');
     const tk = document.getElementById('takeaway');
     if (ok) {
       const p = get('cal_h5cap'), r = get('cal_h5cap_risk');
-      tk.textContent = `Calibrated on five open sources, the game separates MCI-stage players well in simulation (AUC ${f3(+p.auc_10)} after ten sessions, ${pct(+p.novices_flagged_10)} of new players flagged). At the at-risk stage it reaches ${f3(+r.auc_10)}, close to what real path-integration tasks achieve there, and new players remain the main confound.`;
+      tk.textContent = `Calibrated on five open sources, the game separates MCI-stage players well in simulation (AUC ${f3(+p.auc_10)} after ten sessions). At the at-risk stage it reaches ${f3(+r.auc_10)}, close to what real path-integration tasks achieve there, and the cutoff that catches 80% of at-risk players also flags ${pct(+r.healthy_flagged_10)} of healthy ones. Learning the controls is already absorbed by the scoring; a question about gaming experience removes most of what is left of the new-player gap.`;
       unskel('#takeaway, .pv-tile .num');
     } else tk.textContent = '—';
   }
@@ -204,7 +204,7 @@
     svg.append('g').selectAll('text').data(rows).join('text').attr('x', lw - 8).attr('y', (r) => y(r.id) + y.bandwidth() / 2).attr('dy', '.35em').attr('text-anchor', 'end')
       .attr('font-size', 12).style('fill', 'var(--color-fg)').text((r) => r.label);
     const T = tip(el);
-    const accent = (r) => r.id.includes('h5') ? dash.colors[0] : 'var(--cds-chart-muted)';
+    const accent = (r) => r.id.includes('h5') ? (r.id.includes('exp') || r.id.includes('_nc') ? dash.colors[1] : dash.colors[0]) : 'var(--cds-chart-muted)';
     if (key1) svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', x(0)).attr('y', (r) => y(r.id)).attr('height', y.bandwidth() / 2 - 1)
       .attr('width', (r) => Math.max(0, x(+r[key1]) - x(0))).attr('rx', 3).style('fill', accent).attr('opacity', .35);
     svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', x(0)).attr('y', (r) => key1 ? y(r.id) + y.bandwidth() / 2 : y(r.id)).attr('height', key1 ? y.bandwidth() / 2 : y.bandwidth())
@@ -213,7 +213,7 @@
       .attr('font-size', 11).style('fill', 'var(--color-fg-muted)').text((r) => fmt(+r[key2]));
     if (chance != null) svg.append('line').attr('x1', x(chance)).attr('x2', x(chance)).attr('y1', 0).attr('y2', H - 24).style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
     svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', 0).attr('width', W).attr('y', (r) => y(r.id) - 4).attr('height', y.bandwidth() + 8).style('fill', 'transparent')
-      .on('mousemove', (ev, r) => T.show(ev, r.label, key1 ? [`1 session: ${fmt(+r[key1])}`, `10 sessions: ${fmt(+r[key2])}`, r.note] : [`10 sessions: ${fmt(+r[key2])}`, `1 session: ${fmt(+r.novices_flagged_1)}`, r.note]))
+      .on('mousemove', (ev, r) => T.show(ev, r.label, key2 === 'auc_10' ? [`1 session: ${fmt(+r[key1])}`, `10 sessions: ${fmt(+r[key2])}`, r.note] : [`Experienced players: ${fmt(+r[key1])}`, `New players: ${fmt(+r[key2])}`, r.note]))
       .on('mouseleave', () => T.hide());
   }
 
@@ -221,7 +221,7 @@
     const tb = document.querySelector('#tb-scen tbody'); tb.innerHTML = ''; if (!ready('sim_scenarios')) return;
     dash.data('sim_scenarios').data.forEach((r) => {
       const tr = document.createElement('tr');
-      [[r.id, 'hide-narrow'], [r.stage], [r.model], [f3(+r.auc_1), 'n'], [f3(+r.auc_10), 'n'], [pct(+r.novices_flagged_10), 'n'], [r.note, 'hide-narrow']].forEach(([v, c]) => { const td = document.createElement('td'); if (c) td.className = c; td.textContent = v; tr.appendChild(td); });
+      [[r.id, 'hide-narrow'], [r.stage], [r.model], [f3(+r.auc_1), 'n'], [f3(+r.auc_10), 'n'], [pct(+r.healthy_flagged_10), 'n'], [pct(+r.novices_flagged_10), 'n'], [r.note, 'hide-narrow']].forEach(([v, c]) => { const td = document.createElement('td'); if (c) td.className = c; td.textContent = v; tr.appendChild(td); });
       tb.appendChild(tr);
     });
   }
@@ -319,7 +319,7 @@
   dash.onData(() => {
     tiles();
     scenarioBars(document.getElementById('c-auc'), 'auc_1', 'auc_10', f3, 1, .5);
-    scenarioBars(document.getElementById('c-nov'), null, 'novices_flagged_10', pct, 1, null);
+    scenarioBars(document.getElementById('c-nov'), 'healthy_flagged_10', 'novices_flagged_10', pct, 1, null);
     scenTable(); fitChart(document.getElementById('c-fit-tri'), 'Triangles'); fitChart(document.getElementById('c-fit-cur'), 'Curved');
     effChart(); relTable(); fieldChart(); dataTable();
     if (!linked && ready('sim_scenarios')) { linked = true; const el = document.getElementById(location.hash.slice(1)); if (el) { el.scrollIntoView(); dash.setLink(el.id); } }

@@ -53,13 +53,17 @@ R = J(S, 'reanalysis.json')
 SC = [('cal_v1', 'As first built', 'Prodromal', 'Assumed deficits; isotropic lantern model'), ('cal_h5', 'Lantern from data', 'Prodromal', 'H5 lantern, healthy and MCI+ drawn from the triangle fits'),
       ('cal_h5cap', 'Lantern from data + sentinel cap', 'Prodromal', 'Also caps the perceptual-decision deficit at the ageing effect'),
       ('cal_v1_risk', 'As first built', 'At risk', 'Effect at 0.2 of MCI+ (APOE4-sized)'), ('cal_h5cap_risk', 'Lantern from data + sentinel cap', 'At risk', 'Effect at 0.2 of MCI+ (APOE4-sized)')]
+R.update(J(S, 'experience_normed.json')) if os.path.exists(os.path.join(S, 'experience_normed.json')) else None
 for extra in ('cal_h5cap_nc', 'cal_h5cap_nc_risk'):
-    if extra in R: SC.append((extra, 'New players differ only in controls', 'At risk' if 'risk' in extra else 'Prodromal', 'Counterfactual: no lasting cognitive difference for players new to games'))
+    if extra in R: SC.append((extra, 'New players differ only in controls', 'At risk' if 'risk' in extra else 'Prodromal', 'Counterfactual: players new to games differ only in control fluency, which they learn'))
+for extra in ('cal_h5cap_exp', 'cal_h5cap_risk_exp'):
+    if extra in R: SC.append((extra, 'Scored against gaming-experience norms', 'At risk' if 'risk' in extra else 'Prodromal', 'New players scored against the new-player norm (one question about gaming experience)'))
 sims = []
 for key, model, stage, note in SC:
     if key not in R: continue
-    x = R[key]
-    sims.append(dict(id=key, model=model, stage=stage, note=note, auc_1=r3(x['single_pure']['auc']), auc_10=r3(x['pure']['auc']), auc_10_all=r3(x['all']['auc']),
+    x = R[key]; al = x.get('all', {})
+    sims.append(dict(id=key, model=model, stage=stage, note=note, auc_1=r3(x['single_pure']['auc']), auc_10=r3(x['pure']['auc']), auc_10_all=r3(al.get('auc')),
+                     healthy_flagged_10=r3(x['pure']['healthy_flagged']), excess_flagged_10=r3(x['pure']['novice_flagged'] - x['pure']['healthy_flagged']),
                      novices_flagged_10=r3(x['pure']['novice_flagged']), novices_flagged_1=r3(x['single_pure']['novice_flagged']), novice_auc_10=r3(x['pure']['novice_auc'])))
 for name, rows in (('open_datasets', datasets), ('model_fit', models), ('lantern_effects', effects), ('field_effects', field), ('sim_scenarios', sims)):
     json.dump(rows, open(os.path.join(H, name + '.json'), 'w'), indent=1)

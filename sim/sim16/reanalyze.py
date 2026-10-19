@@ -134,3 +134,15 @@ def paired(a, b, kind='plateau', which='long', B=1000):
         d1.append(auc(hb[i], pb[j]) - auc(ha[i], pa[j])); d2.append(auc(nb[k], pb[j]) - auc(na[k], pa[j]))
     q = lambda v: (round(float(np.mean(v)), 3), round(float(np.percentile(v, 2.5)), 3), round(float(np.percentile(v, 97.5)), 3))
     return dict(auc_diff=q(d1), novice_auc_diff=q(d2))
+
+
+def experience_normed(X):
+    """Norms by self-reported gaming experience: players new to games are scored against the new-player norm. The shift
+    (new-player minus experienced healthy mean, per feature) comes from the other half of the normative players, so no
+    player's own data sets the norm applied to them. The simulator has no prodromal players new to games, so this tests
+    only the false-alarm side."""
+    H, N = X['healthy'], X['healthy_novice'].copy()
+    for fold in (0, 1):
+        shift = N[(np.arange(len(N)) % 2) != fold].mean(0) - H[(np.arange(len(H)) % 2) != fold].mean(0)
+        N[(np.arange(len(N)) % 2) == fold] -= shift
+    return dict(X, healthy_novice=N)
