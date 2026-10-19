@@ -91,8 +91,9 @@ def auc1(a, b):
 
 def evaluate(design, seed=1, n_long=120, n_single=300, sessions=10, name=None):
     t = time.time()
-    long = sim16.simulate(design, n_long, sessions, seed=seed)
-    single = sim16.simulate(design, n_single, 1, seed=seed + 500)
+    eff = design.get('effect', .5)
+    long = sim16.simulate(design, n_long, sessions, seed=seed, effect=eff)
+    single = sim16.simulate(design, n_single, 1, seed=seed + 500, effect=eff)
     res = dict(design=design, seed=seed, n_long=n_long, n_single=n_single)
     for nm, rows, ns in (('single', single, 1), ('long', long, sessions)):
         X, keys = matrix(rows, ns); res[nm] = classify(X['healthy'], X['prodromal'], X['healthy_novice'])

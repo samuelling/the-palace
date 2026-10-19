@@ -80,7 +80,7 @@ Each model is fitted per person to all conditions pooled. All are scored on the 
 
 ## What changed
 
-- **Game (`ado.js`):** the lantern model is now A5, an adaptive grid over gain, leak, turn gain, distance noise and direction noise. It integrates each trial's actual legs and turns, so the adaptive choice now favours paths whose turns are informative. Both games pass legs and turns, and the lab overlay and notes show the new parameters.
+- **Game (`ado.js`):** the lantern model was A5 after this first pass (superseded by H5 in the second pass, below), an adaptive grid over gain, leak, turn gain, distance noise and direction noise. It integrates each trial's actual legs and turns, so the adaptive choice now favours paths whose turns are informative. Both games pass legs and turns, and the lab overlay and notes show the new parameters.
 - **Simulator (`sim16`, `pi_model='v2'`):**
   - **`pi_source='data'`:** healthy players are drawn from the healthy-elderly fits and prodromal players from the MCI+ fits, scaled by the effect knob (0.5 = halfway, a stand-in for the preclinical stage).
   - **Spread:** shrunk by reliability where reliability is at least .5. The turn-gain spread is set from the model-free over-turning effect.
@@ -92,3 +92,112 @@ Each model is fitted per person to all conditions pooled. All are scored on the 
 - **Small, symptomatic sample.** 11 biomarker-positive MCI patients are prodromal AD in the IWG sense, not preclinical. Halving the effect for preclinical players is still an assumption.
 - **Different task.** Real walking in VR, not keyboard steering on a lawn. Absolute values don't transfer, which is why the simulator uses relative shifts.
 - **Optimistic group effects.** The MCI+ effects come from 11 people, so they are likely inflated by winner's-curse selection: this is the study that found them.
+
+---
+
+# More datasets (second pass)
+
+Three more open datasets match parts of the game. The raw data are not committed; the scripts regenerate everything from the downloads.
+
+| Dataset | What it is | Licence | Script |
+|---|---|---|---|
+| Stangl, Kanitscheider, Riemer, Fiete & Wolbers 2020, *Nat Commun* ([OSF ufk4x](https://osf.io/ufk4x/)) | Curved-path homing in VR with real walking, verbal distance and body-turn direction at up to 4 stops; 30 young, 26 older adults; trial level | none stated (analysed, not redistributed) | `stangl.py` |
+| Coughlan et al. 2019 *PNAS*; Gillespie/Coughlan et al. 2020 *PLOS ONE* ([OSF x2rjz](https://osf.io/x2rjz), [6adqk](https://osf.io/6adqk)) | Virtual Supermarket Task and Sea Hero Quest in cognitively healthy adults aged 51–75 by APOE genotype, tested twice about 18 months apart; per-person scores | OSF public | `vst_shq.py` |
+| Marquardt et al. 2024, *PLOS Digital Health* ([OSF f9br5](https://doi.org/10.17605/OSF.IO/F9BR5)) | Real-world smartphone wayfinding to 5 campus buildings; 24 young, 25 healthy older, 23 subjective cognitive decline (SCD); per-track measures | OSF public | `wayfind.py` |
+
+## 1. Lantern model structure, tested on a second dataset (Stangl et al.)
+
+The paths here are curved, home distances range from 0.5 to 10 m, and outbound lengths range from 2 to 17 m. That tests two things the triangles could not: how noise grows with distance walked, and how direction error depends on how far away home is.
+
+| Model (per person, 56 people) | k | Sum AIC | Sum BIC |
+|---|---|---|---|
+| Isotropic accumulating noise (the game as first built) | 5 | 38218 | 39038 |
+| Separate distance and direction noise, both constant (like A5) | 5 | 40154 | 40973 |
+| Separate, both accumulating | 7 | 38050 | 39198 |
+| Anisotropic positional noise, accumulating | 5 | **37731** | **38551** |
+| **H5**: constant heading noise plus positional noise accumulating with distance walked | 5 | 38175 | 38995 |
+
+**What each dataset shows:**
+- **Curved paths (Stangl et al.):** noise grows with distance walked, and direction error is larger when home is close. A constant angular noise alone (A5's structure) fits worst.
+- **Triangles (Castegnaro et al.):** direction noise in angular units is what separates the groups.
+
+**Choosing H5.** It fits both datasets (triangle data below). It is the best 5-parameter model on the triangles, and in the curved-path data it beats the isotropic model and every separable one. It keeps the marker in one reliable parameter. The pure positional model (anisotropic) wins on the curved paths, but on the triangles it loses the marker and fits worse than A5 (AIC 8494 vs 8223). The game now uses H5.
+
+Triangle data (refit):
+
+| | k | Sum AIC | Sum BIC |
+|---|---|---|---|
+| A5 | 5 | 8223 | 8871 |
+| **H5** | 5 | **8205** | **8853** |
+| GLAMPI | 7 | 8064 | 8972 |
+
+H5 group effects:
+
+| | heading noise ν0 | turn gain | positional noise a | distance gain | leak |
+|---|---|---|---|---|---|
+| MCI+ vs healthy elderly, d (AUC) | **2.37 (.94)** | −2.08 | .91 | −.32 | .73 |
+| MCI+ vs MCI−, AUC | **.74** | .75 (inv.) | .62 | .66 (inv.) | .52 |
+| Older vs young (Stangl), d (AUC) | **.93 (.77)** | — | −.22 | −.48 | .01 |
+| Split-half reliability (triangles / Stangl) | .77 / .92 | −.63 / — | .64 / .92 | .14 / .98 | .24 / .90 |
+
+**Heading noise is both the disease marker and the main ageing marker.** A screening score built on it needs age-matched norms. The disease effect is large relative to ageing: d 2.4 for MCI+ vs age-matched controls, against d .9 for roughly 45 years of healthy ageing. That gap is what a normed score would exploit.
+
+## 2. What the at-risk stage looks like (APOE4, midlife)
+
+Cognitively healthy adults, mean age 62 (ε3ε3 n = 32, ε3ε4 n = 27):
+
+| Measure | APOE4 d, baseline (AUC) | APOE4 d, 18 months | Test-retest r |
+|---|---|---|---|
+| Egocentric orientation (pointing home after a route) | −.65 (.63 inv.) | −.39 | .57 |
+| Heading direction | −.19 | −.32 | .34 |
+| Allocentric map drop | −.04 | .28 | −.50 (task changed) |
+| Central (border-avoiding) preference | −.97 | −.62 | .18 |
+| Sea Hero Quest distance travelled | .70 | .25 | .35 |
+| ACE-III total | −.47 | .16 | .29 |
+
+**The at-risk egocentric effect is d .4–.65,** in line with Newton et al. 2024 (path-integration AUC .67 for midlife double risk). That is about a fifth of the MCI+ heading-noise effect, so the simulator now has an at-risk scenario with the prodromal effect at 0.2.
+
+## 3. Real-world wayfinding in subjective cognitive decline
+
+Per person, averaged over 5 tracks:
+
+| Measure | SCD vs healthy older, d (AUC) | Older vs young, d | Reliability (odd/even tracks) |
+|---|---|---|---|
+| Orientation stops (< 1 m in 5 s) | **.93 (.73)** | .97 | .57 |
+| Map checks | .69 (.70) | .54 | **.83** |
+| Duration | .69 (.68) | 1.01 | .61 |
+| Distance relative to the young median | .52 (.62) | .66 | .31 |
+| Movement speed | −.43 | −1.35 | .89 |
+
+The published AUC for orientation stops (.757) is reproduced to within the CI.
+
+**What this means for the game:**
+- **Map checks** are the game's plan readings, already logged.
+- **Orientation stops** are now logged too, in the 16-bit game's `stops` log and notes, using the same definition. They are excluded while homing, in safe rooms and near enemies.
+- **Speed is the confound:** it is larger for age than for SCD, which is why speed is kept as a covariate.
+- **Plausibility check:** the simulator's route measures (single-measure AUC .55–.68 at half the prodromal effect) are in the range seen for SCD. The assumed route deficits are not wildly inflated.
+
+## 4. Sentinels: capping the assumed deficit
+
+There is no open perceptual-decision dataset in MCI, but a meta-analysis of 30 perceptual studies gives the whole young-to-old ageing effect on drift: g = −.61 (Theisen et al. 2021, *Psychological Research*). The simulator had assumed a prodromal drift deficit of about 2.7 SD at full effect, larger than 50 years of ageing, which is implausible. `sentinel_cap=True` now caps drift at d .61 and non-decision time at d .6.
+
+## Simulation with everything calibrated
+
+Tuned design, seed 3, 200 per group:
+
+| Scenario | 1 session AUC | 10 sessions AUC | 10 s, cognitive only | Novices flagged (cognitive only) |
+|---|---|---|---|---|
+| As first built (v1), prodromal at half the MCI+ effect | .840 | .958 | .944 | 41% |
+| H5 lantern from data, same | .844 | .949 | .934 | 18% |
+| + sentinel cap | .820 | .927 | .935 | 14% |
+| **At-risk stage (effect 0.2), H5 + cap** | **.591** | **.719** | .705 | 71% |
+| At-risk stage, v1 assumptions | .625 | .790 | .737 | 80% |
+
+**Paired bootstrap, v1 vs H5 + cap, 10 sessions:**
+- **All features:** AUC −.030 (CI −.057 to −.003). Novice separation +.20 (CI .14 to .25).
+- **Cognitive only:** AUC −.009 (CI −.034 to .018). Novice separation +.11 (CI .06 to .16).
+
+**The honest bottom line:**
+- **Prodromal stage (MCI with AD pathology):** the calibrated game separates well in simulation (about .93 after ten sessions) and mostly ignores new players.
+- **At-risk midlife stage (APOE4-sized effects):** expect about .72 after ten sessions. That matches what real path-integration tasks achieve at that stage (AUC .63 to .67), and new players are still flagged at high rates, so the control-learning confound matters most exactly where early detection is the goal.
+- **The old assumptions looked better at risk (.79)** only by leaning on signals that new players also produce.

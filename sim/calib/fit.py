@@ -102,12 +102,51 @@ def a_nll(p, D, kind):
     return nll + np.sum(.5 * LOG2PI + np.log(sigma) + dd ** 2 / (2 * sigma ** 2))
 
 
+def n_nll(p, D, kind):
+    """As A5, but noise is positional and anisotropic in the true-home frame: radial sd ar, tangential sd at (metres),
+    either accumulating with outbound length (N5: sd^2 = a^2 L) or constant (N5c). Angular spread is then at / distance."""
+    gain, leak, g2, ar, at = p
+    t2 = g2 * D['th2']; p2 = np.stack([D['l1'] + D['l2'] * np.cos(t2), D['l2'] * np.sin(t2)], 1)
+    a = sang(np.stack([np.cos(t2), np.sin(t2)], 1), -p2); c = np.linalg.norm(p2, axis=1)
+    R = gain * np.exp(-leak * D['L']) * c
+    sr, st = (ar * np.sqrt(D['L']), at * np.sqrt(D['L'])) if kind == 'N5' else (ar * np.ones(D['n']), at * np.ones(D['n']))
+    # frame: x along the true home direction from cone 3
+    dth = wrap(D['th3'] - D['alpha']); rot = wrap(a - D['alpha'])
+    dx = D['l3'] * np.cos(dth) - R * np.cos(rot); dy = D['l3'] * np.sin(dth) - R * np.sin(rot); ib = ~D['oob']
+    ll_in = -LOG2PI - np.log(sr * st) - dx ** 2 / (2 * sr ** 2) - dy ** 2 / (2 * st ** 2) + np.log(np.maximum(D['l3'], 1e-3))
+    # out of bound: direction only; anisotropic projected normal integrated numerically over distance
+    rr = np.linspace(.05, 12, 240)[:, None]; dr = rr[1, 0] - rr[0, 0]
+    gx = rr * np.cos(dth)[None] - (R * np.cos(rot))[None]; gy = rr * np.sin(dth)[None] - (R * np.sin(rot))[None]
+    dens = np.exp(-gx ** 2 / (2 * sr ** 2) - gy ** 2 / (2 * st ** 2)) * rr / (2 * np.pi * sr * st)
+    ll_oob = np.log(dens.sum(0) * dr + 1e-300)
+    return -np.sum(np.where(ib, ll_in, ll_oob))
+
+
+def h_nll(p, D, kind):
+    """Hybrid: return distance ~ N(R, ar^2 L); return direction ~ N(mental turn error, nu0^2 + at^2 L / c^2).
+    H5 shares one positional noise a = ar = at."""
+    if kind == 'H5': gain, leak, g2, nu0, a = p; ar = at = a
+    else: gain, leak, g2, nu0, ar, at = p
+    t2 = g2 * D['th2']; p2 = np.stack([D['l1'] + D['l2'] * np.cos(t2), D['l2'] * np.sin(t2)], 1)
+    am = sang(np.stack([np.cos(t2), np.sin(t2)], 1), -p2); c = np.linalg.norm(p2, axis=1)
+    R = gain * np.exp(-leak * D['L']) * c
+    sn = np.sqrt(nu0 ** 2 + at ** 2 * D['L'] / np.maximum(D['c'], .3) ** 2); sr = np.sqrt(ar ** 2 * D['L'] + 1e-4)
+    dth = wrap(D['th3'] - am)
+    nll = np.sum(.5 * LOG2PI + np.log(sn) + dth ** 2 / (2 * sn ** 2))
+    dd = (D['l3'] - R)[~D['oob']]
+    return nll + np.sum(.5 * LOG2PI + np.log(sr[~D['oob']]) + dd ** 2 / (2 * sr[~D['oob']] ** 2))
+
+
 ABASE = [(.2, 2.5), (-.1, .3), (0, 3), (1e-3, 3), (1e-3, np.pi)]; ANAMES = ['gain', 'leak', 'g2', 'sigma', 'nu']
 MODELS = {
     'A5':  (lambda p, D: a_nll(p, D, 'A5'), ABASE, ANAMES),
     'A6b': (lambda p, D: a_nll(p, D, 'A6b'), ABASE + [(-90, 90)], ANAMES + ['bias']),
     'A6p': (lambda p, D: a_nll(p, D, 'A6p'), ABASE + [(0, 3)], ANAMES + ['gp']),
     'A7':  (lambda p, D: a_nll(p, D, 'A7'), ABASE + [(-90, 90), (0, 3)], ANAMES + ['bias', 'gp']),
+    'H5':  (lambda p, D: h_nll(p, D, 'H5'), [(.2, 2.5), (-.1, .3), (0, 3), (1e-3, np.pi), (.01, 2)], ['gain', 'leak', 'g2', 'nu0', 'a']),
+    'H6':  (lambda p, D: h_nll(p, D, 'H6'), [(.2, 2.5), (-.1, .3), (0, 3), (1e-3, np.pi), (.01, 2), (.01, 2)], ['gain', 'leak', 'g2', 'nu0', 'ar', 'at']),
+    'N5':  (lambda p, D: n_nll(p, D, 'N5'), [(.2, 2.5), (-.1, .3), (0, 3), (.01, 2), (.01, 2)], ['gain', 'leak', 'g2', 'ar', 'at']),
+    'N5c': (lambda p, D: n_nll(p, D, 'N5c'), [(.2, 2.5), (-.1, .3), (0, 3), (.01, 4), (.01, 4)], ['gain', 'leak', 'g2', 'ar', 'at']),
     'glampi':     (lambda p, D: glampi_nll(p, D), [(-1, 1), (.5, 2), (0, 3), (0, 3), (0, 3), (1e-3, 3), (1e-3, np.pi)], ['beta', 'k', 'g2', 'g3', 'm3', 'sigma', 'nu']),
     'glampi_raw': (lambda p, D: glampi_nll(p, D, True), [(-1, 1), (.5, 2), (0, 3), (0, 3), (0, 3), (1e-3, 3), (1e-3, np.pi)], ['beta', 'k', 'g2', 'g3', 'm3', 'sigma', 'nu']),
     'E5':     (lambda p, D: e_nll(p, D, 'E5'), [(.01, 2), (.01, 3), (.2, 2.5), (-.1, .3), (-90, 90)], ['acc', 'rep', 'gain', 'leak', 'bias']),

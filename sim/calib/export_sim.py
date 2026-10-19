@@ -9,15 +9,18 @@ scaled up and leak per metre down to keep their effect at typical path lengths (
 import json, os
 import numpy as np
 
-A = [r for r in json.load(open('fits_A5.json')) if r['params']]
-rel = json.load(open('splithalf_A5.json')) if os.path.exists('splithalf_A5.json') else {}
-LOG = {'gain', 'sigma', 'nu'}
-SCALE = dict(sigma=1.5, leak=.72)          # triangle task -> game lawn (median outbound 6.4 m vs 8.9 m, home distance 3.1 vs 6.3)
+import sys
+MODEL = sys.argv[1] if len(sys.argv) > 1 else 'A5'
+PARAMS = {'A5': ('gain', 'leak', 'g2', 'sigma', 'nu'), 'H5': ('gain', 'leak', 'g2', 'nu0', 'a')}[MODEL]
+A = [r for r in json.load(open(f'fits_{MODEL}.json')) if r['params']]
+rel = json.load(open(f'splithalf_{MODEL}.json')) if os.path.exists(f'splithalf_{MODEL}.json') else {}
+LOG = {'gain', 'sigma', 'nu', 'nu0', 'a'}
+SCALE = dict(sigma=1.5, leak=.72)   # H5's positional noise a is per sqrt(metre), so it scales with path length by itself          # triangle task -> game lawn (median outbound 6.4 m vs 8.9 m, home distance 3.1 vs 6.3)
 out = {'_note': __doc__, 'reliability': {k: v['spearman_brown'] for k, v in rel.items()}}
 MADS = {}
 for grp, lab in (('elderly', 'healthy'), ('mci_pos', 'prodromal'), ('mci_neg', 'mci_neg'), ('young', 'young')):
     P = [r['params'] for r in A if r['group'] == grp]; out[lab] = {'n': len(P)}
-    for k in ('gain', 'leak', 'g2', 'sigma', 'nu'):
+    for k in PARAMS:
         v = np.array([p[k] * SCALE.get(k, 1) for p in P]); v = np.log(v) if k in LOG else v
         med = float(np.median(v)); mad = float(np.median(np.abs(v - med)) * 1.4826)
         r = rel.get(k, {}).get('spearman_brown', 1.0) or 1.0
@@ -34,8 +37,8 @@ d_dir = (e['mci_pos'].mean() - e['elderly'].mean()) / np.sqrt((e['mci_pos'].var(
 sc = abs(out['prodromal']['g2']['loc'] - out['healthy']['g2']['loc']) / d_dir
 for lab in ('healthy', 'prodromal'): out[lab]['g2']['scale'] = round(float(sc), 4)
 out['g2_note'] = f'turn-gain spread set from the model-free over-turning effect, d = {d_dir:.2f}'
-json.dump(out, open('../sim16/pi_calib.json', 'w'), indent=1)
+json.dump(out, open('../sim16/pi_calib.json' if MODEL == 'A5' else f'../sim16/pi_calib_{MODEL}.json', 'w'), indent=1)
 for lab in ('healthy', 'prodromal', 'mci_neg'):
     print(lab, {k: (round(np.exp(v['loc']) if v['log'] else v['loc'], 3), v['scale']) for k, v in out[lab].items() if k != 'n'})
-for k in ('gain', 'leak', 'g2', 'sigma', 'nu'):
+for k in PARAMS:
     h, p = out['healthy'][k], out['prodromal'][k]; print(k, 'shift in healthy SDs', round((p['loc'] - h['loc']) / h['scale'], 2))

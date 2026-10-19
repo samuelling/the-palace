@@ -28,7 +28,7 @@ def feats_plateau(rows):
 
 
 # parameters that are motor or execution by construction: covariates, never part of the risk score
-MOTORISH = ('f_rt', 'ez_ter', 'L_rep', 'L_sigma', 'free_err', 'l_err', 'lint')   # L_sigma: v2 distance noise, carries control scatter
+MOTORISH = ('f_rt', 'ez_ter', 'L_rep', 'L_sigma', 'L_a', 'free_err', 'l_err', 'lint')   # L_sigma: v2 distance noise, carries control scatter
 
 
 def pure(f):

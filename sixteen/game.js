@@ -489,6 +489,18 @@
     S.leg = { name, target, t0: now(), d0: S.log.motor.dist, scrapes0: S.log.motor.scrapes, shortest: worldDist(S.area.id, tx, ty, target, false), j0: S.log.junctions.length };
     logEvent('leg-start', { leg: name, shortest: S.leg.shortest });
   }
+  // Orientation stops (as in Marquardt et al. 2024's real-world wayfinding, where they separated subjective cognitive
+  // decline from healthy older adults, d ~ .9): standing nearly still (< 1 m over 5 s) while finding the way. Not counted
+  // while homing, in a safe room, near a live enemy, or in dialogue or the plan (the loop does not run then).
+  function updateStops(t) {
+    const W = S.stopWin || (S.stopWin = []); W.push([t, H.x / T, H.y / T, S.area.id]);
+    while (W.length && t - W[0][0] > 5000) W.shift();
+    const busy = S.homing || S.wisp || S.spec.safe.includes(S.area.id) || S.area.enemies.some(e => !e.dead && e.state !== 'dormant' && Math.hypot(e.px - H.x, e.py - H.y) < 5 * T);
+    if (busy || W.length < 2 || t - W[0][0] < 4800 || W[0][3] !== S.area.id) { if (busy) S.inStop = false; return; }
+    const moved = Math.max(...W.map(w => Math.hypot(w[1] - W[0][1], w[2] - W[0][2])));
+    if (moved < 1) { if (!S.inStop) { S.inStop = true; const rec = { t: +((t - S.t0) / 1000).toFixed(1), area: S.area.id, leg: S.leg ? S.leg.name : null, changed: !!S.changedOnce }; S.log.stops.push(rec); logEvent('stop', rec); } }
+    else if (moved > 1.5) S.inStop = false;
+  }
   function checkLeg() {
     const L = S.leg; if (!L) return; const [tx, ty] = heroTile(); if (!isTarget(L.target, S.area.id, tx, ty)) return;
     S.leg = null;
@@ -597,7 +609,7 @@
   const TITLE = { grounds: 'The Grounds', east: 'The East Wing', conservatory: 'The Conservatory', palace: 'The Palace' };
   function calib() { return store.get('palace16.calib', { contrastScale: 1, history: [] }); }
   function newLog(spec) {
-    return { id: spec.id, variant: 'sixteen', seed: spec.seed, startedAt: Date.now(), duration: null, events: [], junctions: [], figures: [], homing: [], legs: [], shots: [], mapViews: [], path: [],
+    return { id: spec.id, variant: 'sixteen', seed: spec.seed, startedAt: Date.now(), duration: null, events: [], junctions: [], figures: [], homing: [], legs: [], shots: [], mapViews: [], stops: [], path: [],
       motor: { dist: 0, runDist: 0, scrapes: 0, straightT: 0, straightD: 0 }, swings: 0, hits: 0, dmg: 0, deaths: 0, staleBumps: 0, closureFinds: 0, closureRevisits: 0, done: false };
   }
   function ensureSession() { if (!S.session) S.session = { version: 1, variant: 'sixteen', startedAt: Date.now(), seedBase: Math.floor(Math.random() * 1e6), chapters: [] }; }
@@ -1101,7 +1113,7 @@
 
   /* ---------- the model-estimates overlay ---------- */
   const LAB_ROWS = {
-    lantern: [['nu', 'Direction noise °', v => v.toFixed(0)], ['g2', 'Turn gain', v => v.toFixed(2)], ['gain', 'Distance gain', v => v.toFixed(2)], ['leak', 'Leak /m', v => v.toFixed(3)], ['sigma', 'Distance noise', v => v.toFixed(2)]],
+    lantern: [['nu0', 'Heading noise °', v => v.toFixed(0)], ['g2', 'Turn gain', v => v.toFixed(2)], ['gain', 'Distance gain', v => v.toFixed(2)], ['leak', 'Leak /m', v => v.toFixed(3)], ['a', 'Position noise /√m', v => v.toFixed(2)]],
     palace: [['rho', 'Rule inference', v => v.toFixed(2)], ['alpha', 'Local update', v => v.toFixed(2)], ['m', 'Link memory', v => v.toFixed(2)]],
   };
   let labOn = null, labLast = 0;
@@ -1182,11 +1194,12 @@
       ['Walking speed on straight runs', m.straightT > 2 ? (m.straightD / m.straightT).toFixed(2) + ' m/s' : '—', 'Motor calibration: how fast you move when there is nothing to decide.'],
       ['Wall bumps', m.dist > 10 ? (10 * m.scrapes / m.dist).toFixed(1) + ' per 10 m' : '—', 'Control precision, kept separate from route choices.'],
       ['Sword', aims.length ? `${median(aims).toFixed(2)} m median offset · ${c.hits} hits from ${c.swings} swings` : `${c.hits} hits from ${c.swings} swings`, 'Timing and lining up a strike. A covariate.'],
-      ['Plan readings', `${c.mapViews.length} · ${Math.round(c.mapViews.reduce((s, v) => s + v.dur, 0))} s`, `${c.mapViews.filter(v => v.changed).length} after the house changed, when the plan no longer matched.`],
+      ['Plan readings', `${c.mapViews.length} · ${Math.round(c.mapViews.reduce((s, v) => s + v.dur, 0))} s`, `${c.mapViews.filter(v => v.changed).length} after the house changed, when the plan no longer matched. In real-world wayfinding, map checks separated subjective cognitive decline from healthy older adults (d about .7) and were the most reliable measure.`],
+      ['Orientation stops', `${(c.stops || []).length}`, `Standing still for 5 s while finding the way, ${(c.stops || []).filter(v => v.changed).length} after the house changed. The clearest real-world wayfinding marker of subjective cognitive decline (d about .9).`],
     ];
     if (c.ado && (c.id === 'conservatory' || c.id === 'palace')) {
       const f = (o, d) => `${o.mean.toFixed(d)} (${o.lo}–${o.hi})`;
-      if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `direction noise ${f(l.nu, 0)}°`, `Spread of the homing direction, with an 80% interval: in real triangle completion the clearest marker of biomarker-positive MCI. Turn gain ${f(l.g2, 2)} (below 1: turns registered as smaller, so the return over-turns), distance gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)} per m, distance noise ${f(l.sigma, 2)} (also carries steering scatter).`]); }
+      if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `heading noise ${f(l.nu0, 0)}°`, `Constant spread of the homing direction, with an 80% interval: in real data the clearest marker of biomarker-positive MCI, and also higher with age, so it needs age-matched norms. Turn gain ${f(l.g2, 2)} (below 1: turns registered as smaller, so the return over-turns), distance gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)} per m, positional noise ${f(l.a, 2)} per √m walked (also carries steering scatter).`]); }
       if (c.id === 'palace') { const q = c.ado.palace; rows.push(['Model: integrating a glimpse', `inference ${f(q.rho, 2)}`, `Probability of working out the whole rearrangement from one glimpse. Local updating ${f(q.alpha, 2)}, memory for unchanged links ${f(q.m, 2)}.`]); }
     }
     if (c.id === 'grounds') rows.unshift(['Warm-up', 'not scored', 'Calibrates movement and the sword for this session, so the chapters measure decisions rather than controls.']);
@@ -1252,7 +1265,7 @@
         const ht = heroTile(), e = exitAt(S.area, ht[0], ht[1]);
         if (e && e.state === 'open' && !S.homing && !S.wisp) goExit(e);
         else if (ht.join() !== before) { checkLeg(); if (S.hooks.onTile) S.hooks.onTile(S.area, ht[0], ht[1]); }
-        updateMazeJunction(); updateClosures(t);
+        updateMazeJunction(); updateClosures(t); updateStops(t);
         if (t - (S.lastPath || 0) > 200) { S.lastPath = t; S.log.path.push([+((t - S.t0) / 1000).toFixed(1), S.area.id, +(H.x / T).toFixed(2), +(H.y / T).toFixed(2)]); }
       }
       S.fx = S.fx.filter(f => (f.t += dt) < f.dur);

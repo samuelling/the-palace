@@ -718,7 +718,7 @@ function updateLantern(dt) {
 
 /* ---------- researcher overlay: live posteriors, certainty, next design ---------- */
 const LAB_ROWS = {
-  lantern: [['nu', 'Direction noise °', v => v.toFixed(0)], ['g2', 'Turn gain', v => v.toFixed(2)], ['gain', 'Distance gain', v => v.toFixed(2)], ['leak', 'Leak /m', v => v.toFixed(3)], ['sigma', 'Distance noise', v => v.toFixed(2)]],
+  lantern: [['nu0', 'Heading noise °', v => v.toFixed(0)], ['g2', 'Turn gain', v => v.toFixed(2)], ['gain', 'Distance gain', v => v.toFixed(2)], ['leak', 'Leak /m', v => v.toFixed(3)], ['a', 'Position noise /√m', v => v.toFixed(2)]],
   palace: [['rho', 'Rule inference', v => v.toFixed(2)], ['alpha', 'Local update', v => v.toFixed(2)], ['m', 'Link memory', v => v.toFixed(2)]],
 };
 let labOn = null, labLast = 0;   // resolved on first use: store is declared further down
@@ -929,7 +929,7 @@ function summarize(c) {
   ];
   if (c.ado && (c.id === 'conservatory' || c.id === 'palace')) {
     const f = (o, d) => `${o.mean.toFixed(d)} (${o.lo}–${o.hi})`;
-    if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `direction noise ${f(l.nu, 0)}°`, `Spread of the homing direction, with an 80% interval: in real triangle completion the clearest marker of biomarker-positive MCI. Turn gain ${f(l.g2, 2)} (below 1: turns registered as smaller, so the return over-turns), distance gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)} per m, distance noise ${f(l.sigma, 2)} (also carries steering scatter).`]); }
+    if (c.id === 'conservatory') { const l = c.ado.lantern; rows.push(['Model: path integration', `heading noise ${f(l.nu0, 0)}°`, `Constant spread of the homing direction, with an 80% interval: in real data the clearest marker of biomarker-positive MCI, and also higher with age, so it needs age-matched norms. Turn gain ${f(l.g2, 2)} (below 1: turns registered as smaller, so the return over-turns), distance gain ${f(l.gain, 2)}, leak ${f(l.leak, 3)} per m, positional noise ${f(l.a, 2)} per √m walked (also carries steering scatter).`]); }
     if (c.id === 'palace') { const q = c.ado.palace; rows.push(['Model: integrating a glimpse', `inference ${f(q.rho, 2)}`, `Probability of working out the whole rearrangement from one glimpse. Local updating ${f(q.alpha, 2)}, memory for unchanged links ${f(q.m, 2)}. Reshuffle types after the first three were chosen to be as informative as possible about these.`]); }
   }
   if (c.id === 'grounds') rows.unshift(['Warm-up', 'not scored', 'Calibrates movement and aim for this session, so the chapters measure decisions rather than controls.']);

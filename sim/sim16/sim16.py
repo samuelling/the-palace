@@ -36,8 +36,12 @@ BASE_DESIGN = dict(
     sentinels=12,          # top-down sentinel decisions per session
     rt_timing='sight',     # sentinel RT from first sight ('sight', as built) or from entering the decision zone ('zone')
     ado=True,
-    pi_model='v1',         # lantern model: 'v1' (as built: accumulating isotropic noise, side bias) or 'v2' (calibrated on
-                           # Howett/Castegnaro triangle completion: gain, leak, angular gain on turns, distance and direction noise)
+    pi_model='v1',         # lantern model: 'v1' (as built: accumulating isotropic noise, side bias); 'v2' (A5, calibrated on
+                           # Howett/Castegnaro triangle completion: gain, leak, angular gain on turns, distance and direction noise);
+                           # 'v3' (H5, best across triangle completion and Stangl et al. 2020: constant direction noise plus
+                           # positional noise accumulating with distance walked)
+    sentinel_cap=False,    # True: cap the assumed prodromal sentinel deficits at the size of the whole young-to-old ageing effect
+                           # on perceptual drift (meta-analysis, Theisen et al. 2021: g = -.61) and give non-decision time d = .6
     pi_source='assumed',   # v2 only: 'assumed' keeps sim2-style group shifts, 'data' draws healthy and prodromal from pi_calib.json
 )
 DESIGN = dict(BASE_DESIGN)
@@ -64,6 +68,7 @@ class Grid:
 
 LAX = dict(acc=[.1, .2, .3, .4, .55, .7, .9, 1.2], rep=[.2, .35, .5, .7, .9, 1.2, 1.6], gain=[.75, .85, .95, 1.05, 1.15], leak=[0, .006, .012, .02, .03], bias=[-24, -12, 0, 12, 24])
 LAX2 = dict(gain=[.4, .55, .7, .85, 1.0, 1.15], leak=[-.03, 0, .02, .05, .08], g2=[.3, .5, .7, .85, 1.0, 1.15, 1.35], sigma=[.4, .7, 1.1, 1.7, 2.6], nu=list(np.radians([8, 15, 25, 40, 60, 90])))   # matches ado.js
+LAX3 = dict(gain=[.4, .55, .7, .85, 1.0, 1.15], leak=[-.03, 0, .02, .05, .08], g2=[.3, .5, .7, .85, 1.0, 1.15, 1.35], nu0=list(np.radians([5, 12, 20, 30, 45, 65])), a=[.1, .2, .35, .55, .8])   # matches ado.js
 PAX = dict(rho=[.05, .2, .35, .5, .65, .8, .95], alpha=[.05, .2, .35, .5, .65, .8, .95], m=[.2, .35, .5, .65, .8, .9, .97])
 
 
@@ -109,6 +114,26 @@ def lantern_eig2(G, geom, rng, S=20):
     return H0 - Hs
 
 
+def lantern_ll3(G, geom, er, et):
+    """H5: return distance ~ N(R, a^2 L); direction error ~ N(rot, nu0^2 + a^2 L / c^2)."""
+    C = G.cols; L, c = geom[0], geom[1]; R, rot = v2_pred(C, geom)
+    er = np.atleast_1d(er)[:, None]; et = np.atleast_1d(et)[:, None]
+    r = np.hypot(c + er, et); th = np.arctan2(et, c + er); d = (th - rot + np.pi) % (2 * np.pi) - np.pi
+    sr = C['a'] * np.sqrt(L); sn = np.sqrt(C['nu0'] ** 2 + C['a'] ** 2 * L / max(c, .3) ** 2)
+    return -np.log(2 * np.pi * sr * sn) - (r - R) ** 2 / (2 * sr ** 2) - d ** 2 / (2 * sn ** 2)
+
+
+def lantern_eig3(G, geom, rng, S=20):
+    w = G.w(); H0 = -(w[w > 1e-300] * np.log(w[w > 1e-300])).sum()
+    u = (rng.random() + np.arange(S)) / S; idx = np.minimum(np.searchsorted(np.cumsum(w), u), G.N - 1)
+    C = {k: v[idx] for k, v in G.cols.items()}; R, rot = v2_pred(C, geom); L, c = geom[0], geom[1]
+    r = np.maximum(.05, R + C['a'] * np.sqrt(L) * rng.normal(size=S)); th = rot + np.sqrt(C['nu0'] ** 2 + C['a'] ** 2 * L / max(c, .3) ** 2) * rng.normal(size=S)
+    er, et = r * np.cos(th) - c, r * np.sin(th)
+    post = G.logp[None, :] + lantern_ll3(G, geom, er, et); post -= post.max(1, keepdims=True); p = np.exp(post); p /= p.sum(1, keepdims=True)
+    Hs = -(np.where(p > 1e-300, p * np.log(np.maximum(p, 1e-300)), 0)).sum(1).mean()
+    return H0 - Hs
+
+
 def lantern_ll(G, L, c, er, et):
     C = G.cols; s2 = C['acc'] ** 2 * L + C['rep'] ** 2; R = C['gain'] * np.exp(-C['leak'] * L) * c; b = np.radians(C['bias'])
     mr, mt = R * np.cos(b) - c, R * np.sin(b)
@@ -145,19 +170,25 @@ def new_person(g, rng):
     p = sim2.sample_person(g, rng)
     p['bias_deg'] = rng.normal(0, 12)            # a constant turning bias, any group
     p.update(v2_person(g, rng))
+    if DESIGN.get('sentinel_cap') and g == 'prodromal':
+        # sim2 draws log k ~ N(log mean, .1) and log ter ~ N(log mean, .06); redraw the prodromal means from the healthy ones
+        eff = sim2.KNOBS['effect']; h = sim2.BASE['healthy']
+        p['k'] = float(np.log(h['k'][0]) - eff * .61 * .1 + rng.normal(0, .1)); p['ter'] = float(np.log(h['ter'][0]) + eff * .6 * .06 + rng.normal(0, .06))
     return p
 
 
 _CAL = json.load(open(os.path.join(HERE, 'pi_calib.json'))) if os.path.exists(os.path.join(HERE, 'pi_calib.json')) else None
+_CAL3 = json.load(open(os.path.join(HERE, 'pi_calib_H5.json'))) if os.path.exists(os.path.join(HERE, 'pi_calib_H5.json')) else None
 
 
 def v2_person(g, rng):
     """Lantern v2 parameters. 'data': healthy and healthy-novice players from healthy elderly, prodromal from biomarker-positive
     MCI moved by the effect knob (sim2.KNOBS['effect']). 'assumed': the old assumption (deficits in noise and leak), on the new axes."""
     eff = sim2.KNOBS['effect']; out = {}
-    if DESIGN.get('pi_source') == 'data' and _CAL:
-        for k in ('gain', 'leak', 'g2', 'sigma', 'nu'):
-            h, pr = _CAL['healthy'][k], _CAL['prodromal'][k]
+    v3 = DESIGN.get('pi_model') == 'v3'; CAL = _CAL3 if v3 else _CAL
+    if DESIGN.get('pi_source') == 'data' and CAL:
+        for k in (('gain', 'leak', 'g2', 'nu0', 'a') if v3 else ('gain', 'leak', 'g2', 'sigma', 'nu')):
+            h, pr = CAL['healthy'][k], CAL['prodromal'][k]
             loc = h['loc'] + (eff * (pr['loc'] - h['loc']) if g == 'prodromal' else 0); sc = h['scale'] + (eff * (pr['scale'] - h['scale']) if g == 'prodromal' else 0)
             v = rng.normal(loc, max(sc, 1e-3)); out['v2_' + k] = float(np.exp(v)) if h['log'] else float(v)
     else:
@@ -560,6 +591,12 @@ def pi_params(q, g):
 
 
 def lantern_trial(q, g, L, c, rng, lens=None, turns=()):
+    if DESIGN['pi_model'] == 'v3':
+        lens = lens or (L,); rot, cm = path_geom(lens, turns, q['v2_g2']); R = q['v2_gain'] * np.exp(-q['v2_leak'] * L) * cm[0]
+        sr = np.sqrt(q['v2_a'] ** 2 * L + q['fp_ctrl'] ** 2); sn = np.sqrt(q['v2_nu0'] ** 2 + (q['v2_a'] ** 2 * L + q['fp_ctrl'] ** 2) / max(c, .3) ** 2)
+        if DESIGN['pi_view'] == 'top': sn = sn * .6; rot = rot * 0
+        r = max(.05, R + sr * rng.normal()); th = rot[0] + sn * rng.normal()
+        return r * np.cos(th) - c, r * np.sin(th)
     if DESIGN['pi_model'] == 'v2':
         lens = lens or (L,); rot, cm = path_geom(lens, turns, q['v2_g2']); R = q['v2_gain'] * np.exp(-q['v2_leak'] * L) * cm[0]
         sig, nu = q['v2_sigma'], q['v2_nu']
@@ -591,15 +628,15 @@ def lanterns(lay, q, g, G, rng):
     for t in range(DESIGN['lantern_trials']):
         cands = [pool[i] for i in rng.integers(len(pool), size=10)] if pool else []
         if not cands: break
-        v2 = DESIGN['pi_model'] == 'v2'
+        v2 = DESIGN['pi_model'] in ('v2', 'v3'); E = lantern_eig3 if DESIGN['pi_model'] == 'v3' else lantern_eig2
         if DESIGN['ado'] and t > 0:
-            eig = [lantern_eig2(G, p, rng) if v2 else lantern_eig(G, p[0], p[1], rng) for p in cands[:6]]; pick = cands[int(np.argmax(eig))]
+            eig = [E(G, p, rng) if v2 else lantern_eig(G, p[0], p[1], rng) for p in cands[:6]]; pick = cands[int(np.argmax(eig))]
         elif DESIGN['ado']:
             pick = min(cands, key=lambda p: abs(p[0] - 12))
         else: pick = cands[0]
         L, c, lens, turns = pick
         er, et = lantern_trial(q, g, L, c, rng, lens, turns)
-        G.logp += (lantern_ll2(G, pick, er, et) if v2 else lantern_ll(G, L, c, er, et))[0]
+        G.logp += ((lantern_ll3 if DESIGN['pi_model'] == 'v3' else lantern_ll2)(G, pick, er, et) if v2 else lantern_ll(G, L, c, er, et))[0]
         errs.append((L, float(np.hypot(er, et)))); T += L / 2.5 + c / (4.75 * q['speed']) + 6
     return errs, T
 
@@ -684,7 +721,7 @@ def one(args):
     g, i, n_sess, seed, design, knobs = args
     DESIGN.clear(); DESIGN.update(design); sim2.set_knobs(**knobs)
     rng = np.random.default_rng(seed); person = new_person(g, rng)
-    state = dict(G=Grid(LAX2 if DESIGN['pi_model'] == 'v2' else LAX), P=Grid(PAX), scale=1.0); rows = []
+    state = dict(G=Grid({'v2': LAX2, 'v3': LAX3}.get(DESIGN['pi_model'], LAX)), P=Grid(PAX), scale=1.0); rows = []
     for s in range(n_sess):
         r = play(person, g, s, rng, state); r.update(group=g, pid=i, session=s); rows.append(r)
     return rows

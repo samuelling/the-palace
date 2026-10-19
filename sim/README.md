@@ -161,3 +161,19 @@ Paired bootstrap, calibrated vs as built:
 Overall detection is unchanged. The gain is specificity: the measured signal (scattered, over-turned returns) is cognitive, and new players do not mimic it the way they mimicked the assumed noise and leak deficits.
 
 The other chapters' deficits (maze, East Wing, palace, sentinels) remain assumptions, and the independence of deficits across domains still inflates the absolute AUCs.
+
+## Second calibration pass (`calib/README.md`, second half)
+
+**Datasets added:**
+- **Stangl et al. 2020:** curved-path homing, young vs older adults.
+- **Coughlan / Gillespie:** APOE4 midlife, supermarket task and Sea Hero Quest, test-retest.
+- **Marquardt et al. 2024:** real-world wayfinding in SCD.
+
+**What changed:**
+- **Lantern model:** now H5 (`pi_model='v3'`, `pi_calib_H5.json`): constant heading noise plus positional noise accumulating with distance walked. It is the best single 5-parameter structure across both path-integration datasets.
+- **Sentinels:** the deficit can be capped at the size of the meta-analytic ageing effect (`sentinel_cap`).
+- **At-risk scenario:** set with `effect: 0.2`, matching APOE4 midlife effect sizes.
+
+**Results:**
+- **Prodromal stage:** about .93 after ten sessions, novices flagged 14% (cognitive-only score).
+- **At-risk stage:** about .72 after ten sessions, with novices flagged 71%.

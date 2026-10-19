@@ -17,3 +17,6 @@ sim/calib/*.log
 sim/calib/peek*.py
 sim/sim16/logs_calib.txt
 __pycache__/
+sim/calib/stangl_trials.json
+sim/calib/stangl_fits.json
+sim/sim16/logs_calib2.txt

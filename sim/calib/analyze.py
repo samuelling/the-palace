@@ -60,7 +60,7 @@ out['replication'] = {g: {k: float(np.mean([v[k] for v in T[g].values()])) for k
 # ---------------------------------------------------------------- 3. group effects on the lantern-model family
 mci_all = lambda TT: {**{('p', k): v for k, v in TT.get('mci_pos', {}).items()}, **{('n', k): v for k, v in TT.get('mci_neg', {}).items()}, **{('u', k): v for k, v in TT.get('mci_unk', {}).items()}}
 out['effects'] = {}
-for m in [x for x in ('E5', 'E6', 'A5', 'A6b', 'A6p', 'glampi') if x in models]:
+for m in [x for x in ('A5', 'H5', 'H6', 'glampi') if x in models]:
     TT = table(pooled, m); names = MODELS[m][2]
     print(f'\n{m}: group means (pooled conditions), effect sizes (d, AUC) vs healthy elderly and MCI+ vs MCI-')
     print(f"{'':8s}" + ''.join(f'{k:>9s}' for k in names))

@@ -42,14 +42,17 @@
   }
   function gauss(rnd) { let u = 0, v = 0; while (u === 0) u = rnd(); while (v === 0) v = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
-  /* ---------- lantern: triangle completion (v2, calibrated on real triangle completion) ----------
-     Fitted to Howett et al. 2019 / Castegnaro et al. 2023 (98 people, see sim/calib): the earlier isotropic-noise model fit
-     real returns worst of all tested; separating direction from distance and adding an angular gain fit best.
+  /* ---------- lantern: triangle completion (calibrated on real data, see sim/calib) ----------
+     Chosen across two datasets: triangle completion in healthy elderly and biomarker-typed MCI (Howett et al. 2019 /
+     Castegnaro et al. 2023, 98 people) and curved-path homing in young and older adults (Stangl et al. 2020, 56 people).
+     The model as first built (one isotropic blob of accumulating noise) fit both worse than this one.
        The outbound path is integrated with every turn registered times g2. From that mental position:
-       return distance ~ N(gain * exp(-leak * L) * mental home distance, sigma)
-       return direction ~ N(true home direction + mental turn error, nu)
-     Biomarker-positive MCI differ most in nu (direction noise) and g2 (they register turns as smaller and over-turn home). */
-  const LANTERN_AXES = { gain: [.4, .55, .7, .85, 1, 1.15], leak: [-.03, 0, .02, .05, .08], g2: [.3, .5, .7, .85, 1, 1.15, 1.35], sigma: [.4, .7, 1.1, 1.7, 2.6], nu: [8, 15, 25, 40, 60, 90] };   // axes match sim/sim16 LAX2
+       return distance  ~ N(gain * exp(-leak * L) * mental home distance, a^2 L)
+       return direction ~ N(true home direction + mental turn error, nu0^2 + a^2 L / c^2)
+     nu0 is a constant heading noise; a is positional noise accumulating with distance walked (it spreads direction more
+     when home is close). nu0 is the marker: d 2.4 for biomarker-positive MCI vs healthy elderly, also d .9 for older vs
+     young adults, so norms must be age-matched. g2 < 1: turns registered as smaller, so the return over-turns. */
+  const LANTERN_AXES = { gain: [.4, .55, .7, .85, 1, 1.15], leak: [-.03, 0, .02, .05, .08], g2: [.3, .5, .7, .85, 1, 1.15, 1.35], nu0: [5, 12, 20, 30, 45, 65], a: [.1, .2, .35, .55, .8] };   // axes match sim/sim16 LAX3
   // mental homing for legs `lens` and turns `turns` (degrees, the games' own sign) when turns are registered times k:
   // returns the error of the mental homing direction (radians, same sign as turns) and the mental home distance
   function pathGeom(d, k) {
@@ -62,21 +65,21 @@
   function geomTable(d) { const T = new Map(); LANTERN_AXES.g2.forEach(k => T.set(k, pathGeom(d, k))); return T; }
   const wrapPi = a => ((a + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
   function lanternLogLik(g, d, er, et, out, T) {
-    const { gain, leak, g2, sigma, nu } = g.cols; T = T || geomTable(d);
-    const r = Math.hypot(d.c + er, et), th = Math.atan2(et, d.c + er);
+    const { gain, leak, g2, nu0, a } = g.cols; T = T || geomTable(d);
+    const r = Math.hypot(d.c + er, et), th = Math.atan2(et, d.c + er), cc = Math.max(d.c, .3);
     for (let i = 0; i < g.N; i++) {
-      const G = T.get(g2[i]), R = gain[i] * Math.exp(-leak[i] * d.L) * G.cm, n = nu[i] * Math.PI / 180, dt = wrapPi(th - G.rot);
-      out[i] = -Math.log(2 * Math.PI * sigma[i] * n) - (r - R) * (r - R) / (2 * sigma[i] * sigma[i]) - dt * dt / (2 * n * n);
+      const G = T.get(g2[i]), R = gain[i] * Math.exp(-leak[i] * d.L) * G.cm, n0 = nu0[i] * Math.PI / 180, sr2 = a[i] * a[i] * d.L, sn2 = n0 * n0 + sr2 / (cc * cc), dt = wrapPi(th - G.rot);
+      out[i] = -Math.log(2 * Math.PI) - .5 * Math.log(sr2 * sn2) - (r - R) * (r - R) / (2 * sr2) - dt * dt / (2 * sn2);
     }
     return out;
   }
   function lanternUpdate(g, d, er, et) { const ll = lanternLogLik(g, d, er, et, new Float64Array(g.N)); for (let i = 0; i < g.N; i++) g.logp[i] += ll[i]; }
   function lanternEIG(g, d, rnd, S) {
     S = S || 20; const w = weights(g), H0 = entropy(w), idx = sampleIdx(w, S, rnd), ll = new Float64Array(g.N), post = new Float64Array(g.N), T = geomTable(d);
-    const { gain, leak, g2, sigma, nu } = g.cols; let Hs = 0;
+    const { gain, leak, g2, nu0, a } = g.cols; let Hs = 0; const cc = Math.max(d.c, .3);
     for (const i of idx) {
-      const G = T.get(g2[i]), R = gain[i] * Math.exp(-leak[i] * d.L) * G.cm;
-      const r = Math.max(.05, R + sigma[i] * gauss(rnd)), th = G.rot + nu[i] * Math.PI / 180 * gauss(rnd);
+      const G = T.get(g2[i]), R = gain[i] * Math.exp(-leak[i] * d.L) * G.cm, n0 = nu0[i] * Math.PI / 180;
+      const r = Math.max(.05, R + a[i] * Math.sqrt(d.L) * gauss(rnd)), th = G.rot + Math.sqrt(n0 * n0 + a[i] * a[i] * d.L / (cc * cc)) * gauss(rnd);
       lanternLogLik(g, d, r * Math.cos(th) - d.c, r * Math.sin(th), ll, T);
       let m = -Infinity; for (let k = 0; k < g.N; k++) { post[k] = g.logp[k] + ll[k]; if (post[k] > m) m = post[k]; }
       let z = 0; for (let k = 0; k < g.N; k++) { post[k] = Math.exp(post[k] - m); z += post[k]; }

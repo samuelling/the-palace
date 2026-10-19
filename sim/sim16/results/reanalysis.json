@@ -63,36 +63,132 @@
    "novice_auc": 0.88
   }
  },
- "cal_v2assumed": {
+ "cal_h5": {
   "single": {
-   "auc": 0.76,
-   "healthy_flagged": 0.43,
-   "novice_flagged": 0.943,
-   "novice_auc": 0.337
+   "auc": 0.844,
+   "healthy_flagged": 0.283,
+   "novice_flagged": 0.667,
+   "novice_auc": 0.584
   },
   "single_pure": {
-   "auc": 0.704,
-   "healthy_flagged": 0.563,
-   "novice_flagged": 0.62,
-   "novice_auc": 0.663
+   "auc": 0.834,
+   "healthy_flagged": 0.273,
+   "novice_flagged": 0.383,
+   "novice_auc": 0.792
   },
   "all": {
-   "auc": 0.915,
-   "healthy_flagged": 0.14,
-   "novice_flagged": 0.71,
-   "novice_auc": 0.625
+   "auc": 0.949,
+   "healthy_flagged": 0.085,
+   "novice_flagged": 0.465,
+   "novice_auc": 0.754
   },
   "plateau": {
-   "auc": 0.914,
-   "healthy_flagged": 0.125,
-   "novice_flagged": 0.625,
-   "novice_auc": 0.64
+   "auc": 0.95,
+   "healthy_flagged": 0.07,
+   "novice_flagged": 0.415,
+   "novice_auc": 0.777
   },
   "pure": {
-   "auc": 0.884,
-   "healthy_flagged": 0.195,
-   "novice_flagged": 0.37,
-   "novice_auc": 0.801
+   "auc": 0.934,
+   "healthy_flagged": 0.085,
+   "novice_flagged": 0.18,
+   "novice_auc": 0.883
+  }
+ },
+ "cal_h5cap": {
+  "single": {
+   "auc": 0.82,
+   "healthy_flagged": 0.317,
+   "novice_flagged": 0.573,
+   "novice_auc": 0.668
+  },
+  "single_pure": {
+   "auc": 0.821,
+   "healthy_flagged": 0.3,
+   "novice_flagged": 0.377,
+   "novice_auc": 0.786
+  },
+  "all": {
+   "auc": 0.927,
+   "healthy_flagged": 0.1,
+   "novice_flagged": 0.36,
+   "novice_auc": 0.793
+  },
+  "plateau": {
+   "auc": 0.934,
+   "healthy_flagged": 0.1,
+   "novice_flagged": 0.325,
+   "novice_auc": 0.815
+  },
+  "pure": {
+   "auc": 0.935,
+   "healthy_flagged": 0.085,
+   "novice_flagged": 0.14,
+   "novice_auc": 0.881
+  }
+ },
+ "cal_h5cap_risk": {
+  "single": {
+   "auc": 0.591,
+   "healthy_flagged": 0.687,
+   "novice_flagged": 0.65,
+   "novice_auc": 0.625
+  },
+  "single_pure": {
+   "auc": 0.597,
+   "healthy_flagged": 0.67,
+   "novice_flagged": 0.757,
+   "novice_auc": 0.552
+  },
+  "all": {
+   "auc": 0.719,
+   "healthy_flagged": 0.505,
+   "novice_flagged": 0.9,
+   "novice_auc": 0.406
+  },
+  "plateau": {
+   "auc": 0.714,
+   "healthy_flagged": 0.485,
+   "novice_flagged": 0.74,
+   "novice_auc": 0.525
+  },
+  "pure": {
+   "auc": 0.705,
+   "healthy_flagged": 0.54,
+   "novice_flagged": 0.71,
+   "novice_auc": 0.578
+  }
+ },
+ "cal_v1_risk": {
+  "single": {
+   "auc": 0.625,
+   "healthy_flagged": 0.663,
+   "novice_flagged": 0.997,
+   "novice_auc": 0.159
+  },
+  "single_pure": {
+   "auc": 0.604,
+   "healthy_flagged": 0.687,
+   "novice_flagged": 0.953,
+   "novice_auc": 0.307
+  },
+  "all": {
+   "auc": 0.79,
+   "healthy_flagged": 0.395,
+   "novice_flagged": 0.955,
+   "novice_auc": 0.251
+  },
+  "plateau": {
+   "auc": 0.752,
+   "healthy_flagged": 0.47,
+   "novice_flagged": 0.965,
+   "novice_auc": 0.314
+  },
+  "pure": {
+   "auc": 0.737,
+   "healthy_flagged": 0.51,
+   "novice_flagged": 0.795,
+   "novice_auc": 0.52
   }
  }
 }
