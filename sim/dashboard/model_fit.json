@@ -1,0 +1,92 @@
+[
+ {
+  "id": "tri-E5",
+  "data": "Triangles (98 people)",
+  "model": "Isotropic accumulating noise (as first built)",
+  "k": 5,
+  "aic": 9287.0,
+  "bic": 9935.5,
+  "dbic": 1082.2
+ },
+ {
+  "id": "tri-A5",
+  "data": "Triangles (98 people)",
+  "model": "Separate distance and direction noise (A5)",
+  "k": 5,
+  "aic": 8222.9,
+  "bic": 8871.4,
+  "dbic": 18.1
+ },
+ {
+  "id": "tri-N5",
+  "data": "Triangles (98 people)",
+  "model": "Anisotropic accumulating positional noise",
+  "k": 5,
+  "aic": 8494.2,
+  "bic": 9142.8,
+  "dbic": 289.5
+ },
+ {
+  "id": "tri-H5",
+  "data": "Triangles (98 people)",
+  "model": "Heading noise + accumulating positional noise (H5)",
+  "k": 5,
+  "aic": 8204.7,
+  "bic": 8853.3,
+  "dbic": 0.0
+ },
+ {
+  "id": "tri-glampi",
+  "data": "Triangles (98 people)",
+  "model": "GLAMPI, published (7 parameters)",
+  "k": 7,
+  "aic": 8064.1,
+  "bic": 8972.0,
+  "dbic": 118.7
+ },
+ {
+  "id": "cur-iso",
+  "data": "Curved paths (56 people)",
+  "model": "Isotropic accumulating noise (as first built)",
+  "k": 5,
+  "aic": 38218.2,
+  "bic": 39037.8,
+  "dbic": 486.8
+ },
+ {
+  "id": "cur-sep5",
+  "data": "Curved paths (56 people)",
+  "model": "Separate distance and direction noise (A5)",
+  "k": 5,
+  "aic": 40153.6,
+  "bic": 40973.2,
+  "dbic": 2422.2
+ },
+ {
+  "id": "cur-sep7",
+  "data": "Curved paths (56 people)",
+  "model": "Separate, both accumulating (7 parameters)",
+  "k": 7,
+  "aic": 38050.0,
+  "bic": 39197.5,
+  "dbic": 646.5
+ },
+ {
+  "id": "cur-ani5",
+  "data": "Curved paths (56 people)",
+  "model": "Anisotropic accumulating positional noise",
+  "k": 5,
+  "aic": 37731.4,
+  "bic": 38551.0,
+  "dbic": 0.0
+ },
+ {
+  "id": "cur-h5",
+  "data": "Curved paths (56 people)",
+  "model": "Heading noise + accumulating positional noise (H5)",
+  "k": 5,
+  "aic": 38175.1,
+  "bic": 38994.7,
+  "dbic": 443.7
+ }
+]

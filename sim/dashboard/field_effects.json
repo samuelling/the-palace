@@ -1,0 +1,83 @@
+[
+ {
+  "id": "apoe-egocentric o",
+  "study": "APOE4 midlife (supermarket, Sea Hero Quest)",
+  "measure": "Egocentric orientation (pointing home)",
+  "d": 0.652,
+  "d_retest": 0.386,
+  "reliability": 0.568,
+  "reliability_kind": "test-retest, 18 months"
+ },
+ {
+  "id": "apoe-heading dire",
+  "study": "APOE4 midlife (supermarket, Sea Hero Quest)",
+  "measure": "Heading direction",
+  "d": 0.191,
+  "d_retest": 0.323,
+  "reliability": 0.336,
+  "reliability_kind": "test-retest, 18 months"
+ },
+ {
+  "id": "apoe-central pref",
+  "study": "APOE4 midlife (supermarket, Sea Hero Quest)",
+  "measure": "Central (border-avoiding) preference",
+  "d": 0.971,
+  "d_retest": 0.619,
+  "reliability": 0.184,
+  "reliability_kind": "test-retest, 18 months"
+ },
+ {
+  "id": "apoe-SHQ distance",
+  "study": "APOE4 midlife (supermarket, Sea Hero Quest)",
+  "measure": "Sea Hero Quest distance",
+  "d": 0.705,
+  "d_retest": 0.251,
+  "reliability": 0.345,
+  "reliability_kind": "test-retest, 18 months"
+ },
+ {
+  "id": "apoe-Four Mountai",
+  "study": "APOE4 midlife (supermarket, Sea Hero Quest)",
+  "measure": "Four Mountains",
+  "d": 0.111,
+  "d_retest": 0.298,
+  "reliability": 0.33,
+  "reliability_kind": "test-retest, 18 months"
+ },
+ {
+  "id": "scd-orientation_stops",
+  "study": "SCD vs healthy older (real-world wayfinding)",
+  "measure": "Orientation stops",
+  "d": 0.933,
+  "d_retest": null,
+  "reliability": 0.574,
+  "reliability_kind": "odd vs even tracks"
+ },
+ {
+  "id": "scd-help_count",
+  "study": "SCD vs healthy older (real-world wayfinding)",
+  "measure": "Map checks",
+  "d": 0.694,
+  "d_retest": null,
+  "reliability": 0.826,
+  "reliability_kind": "odd vs even tracks"
+ },
+ {
+  "id": "scd-wayfinding_duration",
+  "study": "SCD vs healthy older (real-world wayfinding)",
+  "measure": "Duration",
+  "d": 0.693,
+  "d_retest": null,
+  "reliability": 0.61,
+  "reliability_kind": "odd vs even tracks"
+ },
+ {
+  "id": "scd-dist_ratio",
+  "study": "SCD vs healthy older (real-world wayfinding)",
+  "measure": "Distance vs young median",
+  "d": 0.516,
+  "d_retest": null,
+  "reliability": 0.313,
+  "reliability_kind": "odd vs even tracks"
+ }
+]

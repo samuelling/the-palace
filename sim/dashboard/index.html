@@ -1,0 +1,328 @@
+<style>
+.pv { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); }
+.pv-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+.pv-head p { margin: var(--cds-gap-xs) 0 0; color: var(--color-fg-muted); max-width: 70ch; line-height: 1.5; }
+.pv-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--cds-gap-md); }
+.pv-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-xs); align-content: start; }
+.pv-tile .lab { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pv-tile .num { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: calc(var(--cds-font-size-title) * 1.4); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.pv-tile .sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.4; }
+.pv-sec { display: grid; gap: var(--cds-gap-md); }
+.pv-sec > h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.pv-sec > .lede { margin: 0; color: var(--color-fg-muted); max-width: 75ch; line-height: 1.5; font-size: var(--cds-font-size-body); }
+.pv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
+.pv-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); min-width: 0; align-content: start; }
+.pv-card h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+.pv-card .note { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; }
+.pv-chart { position: relative; min-height: 220px; }
+.pv-chart svg { display: block; overflow: visible; }
+.pv-chart text { font-family: var(--font-anthropic-sans); }
+.pv-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.pv-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.pv-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.pv-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); line-height: 1.45; max-width: 18rem; z-index: 2; }
+.pv-tip .t { color: var(--cds-text-secondary); }
+.pv-tablewrap { overflow-x: auto; }
+.pv-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.pv-table th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); padding: 6px 8px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.pv-table td { padding: 6px 8px; border-bottom: 1px solid var(--color-border-line); vertical-align: top; line-height: 1.4; }
+.pv-table td.n, .pv-table th.n { text-align: right; }
+.pv-fail { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.pv-fail::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+@media (max-width: 40rem) { .pv-table .hide-narrow { display: none; } }
+</style>
+
+<div class="pv">
+  <header class="pv-head" id="top">
+    <h1>Palace validation</h1>
+    <p id="takeaway" data-source="sim_scenarios" class="dash-skeleton">—</p>
+  </header>
+
+  <section class="pv-tiles" aria-label="Headline figures">
+    <div class="pv-tile">
+      <span class="lab">Prodromal stage, detection after 10 sessions</span>
+      <span class="num dash-skeleton" id="t-prod" data-source="sim_scenarios" data-field="auc_10" data-where="id=cal_h5cap">—</span>
+      <span class="sub">AUC, healthy vs MCI-stage players, cognitive parameters only</span>
+    </div>
+    <div class="pv-tile">
+      <span class="lab">At-risk stage, detection after 10 sessions</span>
+      <span class="num dash-skeleton" id="t-risk" data-source="sim_scenarios" data-field="auc_10" data-where="id=cal_h5cap_risk">—</span>
+      <span class="sub">Deficits at a fifth of MCI+, the size seen in midlife APOE4 carriers</span>
+    </div>
+    <div class="pv-tile">
+      <span class="lab">New players flagged, prodromal stage</span>
+      <span class="num dash-skeleton" id="t-novp" data-source="sim_scenarios" data-field="novices_flagged_10" data-where="id=cal_h5cap">—</span>
+      <span class="sub">Healthy people new to games, at the cutoff that catches 80% of cases</span>
+    </div>
+    <div class="pv-tile">
+      <span class="lab">New players flagged, at-risk stage</span>
+      <span class="num dash-skeleton" id="t-novr" data-source="sim_scenarios" data-field="novices_flagged_10" data-where="id=cal_h5cap_risk">—</span>
+      <span class="sub">Same cutoff rule; the confound is largest where early detection matters</span>
+    </div>
+  </section>
+
+  <section class="pv-sec" id="simulation">
+    <h2>Simulated detection by stage</h2>
+    <p class="lede">Simulated players play the tuned game for one or ten sessions. Prodromal players carry the MCI+ deficits measured in real data at half strength; at-risk players at a fifth. AUC is cross-validated, healthy vs impaired, scoring cognitive parameters only.</p>
+    <div class="pv-grid">
+      <div class="pv-card">
+        <h3 id="h-auc">Detection (AUC)</h3>
+        <p class="note">Faint bar: one session. Solid bar: ten sessions. Dashed line: chance.</p>
+        <div class="pv-chart dash-skeleton" id="c-auc" data-source="sim_scenarios"></div>
+      </div>
+      <div class="pv-card">
+        <h3 id="h-nov">Healthy new players flagged</h3>
+        <p class="note">Share of healthy people new to games who score as impaired, at the cutoff that catches 80% of impaired players. Lower is better.</p>
+        <div class="pv-chart dash-skeleton" id="c-nov" data-source="sim_scenarios"></div>
+      </div>
+    </div>
+    <div class="pv-card">
+      <h3 id="h-scen">Scenarios</h3>
+      <div class="pv-tablewrap">
+        <table class="pv-table" id="tb-scen" data-source="sim_scenarios" data-row-key="id">
+          <thead><tr>
+            <th data-field="id" class="hide-narrow">Run</th><th data-field="stage">Stage</th><th data-field="model">Model</th>
+            <th data-field="auc_1" class="n">AUC, 1 session</th><th data-field="auc_10" class="n">AUC, 10 sessions</th>
+            <th data-field="novices_flagged_10" class="n">New players flagged</th><th data-field="note" class="hide-narrow">What changes</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv-sec" id="model-fit">
+    <h2>Which lantern model fits real returns</h2>
+    <p class="lede">Each model fitted per person; bars show how far each falls behind the best model on that dataset (summed BIC, lower is better). The game now uses H5, the one structure that does well on both.</p>
+    <div class="pv-grid">
+      <div class="pv-card">
+        <h3 id="h-fit-tri">Triangles, healthy elderly and biomarker-typed MCI</h3>
+        <p class="note">Castegnaro / Howett, 98 people. BIC behind the best.</p>
+        <div class="pv-chart dash-skeleton" id="c-fit-tri" data-source="model_fit"></div>
+      </div>
+      <div class="pv-card">
+        <h3 id="h-fit-cur">Curved paths, young and older adults</h3>
+        <p class="note">Stangl et al., 56 people. BIC behind the best.</p>
+        <div class="pv-chart dash-skeleton" id="c-fit-cur" data-source="model_fit"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv-sec" id="effects">
+    <h2>What separates the groups</h2>
+    <p class="lede">Effect sizes (Cohen's d, impaired or older minus comparison) for the game's five lantern parameters. Heading noise carries the disease signal and the ageing signal, so scores need age-matched norms.</p>
+    <div class="pv-card">
+      <h3 id="h-eff">Lantern parameters, effect size by comparison</h3>
+      <div class="pv-legend" id="lg-eff" data-source="lantern_effects"></div>
+      <div class="pv-chart dash-skeleton" id="c-eff" data-source="lantern_effects"></div>
+    </div>
+    <div class="pv-grid">
+      <div class="pv-card">
+        <h3 id="h-field">At-risk and early-stage effects in other tasks</h3>
+        <p class="note">Absolute d at first testing. APOE4: cognitively healthy midlife carriers vs non-carriers. SCD: subjective cognitive decline vs healthy older adults, real-world wayfinding.</p>
+        <div class="pv-legend" id="lg-field" data-source="field_effects"></div>
+        <div class="pv-chart dash-skeleton" id="c-field" data-source="field_effects"></div>
+      </div>
+      <div class="pv-card">
+        <h3 id="h-rel">Reliability of each lantern parameter</h3>
+        <p class="note">Split-half (Spearman-Brown) in the triangle data, MCI+ vs MCI− AUC beside it.</p>
+        <div class="pv-tablewrap">
+          <table class="pv-table" id="tb-rel" data-source="lantern_effects" data-row-key="id">
+            <thead><tr><th data-field="parameter">Parameter</th><th data-field="d" class="n">d</th><th data-field="auc" class="n">AUC</th><th data-field="reliability" class="n">Reliability</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv-sec" id="datasets">
+    <h2>Open datasets used</h2>
+    <div class="pv-card">
+      <div class="pv-tablewrap">
+        <table class="pv-table" id="tb-data" data-source="open_datasets" data-row-key="dataset">
+          <thead><tr><th data-field="dataset">Dataset</th><th data-field="task">Task</th><th data-field="groups" class="hide-narrow">Groups</th><th data-field="level" class="hide-narrow">Data</th><th data-field="used_for">Used for</th><th data-field="licence" class="hide-narrow">Licence</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const f3 = d3.format('.2f'), pct = d3.format('.0%'), f1 = d3.format('.1f'), fbic = d3.format(',.0f');
+  const ready = (id) => dash.data(id).status === 'ok';
+  function unskel(sel) { document.querySelectorAll(sel).forEach((el) => el.classList.remove('dash-skeleton')); }
+  function fail(el, id) {
+    const s = dash.data(id).status;
+    if (s === 'error' || s === 'connect' || s === 'declined') { el.classList.remove('dash-skeleton'); el.innerHTML = ''; const d = document.createElement('div'); d.className = 'pv-fail'; d.textContent = 'Failed to load'; el.appendChild(d); }
+    return s !== 'ok';
+  }
+  function tip(box) {
+    let t = box.querySelector('.pv-tip'); if (!t) { t = document.createElement('div'); t.className = 'pv-tip'; t.hidden = true; box.appendChild(t); }
+    return {
+      show(ev, title, lines) {
+        t.innerHTML = ''; const h = document.createElement('div'); h.className = 't'; h.textContent = title; t.appendChild(h);
+        lines.forEach((l) => { const d = document.createElement('div'); d.textContent = l; t.appendChild(d); });
+        t.hidden = false; const r = box.getBoundingClientRect(); let x = ev.clientX - r.left + 12, y = ev.clientY - r.top + 12;
+        x = Math.min(x, box.clientWidth - t.offsetWidth - 4); x = Math.max(0, x); t.style.left = x + 'px'; t.style.top = y + 'px';
+      },
+      hide() { t.hidden = true; }
+    };
+  }
+  function textWidth(svg, s, size) { const n = svg.append('text').attr('font-size', size).text(s); const w = n.node().getComputedTextLength(); n.remove(); return w; }
+
+  function tiles() {
+    const ok = ready('sim_scenarios'); const rows = ok ? dash.data('sim_scenarios').data : [];
+    const get = (id) => rows.find((r) => r.id === id) || {};
+    const set = (elId, v, fmt) => { const el = document.getElementById(elId); el.textContent = ok && v != null ? fmt(+v) : '—'; };
+    set('t-prod', get('cal_h5cap').auc_10, f3); set('t-risk', get('cal_h5cap_risk').auc_10, f3);
+    set('t-novp', get('cal_h5cap').novices_flagged_10, pct); set('t-novr', get('cal_h5cap_risk').novices_flagged_10, pct);
+    const tk = document.getElementById('takeaway');
+    if (ok) {
+      const p = get('cal_h5cap'), r = get('cal_h5cap_risk');
+      tk.textContent = `Calibrated on five open sources, the game separates MCI-stage players well in simulation (AUC ${f3(+p.auc_10)} after ten sessions, ${pct(+p.novices_flagged_10)} of new players flagged). At the at-risk stage it reaches ${f3(+r.auc_10)}, close to what real path-integration tasks achieve there, and new players remain the main confound.`;
+      unskel('#takeaway, .pv-tile .num');
+    } else tk.textContent = '—';
+  }
+
+  function scenarioBars(el, key1, key2, fmt, domainMax, chance) {
+    el.innerHTML = ''; if (fail(el, 'sim_scenarios')) return;
+    el.classList.remove('dash-skeleton');
+    const rows = dash.data('sim_scenarios').data.map((r) => ({ ...r, label: `${r.stage} · ${r.model}` }));
+    const W = el.clientWidth || 320, rowH = key1 ? 34 : 26, H = rows.length * rowH + 28;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const lw = Math.min(W * .48, d3.max(rows, (r) => textWidth(svg, r.label, 12)) + 10);
+    const x = d3.scaleLinear([0, domainMax], [lw, W - 34]);
+    const y = d3.scaleBand(rows.map((r) => r.id), [0, H - 24]).padding(.28);
+    svg.append('g').selectAll('line').data(x.ticks(4)).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 24).style('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').attr('transform', `translate(0,${H - 24})`).call(d3.axisBottom(x).ticks(4).tickFormat(fmt)).attr('font-size', null).attr('font-family', null)
+      .call((g) => { g.select('.domain').style('stroke', 'var(--cds-chart-axis)'); g.selectAll('line').remove(); g.selectAll('text').style('fill', 'var(--color-fg-muted)').attr('font-size', 11); });
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', lw - 8).attr('y', (r) => y(r.id) + y.bandwidth() / 2).attr('dy', '.35em').attr('text-anchor', 'end')
+      .attr('font-size', 12).style('fill', 'var(--color-fg)').text((r) => r.label);
+    const T = tip(el);
+    const accent = (r) => r.id.includes('h5') ? dash.colors[0] : 'var(--cds-chart-muted)';
+    if (key1) svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', x(0)).attr('y', (r) => y(r.id)).attr('height', y.bandwidth() / 2 - 1)
+      .attr('width', (r) => Math.max(0, x(+r[key1]) - x(0))).attr('rx', 3).style('fill', accent).attr('opacity', .35);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', x(0)).attr('y', (r) => key1 ? y(r.id) + y.bandwidth() / 2 : y(r.id)).attr('height', key1 ? y.bandwidth() / 2 : y.bandwidth())
+      .attr('width', (r) => Math.max(0, x(+r[key2]) - x(0))).attr('rx', 3).style('fill', accent);
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', (r) => x(+r[key2]) + 4).attr('y', (r) => (key1 ? y(r.id) + y.bandwidth() * .75 : y(r.id) + y.bandwidth() / 2)).attr('dy', '.35em')
+      .attr('font-size', 11).style('fill', 'var(--color-fg-muted)').text((r) => fmt(+r[key2]));
+    if (chance != null) svg.append('line').attr('x1', x(chance)).attr('x2', x(chance)).attr('y1', 0).attr('y2', H - 24).style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 3');
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', 0).attr('width', W).attr('y', (r) => y(r.id) - 4).attr('height', y.bandwidth() + 8).style('fill', 'transparent')
+      .on('mousemove', (ev, r) => T.show(ev, r.label, key1 ? [`1 session: ${fmt(+r[key1])}`, `10 sessions: ${fmt(+r[key2])}`, r.note] : [`10 sessions: ${fmt(+r[key2])}`, `1 session: ${fmt(+r.novices_flagged_1)}`, r.note]))
+      .on('mouseleave', () => T.hide());
+  }
+
+  function scenTable() {
+    const tb = document.querySelector('#tb-scen tbody'); tb.innerHTML = ''; if (!ready('sim_scenarios')) return;
+    dash.data('sim_scenarios').data.forEach((r) => {
+      const tr = document.createElement('tr');
+      [[r.id, 'hide-narrow'], [r.stage], [r.model], [f3(+r.auc_1), 'n'], [f3(+r.auc_10), 'n'], [pct(+r.novices_flagged_10), 'n'], [r.note, 'hide-narrow']].forEach(([v, c]) => { const td = document.createElement('td'); if (c) td.className = c; td.textContent = v; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+  }
+
+  function fitChart(el, which) {
+    el.innerHTML = ''; if (fail(el, 'model_fit')) return; el.classList.remove('dash-skeleton');
+    const rows = dash.data('model_fit').data.filter((r) => r.data.startsWith(which)).map((r) => ({ ...r, dbic: +r.dbic })).sort((a, b) => a.dbic - b.dbic);
+    const W = el.clientWidth || 320, rowH = 30, H = rows.length * rowH + 28;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const lw = Math.min(W * .52, d3.max(rows, (r) => textWidth(svg, r.model, 12)) + 10);
+    const x = d3.scaleLinear([0, d3.max(rows, (r) => r.dbic) || 1], [lw, W - 48]).nice();
+    const y = d3.scaleBand(rows.map((r) => r.id), [0, H - 24]).padding(.3);
+    svg.append('g').selectAll('line').data(x.ticks(4)).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 24).style('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').attr('transform', `translate(0,${H - 24})`).call(d3.axisBottom(x).ticks(4).tickFormat(fbic)).attr('font-size', null).attr('font-family', null)
+      .call((g) => { g.select('.domain').style('stroke', 'var(--cds-chart-axis)'); g.selectAll('line').remove(); g.selectAll('text').style('fill', 'var(--color-fg-muted)').attr('font-size', 11); });
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', lw - 8).attr('y', (r) => y(r.id) + y.bandwidth() / 2).attr('dy', '.35em').attr('text-anchor', 'end').attr('font-size', 12)
+      .style('fill', (r) => r.model.includes('(H5)') ? 'var(--color-fg)' : 'var(--color-fg-muted)').text((r) => r.model);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', x(0)).attr('y', (r) => y(r.id)).attr('height', y.bandwidth()).attr('rx', 3)
+      .attr('width', (r) => Math.max(2, x(r.dbic) - x(0))).style('fill', (r) => r.model.includes('(H5)') ? dash.colors[0] : 'var(--cds-chart-muted)');
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', (r) => Math.max(x(0) + 2, x(r.dbic)) + 4).attr('y', (r) => y(r.id) + y.bandwidth() / 2).attr('dy', '.35em').attr('font-size', 11)
+      .style('fill', 'var(--color-fg-muted)').text((r) => r.dbic === 0 ? 'best' : '+' + fbic(r.dbic));
+    const T = tip(el);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', 0).attr('width', W).attr('y', (r) => y(r.id) - 3).attr('height', y.bandwidth() + 6).style('fill', 'transparent')
+      .on('mousemove', (ev, r) => T.show(ev, r.model, [`${r.k} parameters`, `BIC ${fbic(+r.bic)} (${r.dbic === 0 ? 'best' : '+' + fbic(r.dbic)})`, `AIC ${fbic(+r.aic)}`])).on('mouseleave', () => T.hide());
+  }
+
+  const COMPS = ['MCI+ vs healthy elderly', 'MCI+ vs MCI−', 'Older vs young (healthy)'];
+  function legend(el, items) { el.innerHTML = ''; items.forEach(([lab, col]) => { const s = document.createElement('span'); const i = document.createElement('i'); i.style.background = col; s.appendChild(i); s.appendChild(document.createTextNode(lab)); el.appendChild(s); }); }
+  function effChart() {
+    const el = document.getElementById('c-eff'); el.innerHTML = ''; legend(document.getElementById('lg-eff'), ready('lantern_effects') ? COMPS.map((c, i) => [c, dash.colors[i]]) : []);
+    if (fail(el, 'lantern_effects')) return; el.classList.remove('dash-skeleton');
+    const rows = dash.data('lantern_effects').data.map((r) => ({ ...r, d: +r.d }));
+    const params = [...new Set(rows.map((r) => r.parameter))];
+    const W = el.clientWidth || 320, rowH = 40, H = params.length * rowH + 30;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const lw = d3.max(params, (p) => textWidth(svg, p, 12)) + 12;
+    const ext = d3.extent(rows, (r) => r.d); const x = d3.scaleLinear([Math.min(-.5, ext[0]), Math.max(.5, ext[1])], [lw, W - 12]).nice();
+    const y = d3.scaleBand(params, [0, H - 26]).padding(.2);
+    svg.append('g').selectAll('line').data(x.ticks(6)).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 26).style('stroke', 'var(--cds-chart-grid)');
+    svg.append('line').attr('x1', x(0)).attr('x2', x(0)).attr('y1', 0).attr('y2', H - 26).style('stroke', 'var(--cds-chart-reference)');
+    svg.append('g').attr('transform', `translate(0,${H - 26})`).call(d3.axisBottom(x).ticks(6).tickFormat(d3.format('+.1~f'))).attr('font-size', null).attr('font-family', null)
+      .call((g) => { g.select('.domain').style('stroke', 'var(--cds-chart-axis)'); g.selectAll('line').remove(); g.selectAll('text').style('fill', 'var(--color-fg-muted)').attr('font-size', 11); });
+    svg.append('g').selectAll('text').data(params).join('text').attr('x', lw - 10).attr('y', (p) => y(p) + y.bandwidth() / 2).attr('dy', '.35em').attr('text-anchor', 'end').attr('font-size', 12).style('fill', 'var(--color-fg)').text((p) => p);
+    const off = (c) => (COMPS.indexOf(c) - 1) * (y.bandwidth() / 3.2);
+    const T = tip(el);
+    svg.append('g').selectAll('line').data(rows).join('line').attr('x1', x(0)).attr('x2', (r) => x(r.d)).attr('y1', (r) => y(r.parameter) + y.bandwidth() / 2 + off(r.comparison)).attr('y2', (r) => y(r.parameter) + y.bandwidth() / 2 + off(r.comparison))
+      .style('stroke', (r) => dash.colors[COMPS.indexOf(r.comparison)]).attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('opacity', .55);
+    svg.append('g').selectAll('circle').data(rows).join('circle').attr('cx', (r) => x(r.d)).attr('cy', (r) => y(r.parameter) + y.bandwidth() / 2 + off(r.comparison)).attr('r', 5)
+      .style('fill', (r) => dash.colors[COMPS.indexOf(r.comparison)])
+      .on('mousemove', (ev, r) => T.show(ev, `${r.parameter} · ${r.comparison}`, [`d ${d3.format('+.2f')(r.d)}`, `AUC ${f3(+r.auc)}`, `Reliability ${f3(+r.reliability)}`])).on('mouseleave', () => T.hide());
+  }
+
+  function relTable() {
+    const tb = document.querySelector('#tb-rel tbody'); tb.innerHTML = ''; if (!ready('lantern_effects')) return;
+    dash.data('lantern_effects').data.filter((r) => r.comparison === 'MCI+ vs MCI−').forEach((r) => {
+      const tr = document.createElement('tr'); tr.dataset.key = r.id;
+      [[r.parameter], [d3.format('+.2f')(+r.d), 'n'], [f3(+r.auc), 'n'], [f3(+r.reliability), 'n']].forEach(([v, c]) => { const td = document.createElement('td'); if (c) td.className = c; td.textContent = v; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+  }
+
+  function fieldChart() {
+    const el = document.getElementById('c-field'); el.innerHTML = '';
+    const studies = ready('field_effects') ? [...new Set(dash.data('field_effects').data.map((r) => r.study))] : [];
+    legend(document.getElementById('lg-field'), studies.map((s, i) => [s, dash.colors[i + 3]]));
+    if (fail(el, 'field_effects')) return; el.classList.remove('dash-skeleton');
+    const rows = dash.data('field_effects').data.map((r) => ({ ...r, d: +r.d }));
+    const W = el.clientWidth || 320, rowH = 26, H = rows.length * rowH + 28;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('height', H);
+    const lw = Math.min(W * .55, d3.max(rows, (r) => textWidth(svg, r.measure, 12)) + 10);
+    const x = d3.scaleLinear([0, Math.max(1, d3.max(rows, (r) => r.d))], [lw, W - 36]).nice();
+    const y = d3.scaleBand(rows.map((r) => r.id), [0, H - 24]).padding(.28);
+    svg.append('g').selectAll('line').data(x.ticks(4)).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 24).style('stroke', 'var(--cds-chart-grid)');
+    svg.append('g').attr('transform', `translate(0,${H - 24})`).call(d3.axisBottom(x).ticks(4).tickFormat(d3.format('.1f'))).attr('font-size', null).attr('font-family', null)
+      .call((g) => { g.select('.domain').style('stroke', 'var(--cds-chart-axis)'); g.selectAll('line').remove(); g.selectAll('text').style('fill', 'var(--color-fg-muted)').attr('font-size', 11); });
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', lw - 8).attr('y', (r) => y(r.id) + y.bandwidth() / 2).attr('dy', '.35em').attr('text-anchor', 'end').attr('font-size', 12).style('fill', 'var(--color-fg)').text((r) => r.measure);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', x(0)).attr('y', (r) => y(r.id)).attr('height', y.bandwidth()).attr('rx', 3)
+      .attr('width', (r) => Math.max(2, x(r.d) - x(0))).style('fill', (r) => dash.colors[studies.indexOf(r.study) + 3]);
+    svg.append('g').selectAll('text').data(rows).join('text').attr('x', (r) => x(r.d) + 4).attr('y', (r) => y(r.id) + y.bandwidth() / 2).attr('dy', '.35em').attr('font-size', 11).style('fill', 'var(--color-fg-muted)').text((r) => d3.format('.2f')(r.d));
+    const T = tip(el);
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', 0).attr('width', W).attr('y', (r) => y(r.id) - 3).attr('height', y.bandwidth() + 6).style('fill', 'transparent')
+      .on('mousemove', (ev, r) => T.show(ev, r.measure, [r.study, `d ${f3(r.d)}${r.d_retest != null ? ` (retest ${f3(+r.d_retest)})` : ''}`, `Reliability ${f3(+r.reliability)}, ${r.reliability_kind}`])).on('mouseleave', () => T.hide());
+  }
+
+  function dataTable() {
+    const tb = document.querySelector('#tb-data tbody'); tb.innerHTML = ''; if (!ready('open_datasets')) return;
+    dash.data('open_datasets').data.forEach((r) => {
+      const tr = document.createElement('tr');
+      [[r.dataset], [r.task], [r.groups, 'hide-narrow'], [r.level, 'hide-narrow'], [r.used_for], [r.licence, 'hide-narrow']].forEach(([v, c]) => { const td = document.createElement('td'); if (c) td.className = c; td.textContent = v; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+  }
+
+  let linked = false;
+  dash.onData(() => {
+    tiles();
+    scenarioBars(document.getElementById('c-auc'), 'auc_1', 'auc_10', f3, 1, .5);
+    scenarioBars(document.getElementById('c-nov'), null, 'novices_flagged_10', pct, 1, null);
+    scenTable(); fitChart(document.getElementById('c-fit-tri'), 'Triangles'); fitChart(document.getElementById('c-fit-cur'), 'Curved');
+    effChart(); relTable(); fieldChart(); dataTable();
+    if (!linked && ready('sim_scenarios')) { linked = true; const el = document.getElementById(location.hash.slice(1)); if (el) { el.scrollIntoView(); dash.setLink(el.id); } }
+  });
+})();
+</script>

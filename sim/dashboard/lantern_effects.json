@@ -1,0 +1,114 @@
+[
+ {
+  "id": "nu0-pos-el",
+  "parameter": "Heading noise",
+  "comparison": "MCI+ vs healthy elderly",
+  "d": 2.368,
+  "auc": 0.937,
+  "reliability": 0.771
+ },
+ {
+  "id": "nu0-pos-neg",
+  "parameter": "Heading noise",
+  "comparison": "MCI+ vs MCI\u2212",
+  "d": 0.871,
+  "auc": 0.74,
+  "reliability": 0.771
+ },
+ {
+  "id": "g2-pos-el",
+  "parameter": "Turn gain",
+  "comparison": "MCI+ vs healthy elderly",
+  "d": -2.076,
+  "auc": 0.176,
+  "reliability": -0.627
+ },
+ {
+  "id": "g2-pos-neg",
+  "parameter": "Turn gain",
+  "comparison": "MCI+ vs MCI\u2212",
+  "d": -0.846,
+  "auc": 0.247,
+  "reliability": -0.627
+ },
+ {
+  "id": "a-pos-el",
+  "parameter": "Positional noise",
+  "comparison": "MCI+ vs healthy elderly",
+  "d": 0.912,
+  "auc": 0.702,
+  "reliability": 0.636
+ },
+ {
+  "id": "a-pos-neg",
+  "parameter": "Positional noise",
+  "comparison": "MCI+ vs MCI\u2212",
+  "d": 0.566,
+  "auc": 0.623,
+  "reliability": 0.636
+ },
+ {
+  "id": "gain-pos-el",
+  "parameter": "Distance gain",
+  "comparison": "MCI+ vs healthy elderly",
+  "d": -0.318,
+  "auc": 0.322,
+  "reliability": 0.138
+ },
+ {
+  "id": "gain-pos-neg",
+  "parameter": "Distance gain",
+  "comparison": "MCI+ vs MCI\u2212",
+  "d": -0.506,
+  "auc": 0.338,
+  "reliability": 0.138
+ },
+ {
+  "id": "leak-pos-el",
+  "parameter": "Leak",
+  "comparison": "MCI+ vs healthy elderly",
+  "d": 0.731,
+  "auc": 0.621,
+  "reliability": 0.243
+ },
+ {
+  "id": "leak-pos-neg",
+  "parameter": "Leak",
+  "comparison": "MCI+ vs MCI\u2212",
+  "d": 0.182,
+  "auc": 0.516,
+  "reliability": 0.243
+ },
+ {
+  "id": "nu0-old-young",
+  "parameter": "Heading noise",
+  "comparison": "Older vs young (healthy)",
+  "d": 0.929,
+  "auc": 0.773,
+  "reliability": 0.919
+ },
+ {
+  "id": "gain-old-young",
+  "parameter": "Distance gain",
+  "comparison": "Older vs young (healthy)",
+  "d": -0.482,
+  "auc": 0.371,
+  "reliability": 0.978
+ },
+ {
+  "id": "leak-old-young",
+  "parameter": "Leak",
+  "comparison": "Older vs young (healthy)",
+  "d": 0.013,
+  "auc": 0.495,
+  "reliability": 0.903
+ },
+ {
+  "id": "a-old-young",
+  "parameter": "Positional noise",
+  "comparison": "Older vs young (healthy)",
+  "d": -0.221,
+  "auc": 0.438,
+  "reliability": 0.92
+ }
+]

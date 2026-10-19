@@ -35,7 +35,42 @@ def pure(f):
     return {k: v for k, v in f.items() if not any(k == m or k.startswith(m + ':') for m in MOTORISH)}
 
 
+# ---------------------------------------------------------------- control-learning correction
+# Each session yields a control-fluency index from measures that are about the controls, not the house: walking speed, wall
+# scrapes, and sword aim (the true aim parameter plus measurement noise, as the game measures it from hits and offsets).
+# A normative sample of healthy players (experienced and new to games alike, never prodromal) gives, per cognitive measure,
+# how much it shifts with fluency; the score then uses each measure minus that shift. Two folds by player id so no player's
+# own data set the norm used to correct them.
+CTRL_SEED = 7
+
+
+def fluency(r, rng):
+    return np.array([np.log(r['speed']), np.log(r['scrape']), r['swing'] + rng.normal(0, .08)])
+
+
+def adjust_rows(rows, keys=None):
+    import copy
+    rng = np.random.default_rng(CTRL_SEED); rows = [copy.copy(r) for r in rows]
+    for r in rows: r['_flu'] = fluency(r, rng)
+    keys = keys or [k for k in RAW2 + T.model_keys(rows[0]) if k in rows[0]]
+    ref = lambda fold: [r for r in rows if r['group'] in ('healthy', 'healthy_novice') and r['pid'] % 2 == fold]
+    for fold in (0, 1):
+        R = ref(1 - fold); M = np.array([r['_flu'] for r in R]); mu = M.mean(0)
+        X = np.c_[np.ones(len(R)), M - mu]
+        for k in keys:
+            y = T.tf(k, [r[k] for r in R]) if k in RAW2 else np.array([r[k] for r in R], float); ok = np.isfinite(y)
+            if ok.sum() < 20: continue
+            beta = np.linalg.lstsq(X[ok], y[ok], rcond=None)[0][1:]
+            for r in rows:
+                if r['pid'] % 2 != fold or not np.isfinite(r[k] if r[k] is not None else np.nan): continue
+                v = T.tf(k, [r[k]])[0] if k in RAW2 else r[k]; v = v - float(beta @ (r['_flu'] - mu))
+                # store back on the original scale so person_features' transform still applies
+                r[k] = (float(np.expm1(v)) if k in T.POS else float(v))
+    return rows
+
+
 def matrix(rows, n_sess, kind):
+    if kind.startswith('adj_'): rows = adjust_rows([r for r in rows if r['session'] < n_sess]); kind = kind[4:]
     by = {}
     for r in rows:
         if r['session'] < n_sess: by.setdefault((r['group'], r['pid']), []).append(r)

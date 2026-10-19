@@ -1,0 +1,62 @@
+[
+ {
+  "id": "cal_v1",
+  "model": "As first built",
+  "stage": "Prodromal",
+  "note": "Assumed deficits; isotropic lantern model",
+  "auc_1": 0.801,
+  "auc_10": 0.944,
+  "auc_10_all": 0.958,
+  "novices_flagged_10": 0.405,
+  "novices_flagged_1": 0.807,
+  "novice_auc_10": 0.774
+ },
+ {
+  "id": "cal_h5",
+  "model": "Lantern from data",
+  "stage": "Prodromal",
+  "note": "H5 lantern, healthy and MCI+ drawn from the triangle fits",
+  "auc_1": 0.834,
+  "auc_10": 0.934,
+  "auc_10_all": 0.949,
+  "novices_flagged_10": 0.18,
+  "novices_flagged_1": 0.383,
+  "novice_auc_10": 0.883
+ },
+ {
+  "id": "cal_h5cap",
+  "model": "Lantern from data + sentinel cap",
+  "stage": "Prodromal",
+  "note": "Also caps the perceptual-decision deficit at the ageing effect",
+  "auc_1": 0.821,
+  "auc_10": 0.935,
+  "auc_10_all": 0.927,
+  "novices_flagged_10": 0.14,
+  "novices_flagged_1": 0.377,
+  "novice_auc_10": 0.881
+ },
+ {
+  "id": "cal_v1_risk",
+  "model": "As first built",
+  "stage": "At risk",
+  "note": "Effect at 0.2 of MCI+ (APOE4-sized)",
+  "auc_1": 0.604,
+  "auc_10": 0.737,
+  "auc_10_all": 0.79,
+  "novices_flagged_10": 0.795,
+  "novices_flagged_1": 0.953,
+  "novice_auc_10": 0.52
+ },
+ {
+  "id": "cal_h5cap_risk",
+  "model": "Lantern from data + sentinel cap",
+  "stage": "At risk",
+  "note": "Effect at 0.2 of MCI+ (APOE4-sized)",
+  "auc_1": 0.597,
+  "auc_10": 0.705,
+  "auc_10_all": 0.719,
+  "novices_flagged_10": 0.71,
+  "novices_flagged_1": 0.757,
+  "novice_auc_10": 0.578
+ }
+]

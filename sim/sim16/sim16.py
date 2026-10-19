@@ -40,6 +40,8 @@ BASE_DESIGN = dict(
                            # Howett/Castegnaro triangle completion: gain, leak, angular gain on turns, distance and direction noise);
                            # 'v3' (H5, best across triangle completion and Stangl et al. 2020: constant direction noise plus
                            # positional noise accumulating with distance walked)
+    novice_cog=True,       # False: players new to games differ only in control fluency (and its learning), not in any
+                           # lasting cognitive parameter; tests how much of the novice confound is sim2's assumption
     sentinel_cap=False,    # True: cap the assumed prodromal sentinel deficits at the size of the whole young-to-old ageing effect
                            # on perceptual drift (meta-analysis, Theisen et al. 2021: g = -.61) and give non-decision time d = .6
     pi_source='assumed',   # v2 only: 'assumed' keeps sim2-style group shifts, 'data' draws healthy and prodromal from pi_calib.json
@@ -166,8 +168,14 @@ def palace_eig(G, kind):
 
 
 # ============================================================ person and session parameters
+NOVICE_COG = ('infer', 'pi_gain', 'pi_leak', 'pi_noise', 'pi_bias', 'p_enc', 'alpha', 'forget', 'k', 'a', 'p_glove')
+
+
 def new_person(g, rng):
     p = sim2.sample_person(g, rng)
+    if g == 'healthy_novice' and not DESIGN.get('novice_cog', True):
+        h = sim2.sample_person('healthy', rng)
+        for k in NOVICE_COG: p[k] = h[k]
     p['bias_deg'] = rng.normal(0, 12)            # a constant turning bias, any group
     p.update(v2_person(g, rng))
     if DESIGN.get('sentinel_cap') and g == 'prodromal':

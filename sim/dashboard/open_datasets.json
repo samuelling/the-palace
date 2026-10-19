@@ -1,0 +1,42 @@
+[
+ {
+  "dataset": "Castegnaro / Howett 2019\u201323",
+  "task": "Triangle completion, real walking in VR",
+  "groups": "24 young, 33 healthy elderly, MCI: 11 biomarker+, 14 biomarker\u2212, 16 unknown",
+  "level": "Trial",
+  "used_for": "Lantern model structure; MCI+ effects that set the simulated prodromal player",
+  "licence": "MIT (Zenodo 8253734)"
+ },
+ {
+  "dataset": "Stangl et al. 2020",
+  "task": "Curved-path homing, real walking in VR, up to 4 stops",
+  "groups": "30 young, 26 older adults",
+  "level": "Trial",
+  "used_for": "Lantern model structure (noise growth with distance); ageing effects",
+  "licence": "None stated (OSF ufk4x); analysed, not redistributed"
+ },
+ {
+  "dataset": "Coughlan / Gillespie 2019\u201320",
+  "task": "Virtual Supermarket Task, Sea Hero Quest; retest at ~18 months",
+  "groups": "32 APOE e3e3, 27 e3e4, healthy, age 51\u201375",
+  "level": "Person scores",
+  "used_for": "Size of the at-risk (midlife APOE4) effect; test-retest",
+  "licence": "OSF public (x2rjz, 6adqk)"
+ },
+ {
+  "dataset": "Marquardt et al. 2024",
+  "task": "Real-world smartphone wayfinding, 5 campus buildings",
+  "groups": "24 young, 25 healthy older, 23 SCD",
+  "level": "Per track",
+  "used_for": "Route measures: orientation stops, map checks",
+  "licence": "OSF public (f9br5)"
+ },
+ {
+  "dataset": "Theisen et al. 2021 (meta-analysis)",
+  "task": "Diffusion-model parameters, older vs younger",
+  "groups": "30 perceptual-task studies",
+  "level": "Published effect sizes",
+  "used_for": "Cap on the simulated sentinel (perceptual decision) deficit",
+  "licence": "Published article"
+ }
+]
