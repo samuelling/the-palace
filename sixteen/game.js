@@ -27,7 +27,7 @@
   const S = { spec: null, areas: {}, area: null, exitById: {}, items: [], running: false, paused: false, hooks: {}, log: null, session: null,
     inv: {}, invNames: {}, flags: {}, visited: {}, held: {}, holdAll: false, blackout: false, lanternOff: false, homing: null, wisp: null, leg: null, goal: null,
     trans: null, fx: [], t0: 0, texSeed: 0, changedOnce: false, closures: {}, follower: null, chapter: 0, placed: {}, lastCell: null, mapOpen: null };
-  const H = { x: 0, y: 0, face: 'down', walk: 0, moving: false, atk: 0, atkCd: 0, inv: 0, hp: 6, kx: 0, ky: 0, kt: 0, stun: 0, run: false };
+  const H = { ang: 0, x: 0, y: 0, face: 'down', walk: 0, moving: false, atk: 0, atkCd: 0, inv: 0, hp: 6, kx: 0, ky: 0, kt: 0, stun: 0, run: false };
 
   /* ---------- tiles, collision, sight ---------- */
   const tileAt = (a, x, y) => (x < 0 || y < 0 || x >= a.w || y >= a.h) ? '#' : a.grid[y][x];
@@ -93,13 +93,13 @@
     snapshot(prevC);
     const slide = !e.veil && !te.veil && !isScroll(from) && !isScroll(to) && OPP[e.side] === te.side;
     S.trans = { kind: slide ? 'slide' : 'fade', t: 0, dur: slide ? .55 : .6, dir: e.side, te, switched: false, veil: !!e.veil };
-    if (slide) { switchArea(te); renderWorld(nextC.getContext('2d')); S.trans.switched = true; }
+    if (slide) { switchArea(te); (isFP() ? renderFP : renderWorld)(nextC.getContext('2d')); S.trans.switched = true; }
     sfx(e.veil ? 'veil' : 'whoosh', e.veil ? 1 : .5);
   }
   function switchArea(te) {
     const a = S.areas[te.area], p = arrival(te);
     if (S.follower && S.follower.area === S.area.id) { S.follower.area = a.id; S.follower.x = p.x - DIRV[p.face][0] * 14; S.follower.y = p.y - DIRV[p.face][1] * 14; S.follower.trail = []; }
-    S.area = a; H.x = p.x; H.y = p.y; H.face = p.face; H.kt = 0; S.lastCell = null;
+    S.area = a; H.x = p.x; H.y = p.y; H.face = p.face; H.ang = faceToAng(p.face); H.kt = 0; S.lastCell = null; S.wasFP = isFP();
     rebuildBlk(a); enterArea(a);
   }
   function updateTrans(dt) {
@@ -185,8 +185,8 @@
     H.walk += dt * (H.run ? 13 : 9);
     stepAcc += moved; if (stepAcc > (H.run ? .75 : .55)) { stepAcc = 0; SND.sfx('step', { surface: floorAt(a, ...heroTile()), vol: .8 }); }
   }
-  function bumpAhead(a) {
-    const [dx, dy] = DIRV[H.face], tx = Math.floor((H.x + dx * 9) / T), ty = Math.floor((H.y - 2 + dy * 9) / T);
+  function bumpAhead(a, vec) {
+    const [dx, dy] = vec || DIRV[H.face], tx = Math.floor((H.x + dx * 9) / T), ty = Math.floor((H.y - 2 + dy * 9) / T);
     const e = exitAt(a, tx, ty); if (e && e.state !== 'open') { bumpExit(e); return; }
     if (S.spec.maze && a.id === S.spec.maze.area && tileAt(a, tx, ty) === 'H' && S.spec.maze.planGrid[ty][tx] === '.') {
       const t = now(); if (t - (S.lastHedgeBump || 0) > 1400) { S.lastHedgeBump = t; S.log.staleBumps++; logEvent('stale-bump', { tile: [tx, ty] }); }
@@ -210,6 +210,7 @@
 
   /* ---------- the sword ---------- */
   function attack() {
+    if (isFP()) { attackFP(); return; }
     if (H.atk > 0 || H.atkCd > 0 || H.stun > 0 || H.kt > 0) return;
     H.atk = .24; H.atkCd = .34; sfx('slash', .8); S.log.swings++;
     const [dx, dy] = DIRV[H.face], hx = H.x + dx * 14, hy = H.y - 6 + dy * 14;
@@ -302,7 +303,7 @@
     const a = S.area;
     for (const f of a.figures) {
       if (f.gone || f.decided) { if (f.wob > 0) f.wob -= dt; continue; }
-      if (!f.seen && figureVisible(a, f)) { f.seen = t; logEvent('figure-seen', { id: f.id }); }
+      if (!f.seen && (isFP() ? fpVisible(a, f) : figureVisible(a, f))) { f.seen = t; f.seenDist = +(Math.hypot(H.x - (f.x * T + 8), H.y - (f.y * T + 8)) / T).toFixed(2); f.seenView = isFP() ? 'fp' : 'top'; logEvent('figure-seen', { id: f.id, view: f.seenView }); }
       const d = Math.hypot(H.x - (f.x * T + 8), H.y - (f.y * T + 10)) / T;
       if (d < 1.7) f.near = true;
       if (f.near && d > 2.6) decideFigure(f, 'pass', t);
@@ -311,7 +312,7 @@
   function decideFigure(f, how, t) {
     f.decided = how;
     const correct = (how === 'strike') === (f.type === 'sleeper');
-    const rec = { id: f.id, type: f.type, look: f.look, contrast: f.contrast, how, correct, rt: f.seen ? +((t - f.seen) / 1000).toFixed(2) : null, t: +((t - S.t0) / 1000).toFixed(2), area: f.area };
+    const rec = { id: f.id, type: f.type, look: f.look, contrast: f.contrast, how, correct, rt: f.seen ? +((t - f.seen) / 1000).toFixed(2) : null, t: +((t - S.t0) / 1000).toFixed(2), area: f.area, view: isFP() ? 'fp' : 'top', seenDist: f.seenDist == null ? null : f.seenDist };
     S.log.figures.push(rec); logEvent('figure', rec);
     const a = S.areas[f.area];
     if (f.type === 'sleeper') {
@@ -343,6 +344,7 @@
     return out;
   }
   function focus() {
+    if (isFP()) return focusFP();
     if (S.homing && S.homing.ready) return { kind: 'match', label: S.homing.label };
     let best = null, bs = 1e9; const [fx, fy] = DIRV[H.face];
     for (const o of interactables()) {
@@ -507,7 +509,8 @@
     }
   }
   function homing(target, cb, meta, label) {
-    const h = S.homing = { tx: target.x, ty: target.y, label: label || 'Strike a match', cb, t0: now(), sx: H.x / T, sy: H.y / T, d0: S.log.motor.dist, meta: meta || { kind: 'free' }, ready: false };
+    const h = S.homing = { tx: target.x, ty: target.y, label: label || 'Strike a match', cb, t0: now(), sx: H.x / T, sy: H.y / T, d0: S.log.motor.dist, meta: meta || { kind: 'free' }, ready: false, fp: S.area.id === 'rotunda' };
+    h.meta = Object.assign({ view: (S.area.view === 'fp' || h.fp) ? 'fp' : 'top' }, h.meta);
     setTimeout(() => { if (S.homing === h) h.ready = true; }, 700);
     h.timer = setTimeout(() => { if (S.homing === h) finishHoming(true); }, 90000);
   }
@@ -636,7 +639,7 @@
     S.log.duration = +((now() - S.t0) / 1000).toFixed(1); S.log.done = true;
     if (S.spec.id === 'grounds') { S.session.prologueDone = true; saveSession(); return startChapter(S.pendingChapter || 0); }
     // keep sentinel decisions near threshold for this player: about 75% correct is where drift is best estimated
-    const F = S.log.figures;
+    const F = S.log.figures.filter(f => f.view !== 'fp');
     if (F.length >= 3) { const acc = F.filter(f => f.correct).length / F.length, c = calib();
       c.contrastScale = clamp(c.contrastScale * (acc > .85 ? .8 : acc < .65 ? 1.25 : 1), .4, 2.5);
       c.history.push({ t: Date.now(), chapter: S.spec.id, acc: +acc.toFixed(2), n: F.length, scale: +c.contrastScale.toFixed(3) }); c.history = c.history.slice(-60); store.set('palace16.calib', c); }
@@ -653,6 +656,204 @@
       () => { $('#notesB').onclick = notes; if ($('#next')) $('#next').onclick = () => startChapter(S.chapter + 1); if ($('#again')) $('#again').onclick = () => location.reload(); });
   }
   function showScreen(id, html, after) { const el = $('#' + id); $('#endCard').innerHTML = html; el.hidden = false; if (after) after(); const b = el.querySelector('.btn'); if (b) b.focus(); }
+  /* ---------- first person: a raycaster on the same tile grids ----------
+     Used where egocentric processing is the construct: the hedge maze (closures are found only
+     after turning into them, and junctions must be placed on the plan in your head) and the
+     blackouts (heading must be updated from rotation, distances are foreshortened). */
+  const FOV = .66;   // tan of half the field of view, about 67 degrees across
+  const isFP = () => !!S.area && (S.area.view === 'fp' || !!(S.homing && S.homing.fp));
+  const faceToAng = f => ({ right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 })[f] || 0;
+  const angToFace = a => { const k = Math.round(((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI) / (Math.PI / 2)) % 4; return ['right', 'down', 'left', 'up'][k]; };
+  const angDiff = (a, b) => { let d = (a - b) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
+  let straightA = null;
+  function updateHeroFP(dt, t) {
+    const a = S.area, m = S.log.motor;
+    if (H.inv > 0) H.inv -= dt; if (H.atkCd > 0) H.atkCd -= dt; if (H.stun > 0) H.stun -= dt;
+    if (H.kt > 0) { H.kt -= dt; tryMove(a, H.kx * dt, H.ky * dt, false); return; }
+    if (H.atk > 0) { H.atk -= dt; H.moving = false; return; }
+    if (H.stun > 0) return;
+    let turn = 0, fwd = 0;
+    if (keys.ArrowLeft || keys.KeyA) turn--; if (keys.ArrowRight || keys.KeyD) turn++; if (keys.ArrowUp || keys.KeyW) fwd++; if (keys.ArrowDown || keys.KeyS) fwd--;
+    if (joy.on) { turn += joy.x; fwd -= joy.y; }
+    turn = clamp(turn, -1, 1); fwd = clamp(fwd, -1, 1);
+    H.run = !!(keys.ShiftLeft || keys.ShiftRight);
+    H.ang += turn * 2.4 * dt; H.face = angToFace(H.ang);
+    H.moving = Math.abs(fwd) > .1;
+    if (!H.moving) { H.walk = 0; straightA = null; return; }
+    const sp = (H.run ? 92 : 56) * fwd * (fwd < 0 ? .6 : 1), ox = H.x, oy = H.y;
+    const blocked = tryMove(a, Math.cos(H.ang) * sp * dt, Math.sin(H.ang) * sp * dt, false);
+    const moved = Math.hypot(H.x - ox, H.y - oy) / T;
+    m.dist += moved; if (H.run) m.runDist += moved;
+    if (blocked && t - lastScrape > 500 && moved < Math.abs(sp) * dt / T * .5) { lastScrape = t; m.scrapes++; }
+    if (blocked) bumpAhead(a, [Math.cos(H.ang), Math.sin(H.ang)]);
+    if (Math.abs(turn) > .05 || fwd < .8 || H.run) straightA = null;
+    else { if (straightA === null) straightA = t; else if (t - straightA > 350 && !blocked) { m.straightT += dt; m.straightD += moved; } }
+    H.walk += dt * (H.run ? 12 : 8);
+    stepAcc += moved; if (stepAcc > (H.run ? .75 : .55)) { stepAcc = 0; SND.sfx('step', { surface: floorAt(a, ...heroTile()), vol: .8 }); }
+  }
+  function attackFP() {
+    if (H.atk > 0 || H.atkCd > 0 || H.stun > 0 || H.kt > 0) return;
+    H.atk = .26; H.atkCd = .36; sfx('slash', .8); S.log.swings++;
+    const hx = H.x / T, hy = H.y / T, inCone = (x, y, r, w) => { const d = Math.hypot(x - hx, y - hy); return d < r && Math.abs(angDiff(Math.atan2(y - hy, x - hx), H.ang)) < (w || .6); };
+    let hit = null; const dx = Math.cos(H.ang), dy = Math.sin(H.ang);
+    for (const e of S.area.enemies) { if (e.dead || e.state === 'dormant') continue; if (inCone(e.px / T, (e.py - 5) / T, e.type === 'guardian' ? 2 : 1.6)) { hitEnemy(e, dx, dy); hit = hit || e.type; } }
+    for (const f of S.area.figures) { if (f.gone) continue; if (inCone(f.x + .5, f.y + .5, 1.55, .55)) { strikeFigure(f); hit = hit || 'figure'; break; } }
+    let aimErr = null, bd = 1e9;
+    S.area.enemies.filter(e => !e.dead && e.state !== 'dormant').forEach(e => { const ox = e.px / T - hx, oy = (e.py - 5) / T - hy, d = Math.hypot(ox, oy), along = ox * dx + oy * dy; if (along > 0 && d < 2.5 && d < bd) { bd = d; aimErr = +Math.abs(ox * dy - oy * dx).toFixed(2); } });
+    S.log.shots.push({ t: +((now() - S.t0) / 1000).toFixed(2), hit: !!hit, target: hit, aimErr, view: 'fp' });
+  }
+  function focusFP() {
+    if (S.homing && S.homing.ready) return { kind: 'match', label: S.homing.label };
+    let best = null, bd = 1e9; const hx = H.x / T, hy = H.y / T;
+    for (const o of interactables()) { const ox = o.x / T, oy = (o.y - 6) / T, d = Math.hypot(ox - hx, oy - hy); if (d > 1.6) continue; if (Math.abs(angDiff(Math.atan2(oy - hy, ox - hx), H.ang)) > .75 && d > .6) continue; if (d < bd) { bd = d; best = o; } }
+    return best;
+  }
+  function fpLights(a, t) {
+    const L = []; const add = (x, y, r, col, k) => { const n = parseInt(col.slice(1), 16); L.push({ x, y, r, r2: r * r, cr: (n >> 16 & 255) / 255 * k, cg: (n >> 8 & 255) / 255 * k, cb: (n & 255) / 255 * k }); };
+    if (!S.blackout) a.lights.forEach(l => { const fl = l.flicker === 'fire' ? .9 + Math.random() * .16 : l.flicker === 'candle' ? 1 + Math.sin(t / 130 + l.x) * .03 : 1; add(l.x, l.y, l.r / T * 1.3 * fl, l.color, 1.1); });
+    // at eye level the nearest visible floor is a metre ahead, so the blackout lantern reaches about two: enough for optic flow, never a hedge or the fountain on a lantern path
+    add(H.x / T, H.y / T, (S.blackout ? 2.2 : lanternRadius() / T * 1.05) * (1 + Math.sin(t / 90) * .02), '#ffd9a0', S.blackout ? .95 : 1.15);
+    if (S.wisp && S.wisp.phase !== 'gone') add(S.wisp.x, S.wisp.y, 2.1, '#ffc060', 1.2);
+    S.fx.forEach(f => { if (f.type === 'match') { const k = f.t < .2 ? f.t / .2 : 1 - (f.t - .2) / (f.dur - .2); add(H.x / T, H.y / T, 4 * k + .01, '#ffb040', 1.3); } });
+    if (S.follower && S.follower.area === a.id) add(S.follower.x / T, S.follower.y / T, 1.4, '#ffd9a0', .5);
+    const amb = S.blackout ? 0 : a.dark ? .03 : (1 - a.amb) * .75;
+    return { L, ar: amb * .62, ag: amb * .72, ab: amb * 1.0 };
+  }
+  // brightness at a world point, posterised into a few steps the way old palettes were
+  function lightAt(Lc, x, y, out) {
+    let r = Lc.ar, g = Lc.ag, b = Lc.ab;
+    for (const l of Lc.L) { const dx = x - l.x, dy = y - l.y, d2 = dx * dx + dy * dy; if (d2 >= l.r2) continue; let f = 1 - Math.sqrt(d2) / l.r; f = f * f * (3 - 2 * f); r += l.cr * f; g += l.cg * f; b += l.cb * f; }
+    out[0] = Math.min(1.25, Math.floor(r * 8) / 8); out[1] = Math.min(1.25, Math.floor(g * 8) / 8); out[2] = Math.min(1.25, Math.floor(b * 8) / 8);
+  }
+  const fpC = ART.cv(VW, PH), fpG = fpC.getContext('2d'), fpImg = fpG.createImageData(VW, PH), fpBuf = new Uint32Array(fpImg.data.buffer), zbuf = new Float32Array(VW);
+  const texCache = new Map();
+  function texOf(c) { let t = texCache.get(c); if (!t) { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height); t = { w: c.width, h: c.height, px: new Uint32Array(d.data.buffer.slice(0)) }; texCache.set(c, t); } return t; }
+  const DOOR_TEX = (() => { const P = ART.painter(16, 16); P.r(0, 0, 16, 16, '#1a1018').r(2, 2, 12, 14, '#5a3418'); for (let i = 4; i < 14; i += 3) P.r(i, 2, 1, 14, '#3a1e0c'); P.r(2, 2, 12, 1, '#7a4a24').r(11, 9, 2, 2, '#e0b040'); return P.c; })();
+  // a fountain seen from the side, for eye level (the top-down sprite would stand up as a disc)
+  const FOUNTAIN_SIDE = [0, 1, 2, 3].map(f => { const P = ART.painter(32, 24); P.r(2, 14, 28, 9, '#5a5664').r(1, 13, 30, 3, '#8a8690').r(3, 16, 26, 1, '#1e3e6a'); P.r(14, 6, 4, 8, '#7a7684').r(10, 5, 12, 2, '#8a8690').r(15, 1, 2, 4, '#9ac0f0');
+    for (let i = 0; i < 6; i++) P.p(8 + ((i * 5 + f * 3) % 16), 7 + ((i * 3 + f) % 6), '#6a9ad0'); return P.done(); });
+  const GLOW = (() => { const P = ART.painter(8, 8); P.r(2, 0, 4, 8, 'rgba(255,200,90,.5)').r(0, 2, 8, 4, 'rgba(255,200,90,.5)').r(2, 2, 4, 4, '#ffe08a').r(3, 3, 2, 2, '#fffbe0'); return P.c; })();
+  const shadePx = (p, l) => { const r = p & 255, g = (p >> 8) & 255, b = (p >> 16) & 255; return 0xff000000 | (Math.min(255, b * l[2]) << 16) | (Math.min(255, g * l[1]) << 8) | Math.min(255, r * l[0]); };
+  const rgbPx = (r, g, b) => 0xff000000 | (b << 16) | (g << 8) | r;
+  function wallTex(a, c, x, y, beyondExit) {
+    if (beyondExit) return texOf(DOOR_TEX);
+    if (c === 'H') return texOf(A.hedge(hash(x, y) % 4));
+    return texOf(A.face(a.wall, hash(x, y) % 2));
+  }
+  function renderFP(g) {
+    const a = S.area, t = now(), W2 = VW, Hh = PH, half = Hh / 2, buf = fpBuf, Lc = fpLights(a, t), lt = [0, 0, 0];
+    const px = H.x / T, py = (H.y - 2) / T, dirX = Math.cos(H.ang), dirY = Math.sin(H.ang), plX = -dirY * FOV, plY = dirX * FOV;
+    const bob = H.moving ? Math.sin(H.walk * 2) * 1.5 : 0, hor = half + bob;
+    const roof = a.id === 'maze' && !S.blackout;
+    // floor and ceiling, row by row
+    const rx0 = dirX - plX, ry0 = dirY - plY, rx1 = dirX + plX, ry1 = dirY + plY;
+    for (let y = 0; y < Hh; y++) {
+      const floor = y > hor; const pdist = Math.abs(y - hor) < .5 ? 1e9 : (half) / Math.abs(y - hor);
+      const stX = pdist * (rx1 - rx0) / W2, stY = pdist * (ry1 - ry0) / W2; let fx = px + pdist * rx0, fy = py + pdist * ry0;
+      const row = y * W2;
+      for (let x = 0; x < W2; x++, fx += stX, fy += stY) {
+        if (pdist > 40) { buf[row + x] = 0xff000000; continue; }
+        const cx = Math.floor(fx), cy = Math.floor(fy);
+        if (floor) {
+          let kind = cx >= 0 && cy >= 0 && cx < a.w && cy < a.h ? floorAt(a, cx, cy) : null;
+          if (!kind) { buf[row + x] = 0xff000000; continue; }
+          const tex = texOf(A.floor(kind, kind === 'marble' && a.checker ? (cx + cy) & 1 : kind === 'marble' ? 0 : hash(cx + S.texSeed, cy) % 3));
+          const p = tex.px[((Math.floor((fy - cy) * 16) & 15) << 4) | (Math.floor((fx - cx) * 16) & 15)];
+          lightAt(Lc, fx, fy, lt); buf[row + x] = (lt[0] + lt[1] + lt[2]) < .02 ? 0xff000000 : shadePx(p, lt);
+        } else if (roof) {
+          // the glasshouse roof: dark panes, iron glazing bars every three metres
+          const bar = (fx - Math.floor(fx / 3) * 3) < .07 || (fy - Math.floor(fy / 3) * 3) < .07;
+          const k = Math.max(0, Lc.ab * .55);
+          buf[row + x] = bar ? rgbPx(28 * k * 2 | 0, 34 * k * 2 | 0, 48 * k * 2 | 0) : rgbPx(10 * k * 2 | 0, 16 * k * 2 | 0, 32 * k * 2 | 0);
+        } else buf[row + x] = 0xff000000;
+      }
+    }
+    // walls, one column at a time
+    for (let x = 0; x < W2; x++) {
+      const cam = 2 * x / W2 - 1, rdx = dirX + plX * cam, rdy = dirY + plY * cam;
+      let mx = Math.floor(px), my = Math.floor(py); const ddx = Math.abs(1 / rdx), ddy = Math.abs(1 / rdy);
+      let sx, sy, sdx, sdy; if (rdx < 0) { sx = -1; sdx = (px - mx) * ddx; } else { sx = 1; sdx = (mx + 1 - px) * ddx; } if (rdy < 0) { sy = -1; sdy = (py - my) * ddy; } else { sy = 1; sdy = (my + 1 - py) * ddy; }
+      let side = 0, hitC = null, beyond = false, prevExit = false, steps = 0;
+      while (steps++ < 80) {
+        if (sdx < sdy) { sdx += ddx; mx += sx; side = 0; } else { sdy += ddy; my += sy; side = 1; }
+        if (mx < 0 || my < 0 || mx >= a.w || my >= a.h) { hitC = 'H'; beyond = prevExit; break; }
+        const c = a.grid[my][mx];
+        if (c === 'H' || c === '#') { hitC = c; break; }
+        if (c === 'D') { const e = exitAt(a, mx, my); if (!e || e.state !== 'open') { hitC = a.hedge ? 'H' : '#'; break; } prevExit = true; } else prevExit = false;
+      }
+      const perp = Math.max(.05, side === 0 ? sdx - ddx : sdy - ddy); zbuf[x] = perp;
+      if (!hitC) continue;
+      const lh = Hh / perp, top = hor - lh / 2, bot = hor + lh / 2;
+      let wx = side === 0 ? py + perp * rdy : px + perp * rdx; wx -= Math.floor(wx);
+      const tex = wallTex(a, hitC, mx, my, beyond), tu = Math.min(tex.w - 1, Math.floor(wx * tex.w));
+      const hx = px + perp * rdx - (side === 0 ? sx * .02 : 0), hy = py + perp * rdy - (side === 1 ? sy * .02 : 0);
+      lightAt(Lc, hx, hy, lt); if (side === 1) { lt[0] *= .82; lt[1] *= .82; lt[2] *= .82; }
+      const dark = lt[0] + lt[1] + lt[2] < .02;
+      for (let y = Math.max(0, Math.floor(top)); y < Math.min(Hh, Math.ceil(bot)); y++) {
+        if (dark) { buf[y * W2 + x] = 0xff000000; continue; }
+        const tv = Math.min(tex.h - 1, Math.floor((y - top) / lh * tex.h));
+        buf[y * W2 + x] = shadePx(tex.px[tv * tex.w + tu], lt);
+      }
+    }
+    // everything that stands: billboards, far to near, clipped by the wall depth of each column
+    const sprites = [];
+    const invDet = 1 / (plX * dirY - dirX * plY);
+    const push = (sx, sy, canvas, h, lift, emissive, alpha) => { const rx = sx - px, ry = sy - py, tX = invDet * (dirY * rx - dirX * ry), tY = invDet * (-plY * rx + plX * ry); if (tY > .12 && tY < 30) sprites.push({ sx, sy, tX, tY, canvas, h, lift: lift || 0, emissive, alpha }); };
+    a.props.forEach(p => { if (p.decal || p.wall || p.hidden || p.gone || p.type === 'hatch' || p.type === 'trapdoor') return; const spr = p.type === 'fountain' ? FOUNTAIN_SIDE[Math.floor(t / 200) % 4] : PROP_SPRITE(p); if (!spr) return; push(p.x + p.fw / 2, p.y + p.fh / 2, spr, p.type === 'fountain' ? 1.2 : spr.height / 16 * .9); });
+    a.items.forEach(it => { if (it.taken) return; push(it.x + .5, it.y + .5, A.items[it.kind] || A.items.key, .55, .18 + Math.sin(t / 300 + it.phase) * .03); });
+    a.figures.forEach(f => { if (f.gone) return; const scare = f.look === 'scarecrow', k = f.type === 'sleeper' ? 1 + 7 * f.contrast * Math.sin(2 * Math.PI * t / 1700 + f.phase) : 1;
+      const eye = rgbPx(clamp(118 * k, 0, 255) | 0, clamp(26 * k, 0, 255) | 0, clamp(22 * k, 0, 255) | 0);
+      push(f.x + .5, f.y + .5, scare ? A.scarecrow : A.sentinel, 1.5, 0, (u, v) => scare ? ((u === 6 || u === 9) && (v === 2 || v === 3) ? eye : 0) : (v === 4 && u >= 6 && u <= 9 ? eye : 0)); });
+    a.enemies.forEach(e => { if (e.dead && e.fall >= 1) return; const fr = Math.floor((e.t || 0) * 4) % 2;
+      const spr = e.type === 'guardian' ? A.guardian : e.type === 'knight' ? A.sentinel : (e.type === 'gardener' ? A.gardener : A.ghoul)[e.moving ? fr : 0];
+      push(e.px / T, (e.py - 4) / T, spr, e.type === 'guardian' ? 2 : e.type === 'knight' ? 1.5 : 1, 0, null, e.dead ? 1 - e.fall : (e.stun > 0 && Math.floor(t / 60) % 2 ? .5 : 1)); });
+    if (S.follower && S.follower.area === a.id) push(S.follower.x / T, (S.follower.y - 4) / T, A.locke.down, 1);
+    sprites.sort((p, q) => q.tY - p.tY);
+    for (const s of sprites) {
+      const tex = texOf(s.canvas), scale = Hh / s.tY, sh = s.h * scale, sw = sh * tex.w / tex.h, scx = W2 / 2 * (1 + s.tX / s.tY);
+      const bottom = hor + .5 * scale - s.lift * scale, top = bottom - sh, left = scx - sw / 2;
+      const glow = s.canvas === GLOW;
+      lightAt(Lc, s.sx, s.sy, lt); const dark = !glow && lt[0] + lt[1] + lt[2] < .03;
+      for (let x = Math.max(0, Math.floor(left)); x < Math.min(W2, Math.ceil(left + sw)); x++) {
+        if (s.tY >= zbuf[x]) continue;
+        const u = Math.min(tex.w - 1, Math.floor((x - left) / sw * tex.w));
+        for (let y = Math.max(0, Math.floor(top)); y < Math.min(Hh, Math.ceil(bottom)); y++) {
+          const v = Math.min(tex.h - 1, Math.floor((y - top) / sh * tex.h)), p = tex.px[v * tex.w + u];
+          if ((p >>> 24) < 128) continue;
+          const em = s.emissive && s.emissive(u, v);
+          if (em) { buf[y * W2 + x] = em; continue; }
+          if (glow) { buf[y * W2 + x] = p | 0xff000000; continue; }
+          if (dark) { buf[y * W2 + x] = 0xff000000; continue; }
+          if (s.alpha != null && s.alpha < 1 && ((x + y) & 1)) continue;
+          buf[y * W2 + x] = shadePx(p, lt);
+        }
+      }
+    }
+    fpG.putImageData(fpImg, 0, 0);
+    g.drawImage(fpC, 0, 0);
+    if (S.wisp && S.wisp.phase !== 'gone') {
+      const rx = S.wisp.x - px, ry = S.wisp.y - py, tX = invDet * (dirY * rx - dirX * ry), tY = invDet * (-plY * rx + plX * ry);
+      if (tY > .15) { const cx = Math.round(W2 / 2 * (1 + tX / tY)), scale = Hh / tY, cy = Math.round(hor + .5 * scale - (.55 + Math.sin(t / 200) * .04) * scale), r = Math.max(2, Math.min(26, .14 * scale));
+        if (cx >= 0 && cx < W2 && tY < zbuf[cx]) { [[2.6, .12], [1.7, .25], [1, .9], [.45, 1]].forEach(([k, al], i) => { g.fillStyle = i === 3 ? `rgba(255,251,224,${al})` : `rgba(255,${i === 2 ? 224 : 200},${i === 2 ? 138 : 90},${al})`; g.beginPath(); g.arc(cx, cy, Math.max(1, r * k), 0, 7); g.fill(); }); } }
+    }
+    // the hands: the lantern in the left, the sword in the right
+    if (!S.blackout && !S.lanternOff) { const lx = 30, ly = PH - 30 + Math.round(bob * 2); g.fillStyle = '#2a1c12'; g.fillRect(lx, ly, 14, 22); g.fillRect(lx + 4, ly - 6, 6, 6); g.fillStyle = Math.random() < .08 ? '#fff0b0' : '#ffd060'; g.fillRect(lx + 3, ly + 4, 8, 12); g.fillStyle = '#fff6d0'; g.fillRect(lx + 6, ly + 8, 2, 5); }
+    const sp = H.atk > 0 ? 1 - H.atk / .26 : 0, swing = Math.sin(sp * Math.PI);
+    const bx = VW - 70 - swing * 70, by = PH - 22 - swing * 30 + Math.round(bob * 2);
+    g.save(); g.translate(bx, by); g.rotate(-.5 - swing * 1.1);
+    g.fillStyle = '#c8a040'; g.fillRect(-3, 0, 14, 4); g.fillStyle = '#5a3418'; g.fillRect(2, 4, 4, 12); g.fillStyle = '#dfe4ee'; g.fillRect(2, -46, 4, 46); g.fillStyle = '#8a90a0'; g.fillRect(5, -46, 1, 46); g.fillStyle = '#ffffff'; g.fillRect(2, -48, 2, 3);
+    g.restore();
+    if (swing > .2) { g.fillStyle = `rgba(240,244,255,${(.5 * swing).toFixed(2)})`; for (let k = 0; k < 12; k++) { const aa = -2.4 + k * .16 + sp * 1.2; g.fillRect(Math.round(VW / 2 + Math.cos(aa) * 70), Math.round(PH / 2 + 30 + Math.sin(aa) * 40), 3, 3); } }
+    S.fx.forEach(f => { if (f.type === 'flash') { g.fillStyle = `rgba(200,30,30,${(.35 * (1 - f.t / f.dur)).toFixed(2)})`; g.fillRect(0, 0, VW, PH); } });
+    if (S.trans && S.trans.kind === 'fade') { const tr = S.trans, p = tr.t < tr.dur / 2 ? tr.t / (tr.dur / 2) : 1 - (tr.t - tr.dur / 2) / (tr.dur / 2); g.fillStyle = `rgba(0,0,0,${p.toFixed(3)})`; g.fillRect(0, 0, VW, PH); }
+  }
+  function fpVisible(a, f) {
+    const hx = H.x / T, hy = H.y / T, fx = f.x + .5, fy = f.y + .5, d = Math.hypot(fx - hx, fy - hy);
+    if (d > 7 || Math.abs(angDiff(Math.atan2(fy - hy, fx - hx), H.ang)) > .62) return false;
+    if (!los(a, H.x, H.y - 4, fx * T, fy * T)) return false;
+    const Lc = fpLights(a, now()), lt = [0, 0, 0]; lightAt(Lc, fx, fy, lt); return lt[0] + lt[1] + lt[2] > .2;
+  }
+
   /* ---------- drawing ---------- */
   function camera(a) {
     if (S.homing || S.wisp) return { cx: Math.round(H.x - VW / 2), cy: Math.round(H.y - 8 - PH / 2) };   // locked to the hero: the screen frame is never a landmark
@@ -845,7 +1046,7 @@
     if (S.trans && S.trans.kind === 'slide') {
       const p = Math.min(1, S.trans.t / S.trans.dur), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2, d = { N: [0, 1], S: [0, -1], W: [1, 0], E: [-1, 0] }[S.trans.dir];
       G.drawImage(prevC, Math.round(d[0] * e * VW), HUD + Math.round(d[1] * e * PH)); G.drawImage(nextC, Math.round((d[0] * e - d[0]) * VW), HUD + Math.round((d[1] * e - d[1]) * PH));
-    } else { G.translate(0, HUD); renderWorld(G); }
+    } else { G.translate(0, HUD); if (isFP()) renderFP(G); else renderWorld(G); }
     G.restore();
   }
   function hud() { /* the HUD is redrawn every frame; kept for parity with the 3D engine's call sites */ }
@@ -991,7 +1192,9 @@
     const IG = c.events.filter(e => e.name === 'integrate'), ig = k => IG.filter(e => e.kind === k);
     if (IG.length) rows.push(['First choice after a glimpse', `swap ${pct(ig('swap').filter(e => e.cls === 'correct').length, ig('swap').length)} · rotation ${pct(ig('rotate').filter(e => e.cls === 'correct').length, ig('rotate').length)} · none ${pct(ig('none').filter(e => e.cls === 'correct').length, ig('none').length)}`,
       `After stepping out of a room you see one new link. Choices back to where the room used to be: ${pct(IG.filter(e => e.cls === 'stale').length, IG.filter(e => e.kind !== 'none').length)}.`]);
-    if (F.length) { const rts = F.filter(f => f.rt != null).map(f => f.rt); rows.push(['Sentinels', `${pct(F.filter(f => f.correct).length, F.length)} correct of ${F.length}`, `Strike or walk past. Median time from first seeing one to deciding: ${rts.length ? median(rts).toFixed(1) + ' s' : '—'}.`]); }
+    const Ft = F.filter(f => f.view !== 'fp'), Ff = F.filter(f => f.view === 'fp');
+    if (Ft.length) { const rts = Ft.filter(f => f.rt != null).map(f => f.rt); rows.push(['Sentinels', `${pct(Ft.filter(f => f.correct).length, Ft.length)} correct of ${Ft.length}`, `Strike or walk past. Median time from first seeing one to deciding: ${rts.length ? median(rts).toFixed(1) + ' s' : '—'}. These set the eye-pulse contrast for next time.`]); }
+    if (Ff.length) rows.push(['Scarecrows at eye level', `${pct(Ff.filter(f => f.correct).length, Ff.length)} correct of ${Ff.length}`, 'Kept out of the contrast staircase: in first person the eyes grow as you approach, so these decisions mix contrast with distance. Distance at first sight is logged.']);
     const HL = Hm.filter(h => h.kind === 'lantern'), HF = Hm.filter(h => h.kind !== 'lantern');
     if (HL.length) rows.push(['Following the lantern', `${median(HL.map(h => h.err)).toFixed(1)} m median error`, `${HL.length} return${HL.length === 1 ? '' : 's'} in the dark after outbound paths of ${HL.map(h => h.length.toFixed(0)).join(', ')} m.`]);
     if (HF.length) rows.push(['Finding your way in the dark', `${HF[0].err.toFixed(1)} m off`, `You walked ${HF[0].walked.toFixed(0)} m to get there.`]);
@@ -1022,7 +1225,7 @@
     let threat = 0;
     S.area.enemies.forEach(e => { if (e.dead || e.state === 'dormant') return; const d = Math.hypot(H.x - e.px, H.y - e.py) / T;
       if (e.state === 'chase') threat = Math.max(threat, 1 - .6 * Math.min(1, d / 12)); else if (d < 7 && los(S.area, H.x, H.y - 6, e.px, e.py - 6)) threat = Math.max(threat, .45 * (1 - d / 7)); });
-    SND.update({ dt, x: H.x / T, z: H.y / T, yaw: 0, threat, dark: S.blackout || S.area.dark, safe: S.running && S.spec.safe.includes(S.area.id), hp: H.hp / 2, blind: !!(S.homing || S.wisp), running: S.running && !S.paused });
+    SND.update({ dt, x: H.x / T, z: H.y / T, yaw: isFP() ? Math.atan2(-Math.cos(H.ang), -Math.sin(H.ang)) : 0, threat, dark: S.blackout || S.area.dark, safe: S.running && S.spec.safe.includes(S.area.id), hp: H.hp / 2, blind: !!(S.homing || S.wisp), running: S.running && !S.paused });
   }
 
   /* ---------- loop ---------- */
@@ -1035,9 +1238,15 @@
       if (S.trans) updateTrans(dt);
       else if (S.running && !S.paused && !dlg.open && !S.mapOpen) {
         const before = heroTile().join();
-        updateHero(dt, t); updateEnemies(dt); updateFigures(dt, t); updateCrows(dt); updateFollower(dt); updateWisp(dt);
+        const fp = isFP();
+        if (fp && !S.wasFP) H.ang = faceToAng(H.face);
+        if (fp && !S.fpHint) { S.fpHint = true; toast(TOUCH ? 'Eye level. Stick left and right turns you.' : 'Eye level. Left and right turn, up walks.'); }
+        if (!fp && S.wasFP) H.face = angToFace(H.ang);
+        S.wasFP = fp;
+        if (fp) updateHeroFP(dt, t); else updateHero(dt, t);
+        updateEnemies(dt); updateFigures(dt, t); updateCrows(dt); updateFollower(dt); updateWisp(dt);
         const ht = heroTile(), e = exitAt(S.area, ht[0], ht[1]);
-        if (e && e.state === 'open') goExit(e);
+        if (e && e.state === 'open' && !S.homing && !S.wisp) goExit(e);
         else if (ht.join() !== before) { checkLeg(); if (S.hooks.onTile) S.hooks.onTile(S.area, ht[0], ht[1]); }
         updateMazeJunction(); updateClosures(t);
         if (t - (S.lastPath || 0) > 200) { S.lastPath = t; S.log.path.push([+((t - S.t0) / 1000).toFixed(1), S.area.id, +(H.x / T).toFixed(2), +(H.y / T).toFixed(2)]); }
@@ -1084,7 +1293,7 @@
     $('#start').onclick = () => { audio(); startChapter(0); };
     $('#musicBtn').onclick = () => { audio(); SND.setMusic(!SND.musicOn); musicLabel(); }; musicLabel();
     if (TOUCH) document.body.classList.add('touch');
-    if (TOUCH) $('#keyhelp').textContent = 'Left thumb moves · Strike and Use buttons on the right · tap the text to read on';
+    if (TOUCH) $('#keyhelp').textContent = 'Left thumb moves (at eye level it turns you) · Strike and Use on the right · tap the text to read on';
     touchSetup();
     window.__p16 = { warp(ai, x, y) { S.area = S.areas[ai]; H.x = x * T + 8; H.y = y * T + 12; rebuildBlk(S.area); enterArea(S.area); }, bumpExit, render, S, H, api, use, attack, startChapter, advanceDialog, dlgOpen, finishHoming, interactables, focus, notes, summarize, worldDist, labToggle, openMap, closeMap, goExit, heroTile };
     requestAnimationFrame(loop);

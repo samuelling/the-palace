@@ -255,7 +255,7 @@
   function conservatory(seed, opts) {
     const r = rng32(seed * 13 + 2), CI = 15, CJ = 10, W = CI * 3 + 1, H = CJ * 3 + 1;
     const cx = i => 1 + 3 * i, cy = j => 1 + 3 * j, CK = (i, j) => i + ',' + j;
-    const g = makeArea('maze', 'Greenhouse', W, H, { fillCh: 'H', floor: 'gravel', wall: 'hedgeWall', scroll: true, amb: .5, tint: '#0a1630', hedge: true });
+    const g = makeArea('maze', 'Greenhouse', W, H, { fillCh: 'H', floor: 'gravel', wall: 'hedgeWall', scroll: true, amb: .5, tint: '#0a1630', hedge: true, view: 'fp' });   // walked at eye level
     const LAWN = [5, 2, 10, 7];
     const inLawn = (i, j) => i >= LAWN[0] && i <= LAWN[2] && j >= LAWN[1] && j <= LAWN[3];
     const between = (i, j, a, b) => a === i + 1 ? [[cx(i) + 2, cy(j)], [cx(i) + 2, cy(j) + 1]] : [[cx(i), cy(j) + 2], [cx(i) + 1, cy(j) + 2]];
@@ -344,7 +344,7 @@
         const S = { roses: 0, trials: 0 };
         const OFFICE = { area: 'office', tiles: [[7, 2], [8, 2], [7, 3], [8, 3]] };
         // lantern paths stay well inside the lawn and away from the fountain
-        const inside = (x, y) => x > lx0 + 2.5 && x < lx1 + 1 - 2.5 && y > ly0 + 2.5 && y < ly1 + 1 - 2.5 && Math.hypot(x - FX, y - FY) > 3;
+        const inside = (x, y) => x > lx0 + 2.5 && x < lx1 + 1 - 2.5 && y > ly0 + 2.5 && y < ly1 + 1 - 2.5 && Math.hypot(x - FX, y - FY) > 3.6;
         function lanternPath() {
           for (let k = 0; k < 800; k++) {
             let x = lx0 + 2 + api.rng() * (lx1 - lx0 - 3), y = ly0 + 2 + api.rng() * (ly1 - ly0 - 3);
